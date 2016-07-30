@@ -1,0 +1,1 @@
+CREATE ALIAS STRING_FUNCTION FOR "com.github.marschall.springjdbccall.H2Procedures.stringFunction";
