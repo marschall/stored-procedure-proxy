@@ -1,4 +1,4 @@
-package com.github.marschall.springjdbccall;
+package com.github.marschall.springjdbccall.annotations;
 
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
