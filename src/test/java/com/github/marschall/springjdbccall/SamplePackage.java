@@ -3,6 +3,7 @@ package com.github.marschall.springjdbccall;
 import java.sql.Types;
 
 import com.github.marschall.springjdbccall.annotations.PackageName;
+import com.github.marschall.springjdbccall.annotations.ParameterName;
 import com.github.marschall.springjdbccall.annotations.ParameterType;
 import com.github.marschall.springjdbccall.annotations.ProcedureName;
 
@@ -13,6 +14,6 @@ public interface SamplePackage {
   void sampleFunction(String argument);
 
   @ProcedureName("SAMPLE_PROCEDURE")
-  String sampleProcedure(@ParameterType(Types.NUMERIC) int argument);
+  String sampleProcedure(@ParameterType(Types.NUMERIC) @ParameterName("p_arg_in") int argument);
 
 }
