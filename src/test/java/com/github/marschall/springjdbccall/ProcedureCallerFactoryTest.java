@@ -21,7 +21,7 @@ import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import com.github.marschall.springjdbccall.spi.NamingStrategy;
 
 @ContextConfiguration(classes = DataSourceConfiguration.class)
-public class PackageCallerFactoryTest {
+public class ProcedureCallerFactoryTest {
 
   @ClassRule
   public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
@@ -61,7 +61,7 @@ public class PackageCallerFactoryTest {
 
   @Test
   public void proxyCall() {
-    H2Functions functions = PackageCallerFactory.of(H2Functions.class, jdbcOperations)
+    H2Functions functions = ProcedureCallerFactory.of(H2Functions.class, jdbcOperations)
             .withProcedureNamingStrategy(NamingStrategy.snakeCase().thenUpperCase())
             .build();
 

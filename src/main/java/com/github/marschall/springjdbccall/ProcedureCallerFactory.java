@@ -21,7 +21,7 @@ import com.github.marschall.springjdbccall.annotations.ProcedureName;
 import com.github.marschall.springjdbccall.annotations.SchemaName;
 import com.github.marschall.springjdbccall.spi.NamingStrategy;
 
-public final class PackageCallerFactory<T> {
+public final class ProcedureCallerFactory<T> {
 
   private final Class<T> inferfaceDeclaration;
 
@@ -37,7 +37,7 @@ public final class PackageCallerFactory<T> {
 
   private ParameterRegistration parameterRegistration;
 
-  private PackageCallerFactory(Class<T> inferfaceDeclaration, JdbcOperations jdbcOperations) {
+  private ProcedureCallerFactory(Class<T> inferfaceDeclaration, JdbcOperations jdbcOperations) {
     this.inferfaceDeclaration = inferfaceDeclaration;
     this.jdbcOperations = jdbcOperations;
     this.parameterNamingStrategy = NamingStrategy.IDENTITY;
@@ -48,42 +48,42 @@ public final class PackageCallerFactory<T> {
   }
 
 
-  public static <T> PackageCallerFactory<T> of(Class<T> inferfaceDeclaration, JdbcOperations jdbcTemplate) {
+  public static <T> ProcedureCallerFactory<T> of(Class<T> inferfaceDeclaration, JdbcOperations jdbcTemplate) {
     Objects.requireNonNull(jdbcTemplate);
     Objects.requireNonNull(inferfaceDeclaration);
-    return new PackageCallerFactory<>(inferfaceDeclaration, jdbcTemplate);
+    return new ProcedureCallerFactory<>(inferfaceDeclaration, jdbcTemplate);
   }
 
   public static <T> T build(Class<T> inferfaceDeclaration, JdbcOperations jdbcTemplate) {
     return of(inferfaceDeclaration, jdbcTemplate).build();
   }
-  public PackageCallerFactory<T> withParameterNamingStrategy(NamingStrategy parameterNamingStrategy) {
+  public ProcedureCallerFactory<T> withParameterNamingStrategy(NamingStrategy parameterNamingStrategy) {
     this.parameterNamingStrategy = parameterNamingStrategy;
     return this;
   }
 
-  public PackageCallerFactory<T> withProcedureNamingStrategy(NamingStrategy procedureNamingStrategy) {
+  public ProcedureCallerFactory<T> withProcedureNamingStrategy(NamingStrategy procedureNamingStrategy) {
     this.procedureNamingStrategy = procedureNamingStrategy;
     return this;
   }
 
-  public PackageCallerFactory<T> withSchemaNamingStrategy(NamingStrategy schemaNamingStrategy) {
+  public ProcedureCallerFactory<T> withSchemaNamingStrategy(NamingStrategy schemaNamingStrategy) {
     this.schemaNamingStrategy = schemaNamingStrategy;
     return this;
   }
 
-  public PackageCallerFactory<T> withSchemaName() {
+  public ProcedureCallerFactory<T> withSchemaName() {
     this.hasSchemaName = true;
     return this;
   }
 
-  public PackageCallerFactory<T> withParameterRegistration(ParameterRegistration parameterRegistration) {
+  public ProcedureCallerFactory<T> withParameterRegistration(ParameterRegistration parameterRegistration) {
     this.parameterRegistration = parameterRegistration;
     return this;
   }
 
   public T build() {
-    PackageCaller caller = new PackageCaller(this.jdbcOperations, this.parameterNamingStrategy,
+    ProcedureCaller caller = new ProcedureCaller(this.jdbcOperations, this.parameterNamingStrategy,
             this.procedureNamingStrategy, this.schemaNamingStrategy, this.hasSchemaName,
             this.parameterRegistration);
     // REVIEW correct class loader
@@ -99,7 +99,7 @@ public final class PackageCallerFactory<T> {
     NAME_AND_TYPE;
   }
 
-  static final class PackageCaller implements InvocationHandler {
+  static final class ProcedureCaller implements InvocationHandler {
 
     private final JdbcOperations jdbcOperations;
 
@@ -113,7 +113,7 @@ public final class PackageCallerFactory<T> {
 
     private ParameterRegistration parameterRegistration;
 
-    PackageCaller(JdbcOperations jdbcOperations,
+    ProcedureCaller(JdbcOperations jdbcOperations,
             NamingStrategy parameterNamingStrategy,
             NamingStrategy procedureNamingStrategy,
             NamingStrategy schemaNamingStrategy, boolean hasSchemaName,
@@ -198,8 +198,7 @@ public final class PackageCallerFactory<T> {
       }
     }
 
-    private Object executeScalarMethod(CallableStatement statement)
-            throws SQLException {
+    private Object executeScalarMethod(CallableStatement statement) throws SQLException {
       int count = 0;
       Object last = null;
       try (ResultSet rs = statement.executeQuery()) {
