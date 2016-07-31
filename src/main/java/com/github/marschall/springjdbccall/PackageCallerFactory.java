@@ -17,12 +17,27 @@ import com.github.marschall.springjdbccall.spi.NamingStrategy;
 public final class PackageCallerFactory<T> {
 
   private final Class<T> inferfaceDeclaration;
-  private final JdbcOperations jdbcOperations;
 
+  private JdbcOperations jdbcOperations;
+
+  private NamingStrategy parameterNamingStrategy;
+
+  private NamingStrategy procedureNamingStrategy;
+
+  private NamingStrategy schemaNamingStrategy;
+
+  private boolean hasSchemaName;
+
+  private ParameterRegistration parameterRegistration;
 
   private PackageCallerFactory(Class<T> inferfaceDeclaration, JdbcOperations jdbcOperations) {
     this.inferfaceDeclaration = inferfaceDeclaration;
     this.jdbcOperations = jdbcOperations;
+    this.parameterNamingStrategy = NamingStrategy.IDENTITY;
+    this.procedureNamingStrategy = NamingStrategy.IDENTITY;
+    this.schemaNamingStrategy = NamingStrategy.IDENTITY;
+    this.hasSchemaName = false;
+    this.parameterRegistration = ParameterRegistration.INDEX_ONLY;
   }
 
 
@@ -35,10 +50,35 @@ public final class PackageCallerFactory<T> {
   public static <T> T build(Class<T> inferfaceDeclaration, JdbcOperations jdbcTemplate) {
     return of(inferfaceDeclaration, jdbcTemplate).build();
   }
+  public PackageCallerFactory<T> withParameterNamingStrategy(NamingStrategy parameterNamingStrategy) {
+    this.parameterNamingStrategy = parameterNamingStrategy;
+    return this;
+  }
 
+  public PackageCallerFactory<T> withProcedureNamingStrategy(NamingStrategy procedureNamingStrategy) {
+    this.procedureNamingStrategy = procedureNamingStrategy;
+    return this;
+  }
+
+  public PackageCallerFactory<T> withSchemaNamingStrategy(NamingStrategy schemaNamingStrategy) {
+    this.schemaNamingStrategy = schemaNamingStrategy;
+    return this;
+  }
+
+  public PackageCallerFactory<T> withSchemaName() {
+    this.hasSchemaName = true;
+    return this;
+  }
+
+  public PackageCallerFactory<T> withParameterRegistration(ParameterRegistration parameterRegistration) {
+    this.parameterRegistration = parameterRegistration;
+    return this;
+  }
 
   public T build() {
-    PackageCaller caller = new PackageCaller(this.jdbcOperations);
+    PackageCaller caller = new PackageCaller(this.jdbcOperations, this.parameterNamingStrategy,
+            this.procedureNamingStrategy, this.schemaNamingStrategy, this.hasSchemaName,
+            this.parameterRegistration);
     // REVIEW correct class loader
     Object proxy = Proxy.newProxyInstance(this.inferfaceDeclaration.getClassLoader(),
             new Class<?>[]{this.inferfaceDeclaration}, caller);
@@ -64,12 +104,19 @@ public final class PackageCallerFactory<T> {
 
     private final boolean hasSchemaName;
 
-    PackageCaller(JdbcOperations jdbcOperations) {
+    private ParameterRegistration parameterRegistration;
+
+    PackageCaller(JdbcOperations jdbcOperations,
+            NamingStrategy parameterNamingStrategy,
+            NamingStrategy procedureNamingStrategy,
+            NamingStrategy schemaNamingStrategy, boolean hasSchemaName,
+            ParameterRegistration parameterRegistration) {
       this.jdbcOperations = jdbcOperations;
-      this.parameterNamingStrategy = NamingStrategy.IDENTITY;
-      this.procedureNamingStrategy = NamingStrategy.IDENTITY;
-      this.schemaNamingStrategy = NamingStrategy.IDENTITY;
-      this.hasSchemaName = false;
+      this.parameterNamingStrategy = parameterNamingStrategy;
+      this.procedureNamingStrategy = procedureNamingStrategy;
+      this.schemaNamingStrategy = schemaNamingStrategy;
+      this.hasSchemaName = hasSchemaName;
+      this.parameterRegistration = parameterRegistration;
     }
 
     static String buildSimpleCallString(String functionName, int parameterCount) {
