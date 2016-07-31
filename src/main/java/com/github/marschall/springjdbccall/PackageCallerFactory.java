@@ -2,16 +2,20 @@ package com.github.marschall.springjdbccall;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.lang.reflect.Proxy;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Objects;
 
 import org.springframework.jdbc.core.JdbcOperations;
 
-import com.github.marschall.springjdbccall.annotations.SchemaName;
+import com.github.marschall.springjdbccall.annotations.ParameterName;
+import com.github.marschall.springjdbccall.annotations.ParameterType;
 import com.github.marschall.springjdbccall.annotations.ProcedureName;
+import com.github.marschall.springjdbccall.annotations.SchemaName;
 import com.github.marschall.springjdbccall.spi.NamingStrategy;
 
 public final class PackageCallerFactory<T> {
@@ -172,7 +176,7 @@ public final class PackageCallerFactory<T> {
       Class<?> returnType = method.getReturnType();
       Object returnValue = this.jdbcOperations.execute((Connection connection) -> {
         try (CallableStatement statement = this.prepareCall(connection, proxy, method, args)) {
-          this.bindParameters(args);
+          this.bindParameters(statement, method, args);
           return this.execute(statement);
         }
       });
@@ -184,9 +188,58 @@ public final class PackageCallerFactory<T> {
       return null;
     }
 
-    private void bindParameters(Object[] args) {
-      // TODO Auto-generated method stub
+    private void bindParameters(CallableStatement statement, Method method, Object[] args) throws SQLException {
+      switch (this.parameterRegistration) {
+        case INDEX_ONLY:
+          this.bindParametersByIndex(statement, args);
+          break;
+        case NAME_ONLY:
+          this.bindParametersByName(statement, this.extractParameterNames(method), args);
+          break;
+        case INDEX_AND_TYPE:
+          this.bindParametersByIndexAndType(statement, args, this.extractParameterTypes(method));
+          break;
+        case NAME_AND_TYPE:
+          this.bindParametersByNameAndType(statement, this.extractParameterNames(method), args, this.extractParameterTypes(method));
+          break;
+        default:
+          throw new IllegalStateException("unknown parameter registration: " + this.parameterRegistration);
+      }
+    }
 
+    private String[] extractParameterNames(Method method) {
+      Parameter[] parameters = method.getParameters();
+      String[] names = new String[parameters.length];
+      for (int i = 0; i < parameters.length; i++) {
+        Parameter parameter = parameters[i];
+        ParameterName annotation = parameter.getAnnotation(ParameterName.class);
+        String parameterName;
+        if (annotation != null) {
+          parameterName = annotation.value();
+        } else {
+          parameterName = this.parameterNamingStrategy.translateToDatabase(parameter.getName());
+        }
+        names[i] = parameterName;
+      }
+      return names;
+    }
+
+    private int[] extractParameterTypes(Method method) {
+      Parameter[] parameters = method.getParameters();
+      int[] types = new int[parameters.length];
+      for (int i = 0; i < parameters.length; i++) {
+        Parameter parameter = parameters[i];
+        ParameterType annotation = parameter.getAnnotation(ParameterType.class);
+        int type;
+        if (annotation != null) {
+          type = annotation.value();
+        } else {
+          // TODO basic type mapping
+          type = Types.OTHER;
+        }
+        types[i] = type;
+      }
+      return types;
     }
 
     private CallableStatement prepareCall(Connection connection, Object proxy, Method method, Object[] args) throws SQLException {
@@ -222,21 +275,27 @@ public final class PackageCallerFactory<T> {
       }
     }
 
-    private void registerArgumentsByIndex(CallableStatement statement, Object[] args) throws SQLException {
+    private void bindParametersByIndex(CallableStatement statement, Object[] args) throws SQLException {
       for (int i = 0; i < args.length; i++) {
-        statement.setObject(i, args[i]);
+        statement.setObject(i + 1, args[i]);
       }
     }
 
-    private void registerArgumentsByIndexAndType(CallableStatement statement, int[] types, Object[] args) throws SQLException {
+    private void bindParametersByIndexAndType(CallableStatement statement, Object[] args, int[] types) throws SQLException {
       for (int i = 0; i < args.length; i++) {
-        statement.setObject(i, args[i], types[i]);
+        statement.setObject(i + 1, args[i], types[i]);
       }
     }
 
-    private void registerArgumentsByName(CallableStatement statement, String[] names, Object[] args) throws SQLException {
+    private void bindParametersByName(CallableStatement statement, String[] names, Object[] args) throws SQLException {
       for (int i = 0; i < args.length; i++) {
         statement.setObject(names[i], args[i]);
+      }
+    }
+
+    private void bindParametersByNameAndType(CallableStatement statement, String[] names, Object[] args, int[] types) throws SQLException {
+      for (int i = 0; i < args.length; i++) {
+        statement.setObject(names[i], args[i], types[i]);
       }
     }
 
