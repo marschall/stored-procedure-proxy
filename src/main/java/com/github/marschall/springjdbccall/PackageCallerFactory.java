@@ -6,10 +6,13 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.Proxy;
 import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Collection;
 import java.util.Objects;
 
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcOperations;
 
 import com.github.marschall.springjdbccall.annotations.ParameterName;
@@ -177,14 +180,50 @@ public final class PackageCallerFactory<T> {
       Object returnValue = this.jdbcOperations.execute((Connection connection) -> {
         try (CallableStatement statement = this.prepareCall(connection, proxy, method, args)) {
           this.bindParameters(statement, method, args);
-          return this.execute(statement);
+          return this.execute(statement, returnType);
         }
       });
       return returnType.cast(returnValue);
     }
 
-    private Object execute(CallableStatement statement) {
-      // TODO Auto-generated method stub
+    private Object execute(CallableStatement statement, Class<?> returnType) throws SQLException {
+      if (returnType == Void.TYPE) {
+        return executeVoidMethod(statement);
+      } else {
+        if (Collection.class.isAssignableFrom(returnType)) {
+          // TODO Auto-generated method stub
+          throw new IllegalArgumentException("collections not yet implemented");
+        }
+        return executeScalarMethod(statement);
+      }
+    }
+
+    private Object executeScalarMethod(CallableStatement statement)
+            throws SQLException {
+      int count = 0;
+      Object last = null;
+      try (ResultSet rs = statement.executeQuery()) {
+        while (rs.next()) {
+          last = rs.getObject(1);
+          count += 1;
+        }
+      }
+      if (count != 1) {
+        throw new IncorrectResultSizeDataAccessException(1, count);
+      }
+      return last;
+    }
+
+    private Object executeVoidMethod(CallableStatement statement) throws SQLException {
+      int count = 0;
+      try (ResultSet rs = statement.executeQuery()) {
+        while (rs.next()) {
+          count += 1;
+        }
+      }
+      if (count != 0) {
+        throw new IncorrectResultSizeDataAccessException(0, count);
+      }
       return null;
     }
 
@@ -297,10 +336,6 @@ public final class PackageCallerFactory<T> {
       for (int i = 0; i < args.length; i++) {
         statement.setObject(names[i], args[i], types[i]);
       }
-    }
-
-    private boolean hasReturnValue(Method method) {
-      return method.getReturnType() == Void.TYPE;
     }
 
   }
