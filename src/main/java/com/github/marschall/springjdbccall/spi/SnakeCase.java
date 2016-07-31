@@ -6,8 +6,24 @@ final class SnakeCase implements NamingStrategy {
 
   @Override
   public String translateToDatabase(String javaName) {
-    // TODO Auto-generated method stub
-    return null;
+    StringBuilder builder = new StringBuilder();
+    boolean wasUpperCase = false;
+    for (int i = 0; i < javaName.length(); i++) {
+      char c = javaName.charAt(i);
+      if (i != 0) {
+        boolean isUpperCase = isUpperCase(c);
+        if (isUpperCase && !wasUpperCase) {
+          builder.append('_');
+        }
+        wasUpperCase = isUpperCase;
+      }
+      builder.append(c);
+    }
+    return builder.toString();
+  }
+
+  private static boolean isUpperCase(char c) {
+    return c >= 'A' && c <= 'Z';
   }
 
 }

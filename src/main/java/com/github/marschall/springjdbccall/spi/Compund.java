@@ -23,32 +23,8 @@ final class Compund implements NamingStrategy {
   }
 
   @Override
-  public NamingStrategy thenUpperCase() {
-    this.strategies.add(NamingStrategy.upperCase());
-    return this;
-  }
-
-  @Override
-  public NamingStrategy thenLowerCase() {
-    this.strategies.add(NamingStrategy.lowerCase());
-    return this;
-  }
-
-  @Override
-  public NamingStrategy thenCapitalize() {
-    this.strategies.add(NamingStrategy.capitalize());
-    return this;
-  }
-
-  @Override
-  public NamingStrategy thenSnakeCase() {
-    this.strategies.add(NamingStrategy.snakeCase());
-    return this;
-  }
-
-  @Override
-  public NamingStrategy thenPrefix(String prefix) {
-    this.strategies.add(NamingStrategy.prefix(prefix));
+  public NamingStrategy then(NamingStrategy next) {
+    this.strategies.add(next);
     return this;
   }
 

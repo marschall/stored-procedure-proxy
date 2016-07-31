@@ -26,24 +26,28 @@ public interface NamingStrategy {
     return new Prefix(prefix);
   }
 
+  default NamingStrategy then(NamingStrategy next) {
+    return new Compund(this, next);
+  }
+
   default NamingStrategy thenUpperCase() {
-    return new Compund(this, upperCase());
+    return then(upperCase());
   }
 
   default NamingStrategy thenLowerCase() {
-    return new Compund(this, lowerCase());
+    return then(lowerCase());
   }
 
   default NamingStrategy thenCapitalize() {
-    return new Compund(this, capitalize());
+    return then(capitalize());
   }
 
   default NamingStrategy thenSnakeCase() {
-    return new Compund(this, snakeCase());
+    return then(snakeCase());
   }
 
   default NamingStrategy thenPrefix(String prefix) {
-    return new Compund(this, prefix(prefix));
+    return then(prefix(prefix));
   }
 
 }
