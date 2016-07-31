@@ -2,13 +2,13 @@ package com.github.marschall.springjdbccall.spi;
 
 import java.util.Locale;
 
-final class UpperCase implements NamingStrategy {
+final class LowerCase implements NamingStrategy {
 
-  static final NamingStrategy INSTANCE = new UpperCase();
+  static final NamingStrategy INSTANCE = new LowerCase();
 
   @Override
   public String translateToDatabase(String javaName) {
-    return javaName.toUpperCase(Locale.US);
+    return javaName.toLowerCase(Locale.US);
   }
 
 }

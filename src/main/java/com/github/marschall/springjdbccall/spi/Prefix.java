@@ -2,10 +2,15 @@ package com.github.marschall.springjdbccall.spi;
 
 final class Prefix implements NamingStrategy {
 
+  private final String prefix;
+
+  Prefix(String prefix) {
+    this.prefix = prefix;
+  }
+
   @Override
   public String translateToDatabase(String javaName) {
-    // TODO Auto-generated method stub
-    return null;
+    return this.prefix + javaName;
   }
 
 }

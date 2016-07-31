@@ -13,6 +13,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
@@ -29,15 +30,19 @@ public class PackageCallerFactoryTest {
   @Autowired
   private DataSource dataSource;
 
+  @Autowired
+  private JdbcOperations jdbcOperations;
+
   @Test
   public void nativeCall() throws SQLException {
     try (Connection connection = dataSource.getConnection();
             CallableStatement statement = connection.prepareCall("{call STRING_FUNCTION(?)}")) {
-      statement.setObject(1, "test");
+      String input = "test";
+      statement.setObject(1, input);
 
       try (ResultSet rs = statement.executeQuery()) {
         while (rs.next()) {
-          assertEquals("pre" + "test" + "post", rs.getString(1));
+          assertEquals("pre" + input + "post", rs.getString(1));
         }
       }
 
@@ -50,6 +55,14 @@ public class PackageCallerFactoryTest {
 //      }
 
     }
+  }
+
+  @Test
+  public void proxyCall() {
+    H2Functions functions = PackageCallerFactory.of(H2Functions.class, jdbcOperations).build();
+
+    String input = "test";
+    assertEquals("pre" + input + "post", functions.stringFunction(input));
   }
 
 }

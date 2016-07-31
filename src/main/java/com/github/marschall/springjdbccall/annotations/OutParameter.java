@@ -12,4 +12,8 @@ import java.lang.annotation.Target;
 @Target(METHOD)
 public @interface OutParameter {
 
+  int index() default -1;
+
+  String name() default "";
+
 }

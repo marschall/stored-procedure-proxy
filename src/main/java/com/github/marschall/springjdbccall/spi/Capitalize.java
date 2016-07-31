@@ -1,8 +1,8 @@
 package com.github.marschall.springjdbccall.spi;
 
-final class SnakeCase implements NamingStrategy {
+public class Capitalize implements NamingStrategy {
 
-  static final NamingStrategy INSTANCE = new SnakeCase();
+  static final NamingStrategy INSTANCE = new Capitalize();
 
   @Override
   public String translateToDatabase(String javaName) {
