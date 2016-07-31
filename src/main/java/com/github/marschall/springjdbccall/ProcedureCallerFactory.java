@@ -128,11 +128,11 @@ public final class ProcedureCallerFactory<T> {
 
     static String buildSimpleCallString(String functionName, int parameterCount) {
       // {call RAISE_PRICE(?,?,?)}
-      // {call RAISE_PRICE(?,?,?)}
       StringBuilder builder = new StringBuilder(
               6 // {call
               + functionName.length()
               + 1 // (
+              + Math.max(parameterCount * 2 - 1, 0) // ?,?
               + 2 // )}
               );
       builder.append("{call ");
@@ -157,6 +157,7 @@ public final class ProcedureCallerFactory<T> {
               + 1 // .
               + functionName.length()
               + 1 // (
+              + Math.max(parameterCount * 2 - 1, 0) // ?,?
               + 2 // )}
               );
       builder.append("{call ");

@@ -9,6 +9,7 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,10 +36,19 @@ public class ProcedureCallerFactoryTest {
   @Autowired
   private JdbcOperations jdbcOperations;
 
+  private H2Procedures functions;
+
+  @Before
+  public void setUp() {
+    this.functions = ProcedureCallerFactory.of(H2Procedures.class, this.jdbcOperations)
+            .withProcedureNamingStrategy(NamingStrategy.snakeCase().thenUpperCase())
+            .build();
+  }
+
   @Test
   public void nativeCall() throws SQLException {
     try (Connection connection = dataSource.getConnection();
-            CallableStatement statement = connection.prepareCall("{call STRING_FUNCTION(?)}")) {
+            CallableStatement statement = connection.prepareCall("{call STRING_PROCEDURE(?)}")) {
       String input = "test";
       statement.setObject(1, input);
 
@@ -60,13 +70,14 @@ public class ProcedureCallerFactoryTest {
   }
 
   @Test
-  public void proxyCall() {
-    H2Functions functions = ProcedureCallerFactory.of(H2Functions.class, jdbcOperations)
-            .withProcedureNamingStrategy(NamingStrategy.snakeCase().thenUpperCase())
-            .build();
-
+  public void callScalarProcedure() {
     String input = "test";
-    assertEquals("pre" + input + "post", functions.stringFunction(input));
+    assertEquals("pre" + input + "post", functions.stringProcedure(input));
+  }
+
+  @Test
+  public void callVoidProcedure() {
+    functions.voidProcedure("test");
   }
 
 }
