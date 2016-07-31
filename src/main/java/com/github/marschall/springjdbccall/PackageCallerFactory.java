@@ -4,38 +4,39 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.CallableStatement;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Objects;
 
-import javax.sql.DataSource;
+import org.springframework.jdbc.core.JdbcOperations;
 
 import com.github.marschall.springjdbccall.spi.NamingStrategy;
 
 public final class PackageCallerFactory<T> {
 
   private final Class<T> inferfaceDeclaration;
-  private final DataSource dataSource;
+  private final JdbcOperations jdbcOperations;
 
 
-  private PackageCallerFactory(Class<T> inferfaceDeclaration, DataSource dataSource) {
+  private PackageCallerFactory(Class<T> inferfaceDeclaration, JdbcOperations jdbcOperations) {
     this.inferfaceDeclaration = inferfaceDeclaration;
-    this.dataSource = dataSource;
+    this.jdbcOperations = jdbcOperations;
   }
 
 
-  public static <T> PackageCallerFactory<T> of(Class<T> inferfaceDeclaration, DataSource dataSource) {
-    Objects.requireNonNull(dataSource);
+  public static <T> PackageCallerFactory<T> of(Class<T> inferfaceDeclaration, JdbcOperations jdbcTemplate) {
+    Objects.requireNonNull(jdbcTemplate);
     Objects.requireNonNull(inferfaceDeclaration);
-    return new PackageCallerFactory<>(inferfaceDeclaration, dataSource);
+    return new PackageCallerFactory<>(inferfaceDeclaration, jdbcTemplate);
   }
 
-  public static <T> T build(Class<T> inferfaceDeclaration, DataSource dataSource) {
-    return of(inferfaceDeclaration, dataSource).build();
+  public static <T> T build(Class<T> inferfaceDeclaration, JdbcOperations jdbcTemplate) {
+    return of(inferfaceDeclaration, jdbcTemplate).build();
   }
 
 
   public T build() {
-    PackageCaller caller = new PackageCaller(this.dataSource);
+    PackageCaller caller = new PackageCaller(this.jdbcOperations);
     // REVIEW correct class loader
     Object proxy = Proxy.newProxyInstance(this.inferfaceDeclaration.getClassLoader(),
             new Class<?>[]{this.inferfaceDeclaration}, caller);
@@ -51,12 +52,12 @@ public final class PackageCallerFactory<T> {
 
   static final class PackageCaller implements InvocationHandler {
 
-    private final DataSource dataSource;
+    private final JdbcOperations jdbcOperations;
 
     private final NamingStrategy parameterNamingStrategy;
 
-    PackageCaller(DataSource dataSource) {
-      this.dataSource = dataSource;
+    PackageCaller(JdbcOperations jdbcOperations) {
+      this.jdbcOperations = jdbcOperations;
       this.parameterNamingStrategy = (s) -> s;
     }
 
@@ -110,7 +111,27 @@ public final class PackageCallerFactory<T> {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-      boolean hasReturnValue = this.hasReturnValue(method);
+      Class<?> returnType = method.getReturnType();
+      Object returnValue = this.jdbcOperations.execute((Connection connection) -> {
+        try (CallableStatement statement = this.prepareCall(proxy, method, args)) {
+          this.bindParameter(args);
+          return this.execute(statement);
+        }
+      });
+      return returnType.cast(returnValue);
+    }
+
+    private Object execute(CallableStatement statement) {
+      // TODO Auto-generated method stub
+      return null;
+    }
+
+    private void bindParameter(Object[] args) {
+      // TODO Auto-generated method stub
+
+    }
+
+    private CallableStatement prepareCall(Object proxy, Method method, Object[] args) {
       // TODO Auto-generated method stub
       return null;
     }
