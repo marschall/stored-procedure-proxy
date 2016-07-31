@@ -18,6 +18,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 
+import com.github.marschall.springjdbccall.spi.NamingStrategy;
+
 @ContextConfiguration(classes = DataSourceConfiguration.class)
 public class PackageCallerFactoryTest {
 
@@ -59,7 +61,9 @@ public class PackageCallerFactoryTest {
 
   @Test
   public void proxyCall() {
-    H2Functions functions = PackageCallerFactory.of(H2Functions.class, jdbcOperations).build();
+    H2Functions functions = PackageCallerFactory.of(H2Functions.class, jdbcOperations)
+            .withProcedureNamingStrategy(NamingStrategy.snakeCase().thenUpperCase())
+            .build();
 
     String input = "test";
     assertEquals("pre" + input + "post", functions.stringFunction(input));
