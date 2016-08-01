@@ -22,7 +22,7 @@ public class DataSourceConfiguration {
             .setType(H2)
             .setScriptEncoding("UTF-8")
             .ignoreFailedDrops(true)
-            .addScript("h2_functions.sql")
+            .addScript("h2_procedures.sql")
             .build();
   }
 

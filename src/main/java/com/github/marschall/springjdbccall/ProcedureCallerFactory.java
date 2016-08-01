@@ -18,6 +18,7 @@ import org.springframework.jdbc.core.JdbcOperations;
 import com.github.marschall.springjdbccall.annotations.ParameterName;
 import com.github.marschall.springjdbccall.annotations.ParameterType;
 import com.github.marschall.springjdbccall.annotations.ProcedureName;
+import com.github.marschall.springjdbccall.annotations.ReturnValue;
 import com.github.marschall.springjdbccall.annotations.SchemaName;
 import com.github.marschall.springjdbccall.spi.NamingStrategy;
 
@@ -126,59 +127,11 @@ public final class ProcedureCallerFactory<T> {
       this.parameterRegistration = parameterRegistration;
     }
 
-    static String buildSimpleCallString(String functionName, int parameterCount) {
-      // {call RAISE_PRICE(?,?,?)}
-      StringBuilder builder = new StringBuilder(
-              6 // {call
-              + functionName.length()
-              + 1 // (
-              + Math.max(parameterCount * 2 - 1, 0) // ?,?
-              + 2 // )}
-              );
-      builder.append("{call ");
-      builder.append(functionName);
-      builder.append('(');
-      for (int i = 0; i < parameterCount; i++) {
-        if (i != 0) {
-          builder.append(',');
-        }
-        builder.append('?');
-      }
-      builder.append(")}");
-      return builder.toString();
-
-    }
-
-    static String buildQualifiedCallString(String packageName, String functionName, int parameterCount) {
-      // {call RAISE_PRICE(?,?,?)}
-      StringBuilder builder = new StringBuilder(
-              6 // {call
-              + packageName.length()
-              + 1 // .
-              + functionName.length()
-              + 1 // (
-              + Math.max(parameterCount * 2 - 1, 0) // ?,?
-              + 2 // )}
-              );
-      builder.append("{call ");
-      builder.append(packageName);
-      builder.append('.');
-      builder.append(functionName);
-      builder.append('(');
-      for (int i = 0; i < parameterCount; i++) {
-        if (i != 0) {
-          builder.append(',');
-        }
-        builder.append('?');
-      }
-      builder.append(")}");
-      return builder.toString();
-    }
-
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
       Class<?> returnType = method.getReturnType();
       Object returnValue = this.jdbcOperations.execute((Connection connection) -> {
+        boolean hasReturnValue = hasReturnValue(method);
         try (CallableStatement statement = this.prepareCall(connection, proxy, method, args)) {
           this.bindParameters(statement, method, args);
           return this.execute(statement, returnType);
@@ -293,6 +246,59 @@ public final class ProcedureCallerFactory<T> {
       } else {
         return buildSimpleCallString(procedureName, args.length);
       }
+    }
+
+    static String buildSimpleCallString(String functionName, int parameterCount) {
+      // {call RAISE_PRICE(?,?,?)}
+      StringBuilder builder = new StringBuilder(
+              6 // {call
+              + functionName.length()
+              + 1 // (
+              + Math.max(parameterCount * 2 - 1, 0) // ?,?
+              + 2 // )}
+              );
+      builder.append("{call ");
+      builder.append(functionName);
+      builder.append('(');
+      for (int i = 0; i < parameterCount; i++) {
+        if (i != 0) {
+          builder.append(',');
+        }
+        builder.append('?');
+      }
+      builder.append(")}");
+      return builder.toString();
+
+    }
+
+    static String buildQualifiedCallString(String schemaName, String functionName, int parameterCount) {
+      // {call RAISE_PRICE(?,?,?)}
+      StringBuilder builder = new StringBuilder(
+              6 // {call
+              + schemaName.length()
+              + 1 // .
+              + functionName.length()
+              + 1 // (
+              + Math.max(parameterCount * 2 - 1, 0) // ?,?
+              + 2 // )}
+              );
+      builder.append("{call ");
+      builder.append(schemaName);
+      builder.append('.');
+      builder.append(functionName);
+      builder.append('(');
+      for (int i = 0; i < parameterCount; i++) {
+        if (i != 0) {
+          builder.append(',');
+        }
+        builder.append('?');
+      }
+      builder.append(")}");
+      return builder.toString();
+    }
+
+    private static boolean hasReturnValue(Method method) {
+      return method.getAnnotation(ReturnValue.class) != null;
     }
 
     private String extractProcedureName(Method method) {

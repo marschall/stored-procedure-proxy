@@ -1,6 +1,6 @@
 package com.github.marschall.springjdbccall.spi;
 
-public class Capitalize implements NamingStrategy {
+final class Capitalize implements NamingStrategy {
 
   static final NamingStrategy INSTANCE = new Capitalize();
 
