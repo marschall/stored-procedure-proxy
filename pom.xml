@@ -3,11 +3,11 @@
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.github.marschall</groupId>
-  <artifactId>spring-jdbc-call</artifactId>
+  <artifactId>stored-procedure-proxy</artifactId>
   <version>0.1.0-SNAPSHOT</version>
   <inceptionYear>2013</inceptionYear>
   <name>Spring JDBC Call</name>
-  <description>Utilies for calling SQL procedures with Spring JDBC.</description>
+  <description>Proxies through which to call stored procedures.</description>
 
   <prerequisites>
     <maven>3.0.3</maven>
@@ -16,8 +16,8 @@
   <url>https://github.com/marschall/junit-lambda</url>
 
   <scm>
-    <connection>scm:git:git@github.com:marschall/spring-jdbc-call.git</connection>
-    <developerConnection>scm:git:git@github.com:marschall/spring-jdbc-call.git</developerConnection>
+    <connection>scm:git:git@github.com:marschall/stored-procedure-proxy.git</connection>
+    <developerConnection>scm:git:git@github.com:marschall/stored-procedure-proxy.git</developerConnection>
     <url>${project.url}</url>
     <tag>HEAD</tag>
   </scm>
