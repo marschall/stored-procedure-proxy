@@ -18,4 +18,11 @@ import java.lang.annotation.Target;
 @Target(METHOD)
 public @interface ReturnValue {
 
+  /**
+   *
+   * @return
+   * @see java.sql.Types
+   */
+  int type() default -1;
+
 }
