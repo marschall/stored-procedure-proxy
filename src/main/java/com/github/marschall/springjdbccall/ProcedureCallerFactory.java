@@ -301,6 +301,15 @@ public final class ProcedureCallerFactory<T> {
       return method.getAnnotation(ReturnValue.class) != null;
     }
 
+    private static boolean wantsExceptionTranslation(Method method) {
+      for (Class<?> exceptionType : method.getExceptionTypes()) {
+        if (exceptionType == SQLException.class) {
+          return false;
+        }
+      }
+      return true;
+    }
+
     private String extractProcedureName(Method method) {
       ProcedureName procedureName = method.getAnnotation(ProcedureName.class);
       if (procedureName != null) {
