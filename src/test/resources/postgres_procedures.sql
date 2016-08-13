@@ -26,6 +26,3 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-
-
-

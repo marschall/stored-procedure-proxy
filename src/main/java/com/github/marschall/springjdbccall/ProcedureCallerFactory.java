@@ -27,15 +27,21 @@ public final class ProcedureCallerFactory<T> {
 
   private static final boolean HAS_SPRING;
 
+  private static final IncorrectResultSizeExceptionGenerator INCORRECT_RESULT_SIZE_EXCEPTION_GENERATOR;
+
   static {
     boolean hasSpring;
+    IncorrectResultSizeExceptionGenerator incorrectResultSizeExceptionGenerator;
     try {
       Class.forName("org.springframework.jdbc.support.SQLExceptionTranslator", false, ProcedureCallerFactory.class.getClassLoader());
       hasSpring = true;
+      incorrectResultSizeExceptionGenerator = new DefaultIncorrectResultSizeExceptionGenerator();
     } catch (ClassNotFoundException e) {
       hasSpring = false;
+      incorrectResultSizeExceptionGenerator = new SpringIncorrectResultSizeExceptionGenerator();
     }
     HAS_SPRING = hasSpring;
+    INCORRECT_RESULT_SIZE_EXCEPTION_GENERATOR = incorrectResultSizeExceptionGenerator;
   }
 
   private final Class<T> inferfaceDeclaration;
@@ -116,6 +122,10 @@ public final class ProcedureCallerFactory<T> {
     Object proxy = Proxy.newProxyInstance(this.inferfaceDeclaration.getClassLoader(),
             new Class<?>[]{this.inferfaceDeclaration}, caller);
     return this.inferfaceDeclaration.cast(proxy);
+  }
+
+  static RuntimeException newIncorrectResultSizeException(int expectedSize, int actualSize) {
+    return INCORRECT_RESULT_SIZE_EXCEPTION_GENERATOR.newIncorrectResultSizeException(expectedSize, actualSize);
   }
 
   public enum ParameterRegistration {
@@ -204,8 +214,7 @@ public final class ProcedureCallerFactory<T> {
         }
       }
       if (count != 1) {
-        // TODO use non-Spring exception
-        throw new IncorrectResultSizeDataAccessException(1, count);
+        ProcedureCallerFactory.newIncorrectResultSizeException(1, count);
       }
       return last;
     }
