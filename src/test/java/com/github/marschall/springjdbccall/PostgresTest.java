@@ -1,5 +1,6 @@
 package com.github.marschall.springjdbccall;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 
 import javax.sql.DataSource;
@@ -9,12 +10,14 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.support.EncodedResource;
+import org.springframework.jdbc.datasource.init.DatabasePopulator;
+import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 
-@Sql("classpath:postgres_procedures.sql")
 @ContextConfiguration(classes = {PostgresConfiguration.class, TestConfiguration.class})
 public class PostgresTest {
 
@@ -33,6 +36,10 @@ public class PostgresTest {
   public void setUp() {
     this.procedures = ProcedureCallerFactory.of(PostgresProcedures.class, this.dataSource)
             .build();
+
+    EncodedResource resource = new EncodedResource(new ClassPathResource("postgres_procedures.sql"), UTF_8);
+    DatabasePopulator populator = new PostgresDatabasePopulator("LANGUAGE plpgsql;", resource);
+    DatabasePopulatorUtils.execute(populator, this.dataSource);
   }
 
   @Test

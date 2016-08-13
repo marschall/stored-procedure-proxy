@@ -1,12 +1,12 @@
 -- https://www.postgresql.org/docs/9.5/static/plpgsql-declarations.html
 
-CREATE FUNCTION sales_tax(subtotal real) RETURNS real AS $$
+CREATE OR REPLACE FUNCTION sales_tax(subtotal real) RETURNS real AS $$
 BEGIN
     RETURN subtotal * 0.06;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE FUNCTION property_tax(subtotal real, OUT tax real) AS $$
+CREATE OR REPLACE FUNCTION property_tax(subtotal real, OUT tax real) AS $$
 BEGIN
     tax := subtotal * 0.06;
 END;
