@@ -12,6 +12,8 @@ import java.sql.Types;
 import java.util.Collection;
 import java.util.Objects;
 
+import javax.sql.DataSource;
+
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcOperations;
 
@@ -24,9 +26,22 @@ import com.github.marschall.springjdbccall.spi.NamingStrategy;
 
 public final class ProcedureCallerFactory<T> {
 
+  private static final boolean HAS_SPRING;
+
+  static {
+    boolean hasSpring;
+    try {
+      Class.forName("org.springframework.jdbc.support.SQLExceptionTranslator", false, ProcedureCallerFactory.class.getClassLoader());
+      hasSpring = true;
+    } catch (ClassNotFoundException e) {
+      hasSpring = false;
+    }
+    HAS_SPRING = hasSpring;
+  }
+
   private final Class<T> inferfaceDeclaration;
 
-  private JdbcOperations jdbcOperations;
+  private final DataSource dataSource;
 
   private NamingStrategy parameterNamingStrategy;
 
@@ -38,25 +53,36 @@ public final class ProcedureCallerFactory<T> {
 
   private ParameterRegistration parameterRegistration;
 
-  private ProcedureCallerFactory(Class<T> inferfaceDeclaration, JdbcOperations jdbcOperations) {
+  private SQLExceptionAdapter exceptionAdapter;
+
+  private ProcedureCallerFactory(Class<T> inferfaceDeclaration, DataSource dataSource) {
     this.inferfaceDeclaration = inferfaceDeclaration;
-    this.jdbcOperations = jdbcOperations;
+    this.dataSource = dataSource;
     this.parameterNamingStrategy = NamingStrategy.IDENTITY;
     this.procedureNamingStrategy = NamingStrategy.IDENTITY;
     this.schemaNamingStrategy = NamingStrategy.IDENTITY;
     this.hasSchemaName = false;
     this.parameterRegistration = ParameterRegistration.INDEX_ONLY;
+    this.exceptionAdapter = getDefaultExceptionAdapter(dataSource);
+  }
+
+  private static SQLExceptionAdapter getDefaultExceptionAdapter(DataSource dataSource) {
+    if (HAS_SPRING) {
+      return new SpringSQLExceptionAdapter(dataSource);
+    } else {
+      return UncheckedSQLExceptionAdapter.INSTANCE;
+    }
   }
 
 
-  public static <T> ProcedureCallerFactory<T> of(Class<T> inferfaceDeclaration, JdbcOperations jdbcTemplate) {
-    Objects.requireNonNull(jdbcTemplate);
+  public static <T> ProcedureCallerFactory<T> of(Class<T> inferfaceDeclaration, DataSource dataSource) {
     Objects.requireNonNull(inferfaceDeclaration);
-    return new ProcedureCallerFactory<>(inferfaceDeclaration, jdbcTemplate);
+    Objects.requireNonNull(dataSource);
+    return new ProcedureCallerFactory<>(inferfaceDeclaration, dataSource);
   }
 
-  public static <T> T build(Class<T> inferfaceDeclaration, JdbcOperations jdbcTemplate) {
-    return of(inferfaceDeclaration, jdbcTemplate).build();
+  public static <T> T build(Class<T> inferfaceDeclaration, DataSource dataSource) {
+    return of(inferfaceDeclaration, dataSource).build();
   }
   public ProcedureCallerFactory<T> withParameterNamingStrategy(NamingStrategy parameterNamingStrategy) {
     this.parameterNamingStrategy = parameterNamingStrategy;
@@ -84,9 +110,9 @@ public final class ProcedureCallerFactory<T> {
   }
 
   public T build() {
-    ProcedureCaller caller = new ProcedureCaller(this.jdbcOperations, this.parameterNamingStrategy,
+    ProcedureCaller caller = new ProcedureCaller(this.dataSource, this.parameterNamingStrategy,
             this.procedureNamingStrategy, this.schemaNamingStrategy, this.hasSchemaName,
-            this.parameterRegistration);
+            this.parameterRegistration, this.exceptionAdapter);
     // REVIEW correct class loader
     Object proxy = Proxy.newProxyInstance(this.inferfaceDeclaration.getClassLoader(),
             new Class<?>[]{this.inferfaceDeclaration}, caller);
@@ -102,7 +128,7 @@ public final class ProcedureCallerFactory<T> {
 
   static final class ProcedureCaller implements InvocationHandler {
 
-    private final JdbcOperations jdbcOperations;
+    private final DataSource dataSource;
 
     private final NamingStrategy parameterNamingStrategy;
 
@@ -112,32 +138,47 @@ public final class ProcedureCallerFactory<T> {
 
     private final boolean hasSchemaName;
 
-    private ParameterRegistration parameterRegistration;
+    private final ParameterRegistration parameterRegistration;
 
-    ProcedureCaller(JdbcOperations jdbcOperations,
+    private final SQLExceptionAdapter exceptionAdapter;
+
+    ProcedureCaller(DataSource dataSource,
             NamingStrategy parameterNamingStrategy,
             NamingStrategy procedureNamingStrategy,
             NamingStrategy schemaNamingStrategy, boolean hasSchemaName,
-            ParameterRegistration parameterRegistration) {
-      this.jdbcOperations = jdbcOperations;
+            ParameterRegistration parameterRegistration,
+            SQLExceptionAdapter exceptionAdapter) {
+      this.dataSource = dataSource;
       this.parameterNamingStrategy = parameterNamingStrategy;
       this.procedureNamingStrategy = procedureNamingStrategy;
       this.schemaNamingStrategy = schemaNamingStrategy;
       this.hasSchemaName = hasSchemaName;
       this.parameterRegistration = parameterRegistration;
+      this.exceptionAdapter = exceptionAdapter;
     }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
       Class<?> returnType = method.getReturnType();
-      Object returnValue = this.jdbcOperations.execute((Connection connection) -> {
+      Object returnValue;
+      try (Connection connection = this.dataSource.getConnection()) {
         boolean hasReturnValue = hasReturnValue(method);
         try (CallableStatement statement = this.prepareCall(connection, proxy, method, args)) {
           this.bindParameters(statement, method, args);
-          return this.execute(statement, returnType);
+          returnValue = this.execute(statement, returnType);
         }
-      });
+      } catch (SQLException e) {
+        throw translate(e, method);
+      }
       return returnType.cast(returnValue);
+    }
+
+    private Exception translate(SQLException exception, Method method) {
+      if (wantsExceptionTranslation(method)) {
+        return this.exceptionAdapter.translate(null, null, exception);
+      } else {
+        return exception;
+      }
     }
 
     private Object execute(CallableStatement statement, Class<?> returnType) throws SQLException {
