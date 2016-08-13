@@ -3,10 +3,10 @@ package com.github.marschall.springjdbccall;
 import java.sql.Types;
 
 import com.github.marschall.springjdbccall.annotations.OutParameter;
-import com.github.marschall.springjdbccall.annotations.SchemaName;
 import com.github.marschall.springjdbccall.annotations.ParameterName;
 import com.github.marschall.springjdbccall.annotations.ParameterType;
 import com.github.marschall.springjdbccall.annotations.ProcedureName;
+import com.github.marschall.springjdbccall.annotations.SchemaName;
 
 @SchemaName("SAMPLE_NAME")
 public interface SamplePackage {

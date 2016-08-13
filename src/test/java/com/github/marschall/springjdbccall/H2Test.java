@@ -20,8 +20,8 @@ import org.springframework.test.context.junit4.rules.SpringMethodRule;
 
 import com.github.marschall.springjdbccall.spi.NamingStrategy;
 
-@ContextConfiguration(classes = DataSourceConfiguration.class)
-public class ProcedureCallerFactoryTest {
+@ContextConfiguration(classes = {H2Configuration.class, TestConfiguration.class})
+public class H2Test {
 
   @ClassRule
   public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
