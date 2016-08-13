@@ -9,4 +9,10 @@ public interface PostgresProcedures {
   @ReturnValue
   String browserVersion(String name,  String version);
 
+  @ProcedureName("sales_tax")
+  double salesTax(double subtotal);
+
+  @ProcedureName("property_tax")
+  double propertyTax(double subtotal);
+
 }

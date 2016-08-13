@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
  * Signals that the procedure uses a return value rather than an out
  * parameter.
  *
- * <p>You would use this for example for Oracle functions.</p>
+ * <p>You would use this for functions versus procedures.</p>
  */
 @Documented
 @Retention(RUNTIME)
@@ -24,5 +24,7 @@ public @interface ReturnValue {
    * @see java.sql.Types
    */
   int type() default -1;
+
+  String name() default "";
 
 }

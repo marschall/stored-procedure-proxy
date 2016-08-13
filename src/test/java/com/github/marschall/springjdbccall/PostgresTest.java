@@ -47,4 +47,14 @@ public class PostgresTest {
     assertEquals("Servo/0.0.1", this.procedures.browserVersion("Servo", "0.0.1"));
   }
 
+  @Test
+  public void salesTax() {
+    assertEquals(0.01d, 6.0d, this.procedures.salesTax(100.0d));
+  }
+
+  @Test
+  public void propertyTax() {
+    assertEquals(0.01d, 6.0d, this.procedures.propertyTax(100.0d));
+  }
+
 }

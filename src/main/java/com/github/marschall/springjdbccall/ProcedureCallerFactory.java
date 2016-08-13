@@ -14,8 +14,6 @@ import java.util.Objects;
 
 import javax.sql.DataSource;
 
-import org.springframework.dao.IncorrectResultSizeDataAccessException;
-
 import com.github.marschall.springjdbccall.annotations.ParameterName;
 import com.github.marschall.springjdbccall.annotations.ParameterType;
 import com.github.marschall.springjdbccall.annotations.ProcedureName;
@@ -172,7 +170,6 @@ public final class ProcedureCallerFactory<T> {
       Object returnValue;
       String callString = null;
       try (Connection connection = this.dataSource.getConnection()) {
-        boolean hasReturnValue = hasReturnValue(method);
         callString = buildCallString(method, args);
         try (CallableStatement statement = this.prepareCall(connection, callString)) {
           this.bindParameters(statement, method, args);
@@ -290,14 +287,23 @@ public final class ProcedureCallerFactory<T> {
 
     private String buildCallString(Method method, Object[] args) {
       String procedureName = this.extractProcedureName(method);
-      if (this.hasSchemaName) {
-        return buildQualifiedCallString(procedureName, this.extractSchemaName(method), args.length);
-      } else {
-        return buildSimpleCallString(procedureName, args.length);
-      }
+      boolean hasReturnValue = hasReturnValue(method);
+//      if (hasReturnValue) {
+//        if (this.hasSchemaName) {
+//          return buildQualifiedFunctionCallString(procedureName, this.extractSchemaName(method), args.length);
+//        } else {
+//          return buildSimpleFunctionCallString(procedureName, args.length);
+//        }
+//      } else {
+        if (this.hasSchemaName) {
+          return buildQualifiedProcedureCallString(procedureName, this.extractSchemaName(method), args.length);
+        } else {
+          return buildSimpleProcudureCallString(procedureName, args.length);
+        }
+//      }
     }
 
-    static String buildSimpleCallString(String functionName, int parameterCount) {
+    static String buildSimpleProcudureCallString(String functionName, int parameterCount) {
       // {call RAISE_PRICE(?,?,?)}
       StringBuilder builder = new StringBuilder(
               6 // {call
@@ -320,7 +326,7 @@ public final class ProcedureCallerFactory<T> {
 
     }
 
-    static String buildQualifiedCallString(String schemaName, String functionName, int parameterCount) {
+    static String buildQualifiedProcedureCallString(String schemaName, String functionName, int parameterCount) {
       // {call RAISE_PRICE(?,?,?)}
       StringBuilder builder = new StringBuilder(
               6 // {call
@@ -346,7 +352,7 @@ public final class ProcedureCallerFactory<T> {
       return builder.toString();
     }
 
-    static String buildSimpleCallFunctionString(String functionName, int parameterCount) {
+    static String buildSimpleFunctionCallString(String functionName, int parameterCount) {
       // { ? = call RAISE_PRICE(?,?,?)}
       StringBuilder builder = new StringBuilder(
               11 // { ? = call
@@ -369,7 +375,7 @@ public final class ProcedureCallerFactory<T> {
 
     }
 
-    static String buildQualifiedCallFunctionString(String schemaName, String functionName, int parameterCount) {
+    static String buildQualifiedFunctionCallString(String schemaName, String functionName, int parameterCount) {
       // { ? = call RAISE_PRICE(?,?,?)}
       StringBuilder builder = new StringBuilder(
               11 // { ? = call
@@ -425,6 +431,22 @@ public final class ProcedureCallerFactory<T> {
       } else {
         return this.schemaNamingStrategy.translateToDatabase(declaringClass.getName());
       }
+    }
+
+    private void bindOutParameterByType(CallableStatement statement, int index) throws SQLException {
+      statement.registerOutParameter(index, Types.OTHER);
+    }
+
+    private void bindOutParameterByIndexAndType(CallableStatement statement, int index, int type) throws SQLException {
+      statement.registerOutParameter(index, type);
+    }
+
+    private void bindOutParameterByName(CallableStatement statement, String name) throws SQLException {
+      statement.registerOutParameter(name, Types.OTHER);
+    }
+
+    private void bindOutParameterByNameAndType(CallableStatement statement, String name, int type) throws SQLException {
+      statement.registerOutParameter(name, type);
     }
 
     private void bindParametersByIndex(CallableStatement statement, Object[] args) throws SQLException {
