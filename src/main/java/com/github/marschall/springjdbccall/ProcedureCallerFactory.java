@@ -287,7 +287,7 @@ public final class ProcedureCallerFactory<T> {
 
     private String buildCallString(Method method, Object[] args) {
       String procedureName = this.extractProcedureName(method);
-      boolean hasReturnValue = hasReturnValue(method);
+      boolean procedureHasReturnValue = procedureHasReturnValue(method);
 //      if (hasReturnValue) {
 //        if (this.hasSchemaName) {
 //          return buildQualifiedFunctionCallString(procedureName, this.extractSchemaName(method), args.length);
@@ -401,7 +401,7 @@ public final class ProcedureCallerFactory<T> {
       return builder.toString();
     }
 
-    private static boolean hasReturnValue(Method method) {
+    private static boolean procedureHasReturnValue(Method method) {
       return method.getAnnotation(ReturnValue.class) != null;
     }
 
@@ -472,6 +472,17 @@ public final class ProcedureCallerFactory<T> {
         statement.setObject(names[i], args[i], types[i]);
       }
     }
+
+  }
+
+  static final class CallInfo {
+
+    String functionName;
+    String callString;
+    int outParameterIndex;
+    int[] types;
+    String[] names;
+
 
   }
 

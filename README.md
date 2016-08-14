@@ -28,3 +28,5 @@ Exception Translation
 - if the does not method declare `throws SQLException` exception and Spring is present translation will happen using Spring
 
 
+https://blog.jooq.org/tag/stored-procedures/
+

@@ -2,6 +2,12 @@ package com.github.marschall.springjdbccall;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Types;
 
 import javax.sql.DataSource;
 
@@ -48,13 +54,41 @@ public class PostgresTest {
   }
 
   @Test
+  public void callSalesTaxOld() throws SQLException {
+    try (Connection connection = this.dataSource.getConnection();
+            CallableStatement statement = connection.prepareCall("{ ? = call sales_tax(?)}")) {
+      statement.registerOutParameter(1, Types.REAL);
+      statement.setFloat(2, 100.0f);
+
+      boolean hasResult = statement.execute();
+      assertFalse(hasResult);
+      Object result = statement.getObject(1);
+      assertEquals(0.01d, 6.0f, (Float) result);
+    }
+  }
+
+  @Test
   public void salesTax() {
-    assertEquals(0.01d, 6.0d, this.procedures.salesTax(100.0d));
+    assertEquals(0.01f, 6.0f, this.procedures.salesTax(100.0f));
+  }
+
+  @Test
+  public void callPropertyTaxOld() throws SQLException {
+    try (Connection connection = this.dataSource.getConnection();
+            CallableStatement statement = connection.prepareCall("{call property_tax(?, ?)}")) {
+      statement.setFloat(1, 100.0f);
+      statement.registerOutParameter(2, Types.REAL);
+
+      boolean hasResult = statement.execute();
+      assertFalse(hasResult);
+      Object result = statement.getObject(2);
+      assertEquals(0.01d, 6.0f, (Float) result);
+    }
   }
 
   @Test
   public void propertyTax() {
-    assertEquals(0.01d, 6.0d, this.procedures.propertyTax(100.0d));
+    assertEquals(0.01f, 6.0f, this.procedures.propertyTax(100.0f));
   }
 
 }

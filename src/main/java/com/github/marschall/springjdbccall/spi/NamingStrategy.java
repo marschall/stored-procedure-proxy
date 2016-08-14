@@ -1,5 +1,6 @@
 package com.github.marschall.springjdbccall.spi;
 
+@FunctionalInterface
 public interface NamingStrategy {
 
   public static NamingStrategy IDENTITY = (s) -> s;

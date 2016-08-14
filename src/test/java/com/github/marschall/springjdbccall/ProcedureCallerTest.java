@@ -1,6 +1,5 @@
 package com.github.marschall.springjdbccall;
 
-import static com.github.marschall.springjdbccall.ProcedureCallerFactory.ProcedureCaller.*;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;

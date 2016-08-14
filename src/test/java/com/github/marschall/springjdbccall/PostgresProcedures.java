@@ -10,9 +10,9 @@ public interface PostgresProcedures {
   String browserVersion(String name,  String version);
 
   @ProcedureName("sales_tax")
-  double salesTax(double subtotal);
+  float salesTax(float subtotal);
 
   @ProcedureName("property_tax")
-  double propertyTax(double subtotal);
+  float propertyTax(float subtotal);
 
 }
