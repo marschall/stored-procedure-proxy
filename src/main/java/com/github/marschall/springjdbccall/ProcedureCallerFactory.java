@@ -287,6 +287,7 @@ public final class ProcedureCallerFactory<T> {
 
     private String buildCallString(Method method, Object[] args) {
       String procedureName = this.extractProcedureName(method);
+      int parameterCount = args != null ? args.length : 0;
       boolean procedureHasReturnValue = procedureHasReturnValue(method);
 //      if (hasReturnValue) {
 //        if (this.hasSchemaName) {
@@ -296,9 +297,9 @@ public final class ProcedureCallerFactory<T> {
 //        }
 //      } else {
         if (this.hasSchemaName) {
-          return buildQualifiedProcedureCallString(procedureName, this.extractSchemaName(method), args.length);
+          return buildQualifiedProcedureCallString(procedureName, this.extractSchemaName(method), parameterCount);
         } else {
-          return buildSimpleProcudureCallString(procedureName, args.length);
+          return buildSimpleProcudureCallString(procedureName, parameterCount);
         }
 //      }
     }
@@ -450,24 +451,36 @@ public final class ProcedureCallerFactory<T> {
     }
 
     private void bindParametersByIndex(CallableStatement statement, Object[] args) throws SQLException {
+      if (args == null) {
+        return;
+      }
       for (int i = 0; i < args.length; i++) {
         statement.setObject(i + 1, args[i]);
       }
     }
 
     private void bindParametersByIndexAndType(CallableStatement statement, Object[] args, int[] types) throws SQLException {
+      if (args == null) {
+        return;
+      }
       for (int i = 0; i < args.length; i++) {
         statement.setObject(i + 1, args[i], types[i]);
       }
     }
 
     private void bindParametersByName(CallableStatement statement, String[] names, Object[] args) throws SQLException {
+      if (args == null) {
+        return;
+      }
       for (int i = 0; i < args.length; i++) {
         statement.setObject(names[i], args[i]);
       }
     }
 
     private void bindParametersByNameAndType(CallableStatement statement, String[] names, Object[] args, int[] types) throws SQLException {
+      if (args == null) {
+        return;
+      }
       for (int i = 0; i < args.length; i++) {
         statement.setObject(names[i], args[i], types[i]);
       }

@@ -1,6 +1,7 @@
 -- https://www.postgresql.org/docs/9.5/static/plpgsql-declarations.html
 
-CREATE OR REPLACE FUNCTION sales_tax(subtotal real) RETURNS real AS $$
+CREATE OR REPLACE FUNCTION sales_tax(subtotal real)
+RETURNS real AS $$
 BEGIN
     RETURN subtotal * 0.06;
 END;
@@ -23,6 +24,13 @@ BEGIN
         RETURN v_name;
     END IF;
     RETURN v_name || '/' || v_version;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION raise_exception()
+RETURNS void AS $$
+BEGIN
+    RAISE SQLSTATE '22000';
 END;
 $$ LANGUAGE plpgsql;
 

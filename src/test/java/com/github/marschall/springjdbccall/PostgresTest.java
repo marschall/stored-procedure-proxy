@@ -3,6 +3,8 @@ package com.github.marschall.springjdbccall;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -15,9 +17,11 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.postgresql.util.PSQLException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.support.EncodedResource;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.datasource.init.DatabasePopulator;
 import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
 import org.springframework.test.context.ContextConfiguration;
@@ -89,6 +93,32 @@ public class PostgresTest {
   @Test
   public void propertyTax() {
     assertEquals(0.01f, 6.0f, this.procedures.propertyTax(100.0f));
+  }
+
+  @Test
+  public void raiseCheckedException() {
+    try {
+      this.procedures.raiseCheckedException();
+      fail("should raise exception");
+    } catch (SQLException e) {
+      assertTrue(e instanceof PSQLException);
+      // FIXME org.postgresql.util.PSQLException.PSQLException(ServerErrorMessage)
+//      assertEquals(22000, e.getErrorCode());
+      assertEquals("22000", e.getSQLState());
+    }
+  }
+
+  @Test
+  public void raiseUncheckedException() {
+    try {
+      this.procedures.raiseUncheckedException();
+      fail("should raise exception");
+    } catch (DataAccessException e) {
+      Throwable cause = e.getCause();
+      assertTrue(cause instanceof PSQLException);
+//      assertEquals(22000, ((SQLException) cause).getErrorCode());
+      assertEquals("22000", ((SQLException) cause).getSQLState());
+    }
   }
 
 }

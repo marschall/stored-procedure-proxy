@@ -1,5 +1,7 @@
 package com.github.marschall.springjdbccall;
 
+import java.sql.SQLException;
+
 import com.github.marschall.springjdbccall.annotations.ProcedureName;
 import com.github.marschall.springjdbccall.annotations.ReturnValue;
 
@@ -14,5 +16,11 @@ public interface PostgresProcedures {
 
   @ProcedureName("property_tax")
   float propertyTax(float subtotal);
+
+  @ProcedureName("raise_exception")
+  void raiseCheckedException() throws SQLException;
+
+  @ProcedureName("raise_exception")
+  void raiseUncheckedException();
 
 }
