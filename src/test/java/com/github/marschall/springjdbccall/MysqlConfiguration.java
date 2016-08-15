@@ -15,9 +15,10 @@ public class MysqlConfiguration {
     dataSource.setSuppressClose(true);
     String userName = System.getProperty("user.name");
     String database = userName;
-    dataSource.setUrl("jdbc:mysql:///" + database);
+    // https://dev.mysql.com/doc/connector-j/6.0/en/connector-j-reference-configuration-properties.html
+    dataSource.setUrl("jdbc:mysql://localhost:3306/" + database);
     dataSource.setUsername(userName);
-    dataSource.setPassword("");
+    dataSource.setPassword(userName);
     return dataSource;
   }
 

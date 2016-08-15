@@ -47,8 +47,6 @@ public class PostgresTest {
     this.procedures = ProcedureCallerFactory.of(PostgresProcedures.class, this.dataSource)
             .build();
 
-    Object x = int.class;
-
     EncodedResource resource = new EncodedResource(new ClassPathResource("postgres_procedures.sql"), UTF_8);
     DatabasePopulator populator = new PostgresDatabasePopulator("LANGUAGE plpgsql;", resource);
     DatabasePopulatorUtils.execute(populator, this.dataSource);
