@@ -178,7 +178,39 @@ public final class ProcedureCallerFactory<T> {
       } catch (SQLException e) {
         throw translate(e, method, callString);
       }
-      return returnType.cast(returnValue);
+      return checkReturnType(returnType, returnValue);
+    }
+
+    private static Object checkReturnType(Class<?> returnType, Object returnValue) {
+      if (!returnType.isPrimitive()) {
+        return returnType.cast(returnValue);
+      } else if (returnType == void.class) {
+        return null;
+      } else {
+        return getWrapperClass(returnType).cast(returnValue);
+      }
+    }
+
+    private static Class<?> getWrapperClass(Class<?> primitiveClass) {
+      if (primitiveClass == int.class) {
+        return Integer.class;
+      } else if (primitiveClass == long.class) {
+        return Long.class;
+      } else if (primitiveClass == float.class) {
+        return Float.class;
+      } else if (primitiveClass == double.class) {
+        return Double.class;
+      } else if (primitiveClass == byte.class) {
+        return Byte.class;
+      } else if (primitiveClass == short.class) {
+        return Short.class;
+      } else if (primitiveClass == char.class) {
+        return Character.class;
+      } else if (primitiveClass == boolean.class) {
+        return Boolean.class;
+      } else {
+        throw new IllegalArgumentException("unknown primitive type: " + primitiveClass);
+      }
     }
 
     private Exception translate(SQLException exception, Method method, String callString) {
