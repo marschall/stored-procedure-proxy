@@ -349,16 +349,16 @@ public final class ProcedureCallerFactory<T> {
       int parameterCount = getParameterCount(args);
       String procedureName = this.extractProcedureName(method);
       String schemaName = this.hasSchemaName(method) ? this.extractSchemaName(method) : null;
-      boolean procedureHasReturnValue = procedureHasReturnValue(method);
-      String callString = buildCallString(schemaName, procedureName, parameterCount, procedureHasReturnValue);
+      boolean isFunction = procedureHasReturnValue(method);
+      Class<?> methodReturnType = method.getReturnType();
+      boolean methodHasReturnValue = methodReturnType != void.class;
+      String callString = buildCallString(schemaName, procedureName, parameterCount, isFunction, !methodHasReturnValue);
       int[] inParameterTypes = this.isExtractParameterTypes() ? this.extractParameterTypes(method) : null;
       String[] inParameterNames = this.isExtractParameterNames() ? extractParameterNames(method) : null;
 
       int outParameterIndex;
       int outParameterType;
       String outParameterName;
-      Class<?> methodReturnType = method.getReturnType();
-      boolean methodHasReturnValue = methodReturnType != void.class;
       if (methodHasReturnValue) {
         OutParameter outParameter = method.getAnnotation(OutParameter.class);
         ReturnValue returnValue = method.getAnnotation(ReturnValue.class);
@@ -393,7 +393,7 @@ public final class ProcedureCallerFactory<T> {
       }
 
       int[] inParameterIndices;
-      if (!procedureHasReturnValue && outParameterIndex == parameterCount) {
+      if (!isFunction && outParameterIndex == parameterCount) {
         // we have an out parameter and it's the last parameter
         inParameterIndices = buildInParameterIndices(parameterCount);
       } else {
@@ -430,11 +430,11 @@ public final class ProcedureCallerFactory<T> {
       return args != null ? args.length : 0;
     }
 
-    private static String buildCallString(String schemaName, String procedureName, int parameterCount, boolean hasReturnValue) {
-      if (hasReturnValue) {
+    private static String buildCallString(String schemaName, String procedureName, int parameterCount, boolean isFunction, boolean isVoid) {
+      if (isFunction) {
         return buildQualifiedFunctionCallString(schemaName, procedureName, parameterCount);
       } else {
-        return buildQualifiedProcedureCallString(schemaName, procedureName, parameterCount + 1);
+        return buildQualifiedProcedureCallString(schemaName, procedureName, isVoid ? parameterCount : parameterCount + 1);
       }
     }
 
