@@ -12,6 +12,6 @@ import java.lang.annotation.Target;
 @Target(TYPE)
 public @interface SchemaName {
 
-  String value();
+  String value() default "";
 
 }

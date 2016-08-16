@@ -11,75 +11,71 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.github.marschall.springjdbccall.spi.TypeMapper;
 
-enum DefaultTypeMapper implements TypeMapper {
-  INSTANCE;
+final class DefaultTypeMapper implements TypeMapper {
+
+  static final TypeMapper INSTANCE = new DefaultTypeMapper();
+
+  private final Map<Class<?>, Integer> typeMap;
+
+  DefaultTypeMapper() {
+    this.typeMap = new HashMap<>();
+    this.typeMap.put(String.class, Types.VARCHAR);
+
+    // char is not mapped
+
+    // primitive integers
+    this.typeMap.put(Integer.class, Types.INTEGER);
+    this.typeMap.put(int.class, Types.INTEGER);
+    this.typeMap.put(Long.class, Types.BIGINT);
+    this.typeMap.put(long.class, Types.BIGINT);
+    this.typeMap.put(Short.class, Types.SMALLINT);
+    this.typeMap.put(short.class, Types.SMALLINT);
+    this.typeMap.put(Byte.class, Types.TINYINT);
+    this.typeMap.put(byte.class, Types.TINYINT);
+    // arbitrary precision numbers
+    // should be an alias for DECIMAL but Oracle treats DECIMAL as double
+    this.typeMap.put(BigDecimal.class, Types.NUMERIC);
+    this.typeMap.put(BigInteger.class, Types.NUMERIC);
+
+    // floating points
+    this.typeMap.put(float.class, Types.REAL);
+    this.typeMap.put(double.class, Types.DOUBLE);
+    this.typeMap.put(Float.class, Types.REAL);
+    this.typeMap.put(Double.class, Types.DOUBLE);
+
+    // LOBs
+    this.typeMap.put(Blob.class, Types.BLOB);
+    this.typeMap.put(Clob.class, Types.CLOB);
+
+    // java 8 date time
+    this.typeMap.put(LocalDate.class, Types.DATE);
+    this.typeMap.put(LocalTime.class, Types.TIME);
+    this.typeMap.put(LocalDateTime.class, Types.TIMESTAMP);
+    this.typeMap.put(OffsetTime.class, Types.TIME_WITH_TIMEZONE);
+    this.typeMap.put(OffsetDateTime.class, Types.TIMESTAMP_WITH_TIMEZONE);
+
+    // old date time
+    this.typeMap.put(java.sql.Date.class, Types.DATE);
+    this.typeMap.put(java.sql.Time.class, Types.TIME);
+    this.typeMap.put(java.sql.Timestamp.class, Types.TIMESTAMP);
+
+    this.typeMap.put(SQLXML.class, Types.SQLXML);
+    // boolean
+    this.typeMap.put(Boolean.class, Types.BOOLEAN);
+  }
 
   @Override
   public int mapToSqlType(Class<?> javaType) {
-    // no need to handle primitives since everything is boxed anyway
-    if (javaType == String.class) {
-      return Types.VARCHAR;
-
-    // primitive integers
-    } else if (javaType == Integer.class) {
-      return Types.INTEGER;
-    } else if (javaType == Long.class) {
-      return Types.BIGINT;
-    } else if (javaType == Short.class) {
-      return Types.SMALLINT;
-    } else if (javaType == Byte.class) {
-
-    // arbitrary precision numbers
-      return Types.TINYINT;
-    } else if (javaType == BigDecimal.class) {
-      // should be an alias for DECIMAL but Oracle treats DECIMAL as double
-      return Types.NUMERIC;
-    } else if (javaType == BigInteger.class) {
-      return Types.NUMERIC;
-
-    // floating points
-    } else if (javaType == Float.class) {
-      return Types.REAL;
-    } else if (javaType == Double.class) {
-      return Types.DOUBLE;
-
-    // LOBs
-    } else if (javaType == Blob.class) {
-      return Types.BLOB;
-    } else if (javaType == Clob.class) {
-      return Types.CLOB;
-
-    // java 8 date time
-    } else if (javaType == LocalDate.class) {
-      return Types.DATE;
-    } else if (javaType == LocalTime.class) {
-      return Types.TIME;
-    } else if (javaType == LocalDateTime.class) {
-      return Types.TIMESTAMP;
-    } else if (javaType == OffsetTime.class) {
-      return Types.TIME_WITH_TIMEZONE;
-    } else if (javaType == OffsetDateTime.class) {
-      return Types.TIMESTAMP_WITH_TIMEZONE;
-
-    // old date time
-    } else if (javaType == java.sql.Date.class) {
-      return Types.DATE;
-    } else if (javaType == java.sql.Time.class) {
-      return Types.TIME;
-    } else if (javaType == java.sql.Timestamp.class) {
-      return Types.TIMESTAMP;
-
-    } else if (javaType == SQLXML.class) {
-      return Types.SQLXML;
-    // boolean
-    } else if (javaType == Boolean.class) {
-      return Types.BOOLEAN;
+    Integer sqlType = this.typeMap.get(javaType);
+    if (sqlType == null) {
+      throw new IllegalArgumentException("unknown type: " + javaType);
     }
-
-    throw new IllegalArgumentException("unknown type: " + javaType);
+    return sqlType;
   }
 
 
