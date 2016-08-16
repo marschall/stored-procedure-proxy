@@ -12,6 +12,8 @@ Proxies through which to call stored procedures.
 -- supports binding by parameter names
 -- parameter names can be read from [source](https://docs.oracle.com/javase/tutorial/reflect/member/methodparameterreflection.html) (if you compile with `-parameters`)
 - integrates with Spring but does not require Spring
+- supports primitive types
+- supports Java 8 Date and Time API
 
 Not supported
 
@@ -29,4 +31,10 @@ Exception Translation
 
 
 https://blog.jooq.org/tag/stored-procedures/
+
+Caveats
+-------
+- no support for `java.util.Date` or `java.util.Calendar`, because JDBC doesn't support it
+- no support for `BigInteger`, because JDBC doesn't support it
+
 
