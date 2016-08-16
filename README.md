@@ -4,17 +4,17 @@ Stored Procedure Proxy
 Proxies through which to call stored procedures.
 
 - works with Oracle packages
-- works with Oracle functions
+- works with functions as well as procedures with out parameters
 - avoids JDBC metadata
--- works if the database user is not the schema owner
--- works if there are hundreds of visible schemas
+ - works if the database user is not the schema owner
+- works if there are hundreds of visible schemas
 - names for schemas, procedures and parameters can be supplied explicitly or derived if you have a naming convention
--- supports binding by parameter names
--- parameter names can be read from [source](https://docs.oracle.com/javase/tutorial/reflect/member/methodparameterreflection.html) (if you compile with `-parameters`)
+ - supports binding by parameter names
+ - parameter names can be read from [source](https://docs.oracle.com/javase/tutorial/reflect/member/methodparameterreflection.html) (if you compile with `-parameters`)
 - integrates with Spring but does not require Spring
 - supports primitive types
 - supports Java 8 Date and Time API
--- if the driver supports it
+ - if the driver supports it
 
 Not supported
 
@@ -37,6 +37,7 @@ Caveats
 -------
 - no support for `java.util.Date` or `java.util.Calendar`, because JDBC doesn't support it
 - no support for `BigInteger`, because JDBC doesn't support it
-- all H2 procedures must be annotated with `@ReturnValue` because H2 does not support OUT paramters
+- all H2 procedures must be annotated with `@ReturnValue` because H2 does not support OUT parameters
+- uses [@Annotations](http://www.annotatiomania.com)
 
 
