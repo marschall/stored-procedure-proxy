@@ -32,6 +32,6 @@ public @interface OutParameter {
    * @return
    * @see java.sql.Types
    */
-  int type() default -1;
+  int type() default Integer.MIN_VALUE;
 
 }

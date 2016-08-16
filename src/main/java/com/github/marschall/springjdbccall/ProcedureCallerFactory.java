@@ -176,13 +176,13 @@ public final class ProcedureCallerFactory<T> {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-      Class<?> returnType = method.getReturnType();
+      Class<?> returnType = getBoxedClass(method.getReturnType());
       CallInfo callInfo = this.buildCallInfo(method, args);
       Object returnValue;
       try (Connection connection = this.dataSource.getConnection()) {
         try (CallableStatement statement = this.prepareCall(connection, callInfo)) {
           bindParameters(args, callInfo, statement);
-          returnValue = this.execute(statement, returnType);
+          returnValue = this.execute(statement, callInfo, returnType);
         }
       } catch (SQLException e) {
         throw translate(e, method, callInfo);
@@ -190,8 +190,7 @@ public final class ProcedureCallerFactory<T> {
       return checkReturnType(returnType, returnValue);
     }
 
-    private void bindParameters(Object[] args, CallInfo callInfo,
-            CallableStatement statement) throws SQLException {
+    private void bindParameters(Object[] args, CallInfo callInfo, CallableStatement statement) throws SQLException {
       this.bindInParameters(statement, callInfo, args);
       if (callInfo.hasOutParamter()) {
         this.bindOutParameter(statement, callInfo);
@@ -199,12 +198,20 @@ public final class ProcedureCallerFactory<T> {
     }
 
     private static Object checkReturnType(Class<?> returnType, Object returnValue) {
-      if (!returnType.isPrimitive()) {
-        return returnType.cast(returnValue);
-      } else if (returnType == void.class) {
+      if (returnType == void.class) {
         return null;
+      }
+      return returnType.cast(returnValue);
+    }
+
+    private static Class<?> getBoxedClass(Class<?> clazz) {
+      if (clazz == void.class) {
+        return clazz;
+      }
+      if (!clazz.isPrimitive()) {
+        return clazz;
       } else {
-        return getWrapperClass(returnType).cast(returnValue);
+        return getWrapperClass(clazz);
       }
     }
 
@@ -238,7 +245,7 @@ public final class ProcedureCallerFactory<T> {
       }
     }
 
-    private Object execute(CallableStatement statement, Class<?> returnType) throws SQLException {
+    private Object execute(CallableStatement statement, CallInfo callInfo, Class<?> returnType) throws SQLException {
       if (returnType == void.class) {
         return executeVoidMethod(statement);
       } else {
@@ -246,19 +253,25 @@ public final class ProcedureCallerFactory<T> {
           // TODO Auto-generated method stub
           throw new IllegalArgumentException("collections not yet implemented");
         }
-        return executeScalarMethod(statement);
+        return executeScalarMethod(statement, callInfo, returnType);
       }
     }
 
-    private Object executeScalarMethod(CallableStatement statement) throws SQLException {
+    private Object executeScalarMethod(CallableStatement statement, CallInfo callInfo, Class<?> returnType) throws SQLException {
       int count = 0;
       Object last = null;
-      try (ResultSet rs = statement.executeQuery()) {
-        while (rs.next()) {
-          last = rs.getObject(1);
-          count += 1;
-        }
-      }
+      boolean hasResultSet = statement.execute();
+
+      // TODO bind by name
+//      last = statement.getObject(callInfo.outParameterIndex, returnType);
+      last = statement.getObject(callInfo.outParameterIndex);
+      count = 1;
+//      try (ResultSet rs = statement.executeQuery()) {
+//        while (rs.next()) {
+//          last = rs.getObject(1);
+//          count += 1;
+//        }
+//      }
       if (count != 1) {
         ProcedureCallerFactory.newIncorrectResultSizeException(1, count);
       }
@@ -332,7 +345,7 @@ public final class ProcedureCallerFactory<T> {
       String procedureName = this.extractProcedureName(method);
       String schemaName = this.hasSchemaName(method) ? this.extractSchemaName(method) : null;
       boolean procedureHasReturnValue = procedureHasReturnValue(method);
-      String callString = buildCallString(procedureName, schemaName, parameterCount, procedureHasReturnValue);
+      String callString = buildCallString(schemaName, procedureName, parameterCount, procedureHasReturnValue);
       int[] inParameterTypes = this.isExtractParameterTypes() ? this.extractParameterTypes(method) : null;
       String[] inParameterNames = this.isExtractParameterNames() ? extractParameterNames(method) : null;
 
@@ -343,24 +356,79 @@ public final class ProcedureCallerFactory<T> {
       boolean methodHasReturnValue = methodReturnType != void.class;
       if (methodHasReturnValue) {
         OutParameter outParameter = method.getAnnotation(OutParameter.class);
-        ReturnValue annotation = method.getAnnotation(ReturnValue.class);
+        ReturnValue returnValue = method.getAnnotation(ReturnValue.class);
+        if (outParameter != null) {
+          if (returnValue != null) {
+            throw new IllegalArgumentException("method " + method + " needs to be annotated with only one of" + OutParameter.class + " or " + ReturnValue.class);
+          }
+          outParameterName = outParameter.name();
+          outParameterIndex = outParameter.index();
+          outParameterType = outParameter.type();
+        } else if (returnValue != null) {
+          outParameterName = returnValue.name();
+          outParameterIndex = 1;
+          outParameterType = returnValue.type();
+        } else {
+          throw new IllegalArgumentException("method " + method + " needs to be annotated with " + OutParameter.class + " or " + ReturnValue.class);
+        }
+        // correct annotation default values
+        if (outParameterName.isEmpty()) {
+          outParameterName = null;
+        }
+        if (outParameterIndex == -1) {
+          outParameterIndex = parameterCount + 1;
+        }
+        if (outParameterType == Integer.MIN_VALUE) {
+          outParameterType = this.typeMapper.mapToSqlType(methodReturnType);
+        }
       } else {
         outParameterIndex = -1;
         outParameterType = 0;
         outParameterName = null;
       }
 
+      int[] inParameterIndices;
+      if (!procedureHasReturnValue || outParameterIndex == parameterCount) {
+        inParameterIndices = buildInParameterIndices(parameterCount);
+      } else {
+        inParameterIndices = buildInParameterIndices(parameterCount, outParameterIndex);
+      }
+
+      return new CallInfo(procedureName, callString,
+              outParameterIndex, outParameterType, outParameterName,
+              inParameterIndices, inParameterTypes, inParameterNames);
+
+    }
+
+    static int[] buildInParameterIndices(int parameterCount) {
+      int[] indices = new int[parameterCount];
+      for (int i = 0; i < indices.length; i++) {
+        indices[i] = i + 1;
+      }
+      return indices;
+    }
+
+    static int[] buildInParameterIndices(int parameterCount, int outParameterIndex) {
+      int[] indices = new int[parameterCount];
+      for (int i = 0; i < indices.length; i++) {
+        if (outParameterIndex > i + 1) {
+          indices[i] = i + 1;
+        } else {
+          indices[i] = i + 2;
+        }
+      }
+      return indices;
     }
 
     private static int getParameterCount(Object[] args) {
       return args != null ? args.length : 0;
     }
 
-    private static String buildCallString(String procedureName, String schemaName, int parameterCount, boolean hasReturnValue) {
+    private static String buildCallString(String schemaName, String procedureName, int parameterCount, boolean hasReturnValue) {
       if (hasReturnValue) {
-        return buildQualifiedFunctionCallString(procedureName, schemaName, parameterCount);
+        return buildQualifiedFunctionCallString(schemaName, procedureName, parameterCount);
       } else {
-        return buildQualifiedProcedureCallString(procedureName, schemaName, parameterCount);
+        return buildQualifiedProcedureCallString(schemaName, procedureName, parameterCount);
       }
     }
 
@@ -556,14 +624,31 @@ public final class ProcedureCallerFactory<T> {
 
   static final class CallInfo {
 
-    String procedureName;
-    String callString;
-    int outParameterIndex;
-    int outParameterType;
-    String outParameterName;
-    int[] inParameterTypes;
-    int[] inParameterIndices;
-    String[] inParameterNames;
+    final String procedureName;
+    final String callString;
+    final int outParameterIndex;
+    final int outParameterType;
+    final String outParameterName;
+    final int[] inParameterIndices;
+    final int[] inParameterTypes;
+    final String[] inParameterNames;
+
+
+    CallInfo(String procedureName, String callString, int outParameterIndex,
+            int outParameterType, String outParameterName,
+            int[] inParameterIndices, int[] inParameterTypes,
+            String[] inParameterNames) {
+      this.procedureName = procedureName;
+      this.callString = callString;
+      this.outParameterIndex = outParameterIndex;
+      this.outParameterType = outParameterType;
+      this.outParameterName = outParameterName;
+      this.inParameterIndices = inParameterIndices;
+      this.inParameterTypes = inParameterTypes;
+      this.inParameterNames = inParameterNames;
+    }
+
+
 
     boolean hasOutParamter() {
       return this.outParameterIndex != -1;

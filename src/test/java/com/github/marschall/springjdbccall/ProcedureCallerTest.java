@@ -1,5 +1,6 @@
 package com.github.marschall.springjdbccall;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
@@ -17,9 +18,9 @@ public class ProcedureCallerTest {
 
   @Test
   public void buildSimpleProcudureCallString() {
-    assertEquals("{call n()}", ProcedureCaller.buildQualifiedProcedureCallString("n", null, 0));
-    assertEquals("{call n(?)}", ProcedureCaller.buildQualifiedProcedureCallString("n", null, 1));
-    assertEquals("{call n(?,?)}", ProcedureCaller.buildQualifiedProcedureCallString("n", null, 2));
+    assertEquals("{call n()}", ProcedureCaller.buildQualifiedProcedureCallString(null, "n", 0));
+    assertEquals("{call n(?)}", ProcedureCaller.buildQualifiedProcedureCallString(null, "n", 1));
+    assertEquals("{call n(?,?)}", ProcedureCaller.buildQualifiedProcedureCallString(null, "n", 2));
   }
 
   @Test
@@ -31,9 +32,24 @@ public class ProcedureCallerTest {
 
   @Test
   public void buildSimpleFunctionCallString() {
-    assertEquals("{ ? = call n()}", ProcedureCaller.buildQualifiedFunctionCallString("n", null, 0));
-    assertEquals("{ ? = call n(?)}", ProcedureCaller.buildQualifiedFunctionCallString("n", null, 1));
-    assertEquals("{ ? = call n(?,?)}", ProcedureCaller.buildQualifiedFunctionCallString("n", null, 2));
+    assertEquals("{ ? = call n()}", ProcedureCaller.buildQualifiedFunctionCallString(null, "n", 0));
+    assertEquals("{ ? = call n(?)}", ProcedureCaller.buildQualifiedFunctionCallString(null, "n", 1));
+    assertEquals("{ ? = call n(?,?)}", ProcedureCaller.buildQualifiedFunctionCallString(null, "n", 2));
+  }
+
+  @Test
+  public void buildInParameterIndicesNoOut() {
+    assertArrayEquals(new int[] {}, ProcedureCaller.buildInParameterIndices(0));
+    assertArrayEquals(new int[] {1}, ProcedureCaller.buildInParameterIndices(1));
+    assertArrayEquals(new int[] {1, 2}, ProcedureCaller.buildInParameterIndices(2));
+  }
+
+  @Test
+  public void buildInParameterIndicesWithOut() {
+    assertArrayEquals(new int[] {}, ProcedureCaller.buildInParameterIndices(0, 1));
+    assertArrayEquals(new int[] {2, 3, 4}, ProcedureCaller.buildInParameterIndices(3, 1));
+    assertArrayEquals(new int[] {1, 3, 4}, ProcedureCaller.buildInParameterIndices(3, 2));
+    assertArrayEquals(new int[] {1, 2, 4}, ProcedureCaller.buildInParameterIndices(3, 3));
   }
 
 }
