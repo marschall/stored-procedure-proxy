@@ -14,6 +14,7 @@ Proxies through which to call stored procedures.
 - integrates with Spring but does not require Spring
 - supports primitive types
 - supports Java 8 Date and Time API
+-- if the driver supports it
 
 Not supported
 

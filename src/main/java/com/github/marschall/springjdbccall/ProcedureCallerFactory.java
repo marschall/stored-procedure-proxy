@@ -285,46 +285,54 @@ public final class ProcedureCallerFactory<T> {
     }
 
     private Object executeScalarMethod(CallableStatement statement, CallInfo callInfo, Class<?> returnType) throws SQLException {
-      int count = 0;
-      Object last = null;
+      // REVIEW for functions does retrieving the value by name make sense?
       boolean hasResultSet = statement.execute();
       if (hasResultSet) {
-        // hack for H2 which doesn't have out paramters
-        try (ResultSet rs = statement.executeQuery()) {
-          while (rs.next()) {
-            if (this.isUseParameterNames()) {
-//              last = rs.getObject(callInfo.outParameterName, returnType);
-              // H2 supports #getObject(String, Class) but always returns null
-              last = rs.getObject(callInfo.outParameterName);
-            } else {
-//              last = rs.getObject(1, returnType);
-              // H2 supports #getObject(int, Class) but always returns null
-              last = rs.getObject(1);
-            }
-            count += 1;
-          }
-        }
+        return readFromResultSet(statement, callInfo);
       } else {
-        try {
-          if (this.isUseParameterNames()) {
-            last = statement.getObject(callInfo.outParameterName, returnType);
-          } else {
-            last = statement.getObject(callInfo.outParameterIndex, returnType);
-          }
-        } catch (SQLFeatureNotSupportedException e) {
-          // we need to pass the class for Java 8 Date Time support
-          // however the Postgres JDBC driver does not support this
-          // so lets try again and hope it works this time
-          if (this.isUseParameterNames()) {
-            last = statement.getObject(callInfo.outParameterName);
-          } else {
-            last = statement.getObject(callInfo.outParameterIndex);
-          }
-        }
-        count = 1;
+        return readFromStatement(statement, callInfo, returnType);
       }
-      if (count != 1) {
-        ProcedureCallerFactory.newIncorrectResultSizeException(1, count);
+    }
+
+    private Object readFromStatement(CallableStatement statement, CallInfo callInfo, Class<?> returnType) throws SQLException {
+      try {
+        if (this.isUseParameterNames()) {
+          return statement.getObject(callInfo.outParameterName, returnType);
+        } else {
+          return statement.getObject(callInfo.outParameterIndex, returnType);
+        }
+      } catch (SQLFeatureNotSupportedException e) {
+        // we need to pass the class for Java 8 Date Time support
+        // however the Postgres JDBC driver does not support this
+        // so lets try again and hope it works this time
+        if (this.isUseParameterNames()) {
+          return statement.getObject(callInfo.outParameterName);
+        } else {
+          return statement.getObject(callInfo.outParameterIndex);
+        }
+      }
+    }
+
+    private Object readFromResultSet(CallableStatement statement, CallInfo callInfo) throws SQLException {
+      Object last = null;
+      int count = 0;
+      // hack for H2 which doesn't have out paramters
+      try (ResultSet rs = statement.executeQuery()) {
+        while (rs.next()) {
+          if (this.isUseParameterNames()) {
+//              last = rs.getObject(callInfo.outParameterName, returnType);
+            // H2 supports #getObject(String, Class) but always returns null
+            last = rs.getObject(callInfo.outParameterName);
+          } else {
+//              last = rs.getObject(1, returnType);
+            // H2 supports #getObject(int, Class) but always returns null
+            last = rs.getObject(1);
+          }
+          count += 1;
+        }
+        if (count != 1) {
+          ProcedureCallerFactory.newIncorrectResultSizeException(1, count);
+        }
       }
       return last;
     }
