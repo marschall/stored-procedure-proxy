@@ -23,7 +23,7 @@ public @interface ReturnValue {
    * @return
    * @see java.sql.Types
    */
-  int type() default -1;
+  int type() default Integer.MIN_VALUE;
 
   String name() default "";
 

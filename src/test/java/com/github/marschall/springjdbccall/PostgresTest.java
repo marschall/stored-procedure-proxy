@@ -102,8 +102,6 @@ public class PostgresTest {
       fail("should raise exception");
     } catch (SQLException e) {
       assertTrue(e instanceof PSQLException);
-      // FIXME org.postgresql.util.PSQLException.PSQLException(ServerErrorMessage)
-//      assertEquals(22000, e.getErrorCode());
       assertEquals("22000", e.getSQLState());
     }
   }
@@ -116,7 +114,6 @@ public class PostgresTest {
     } catch (DataAccessException e) {
       Throwable cause = e.getCause();
       assertTrue(cause instanceof PSQLException);
-//      assertEquals(22000, ((SQLException) cause).getErrorCode());
       assertEquals("22000", ((SQLException) cause).getSQLState());
     }
   }

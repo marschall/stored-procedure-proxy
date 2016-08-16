@@ -37,12 +37,12 @@ public class MysqlTest {
 
   @Test
   public void helloFunction() {
-    assertEquals("Hello Monty!", this.procedures.helloFunction("Monty"));
+    assertEquals("Hello, Monty!", this.procedures.helloFunction("Monty"));
   }
 
   @Test
   public void helloProcedure() {
-    assertEquals("Hello Monty!", this.procedures.helloProcedure("Monty"));
+    assertEquals("Hello, Monty!", this.procedures.helloProcedure("Monty"));
   }
 
 }

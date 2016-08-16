@@ -8,13 +8,13 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Types;
 import java.util.Collection;
 import java.util.Objects;
 
 import javax.sql.DataSource;
 
-import com.github.marschall.springjdbccall.ProcedureCallerFactory.CallInfo;
 import com.github.marschall.springjdbccall.annotations.OutParameter;
 import com.github.marschall.springjdbccall.annotations.ParameterName;
 import com.github.marschall.springjdbccall.annotations.ParameterType;
@@ -263,8 +263,13 @@ public final class ProcedureCallerFactory<T> {
       boolean hasResultSet = statement.execute();
 
       // TODO bind by name
-//      last = statement.getObject(callInfo.outParameterIndex, returnType);
-      last = statement.getObject(callInfo.outParameterIndex);
+      try {
+        last = statement.getObject(callInfo.outParameterIndex, returnType);
+      } catch (SQLFeatureNotSupportedException e) {
+        // we need to pass the class for Java 8 Date Time support
+        // however the Postgres JDBC driver does not (yet) support this
+        last = statement.getObject(callInfo.outParameterIndex);
+      }
       count = 1;
 //      try (ResultSet rs = statement.executeQuery()) {
 //        while (rs.next()) {
@@ -388,7 +393,8 @@ public final class ProcedureCallerFactory<T> {
       }
 
       int[] inParameterIndices;
-      if (!procedureHasReturnValue || outParameterIndex == parameterCount) {
+      if (!procedureHasReturnValue && outParameterIndex == parameterCount) {
+        // we have an out parameter and it's the last parameter
         inParameterIndices = buildInParameterIndices(parameterCount);
       } else {
         inParameterIndices = buildInParameterIndices(parameterCount, outParameterIndex);
@@ -428,7 +434,7 @@ public final class ProcedureCallerFactory<T> {
       if (hasReturnValue) {
         return buildQualifiedFunctionCallString(schemaName, procedureName, parameterCount);
       } else {
-        return buildQualifiedProcedureCallString(schemaName, procedureName, parameterCount);
+        return buildQualifiedProcedureCallString(schemaName, procedureName, parameterCount + 1);
       }
     }
 
