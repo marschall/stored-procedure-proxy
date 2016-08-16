@@ -337,42 +337,26 @@ public final class ProcedureCallerFactory<T> {
     }
 
     static String buildSimpleProcudureCallString(String functionName, int parameterCount) {
-      // {call RAISE_PRICE(?,?,?)}
-      StringBuilder builder = new StringBuilder(
-              6 // {call
-              + functionName.length()
-              + 1 // (
-              + Math.max(parameterCount * 2 - 1, 0) // ?,?
-              + 2 // )}
-              );
-      builder.append("{call ");
-      builder.append(functionName);
-      builder.append('(');
-      for (int i = 0; i < parameterCount; i++) {
-        if (i != 0) {
-          builder.append(',');
-        }
-        builder.append('?');
-      }
-      builder.append(")}");
-      return builder.toString();
-
+      return buildQualifiedProcedureCallString(null, functionName, parameterCount);
     }
 
     static String buildQualifiedProcedureCallString(String schemaName, String functionName, int parameterCount) {
       // {call RAISE_PRICE(?,?,?)}
-      StringBuilder builder = new StringBuilder(
-              6 // {call
-              + schemaName.length()
-              + 1 // .
-              + functionName.length()
-              + 1 // (
-              + Math.max(parameterCount * 2 - 1, 0) // ?,?
-              + 2 // )}
-              );
+      int capacity = 6; // {call
+      if (schemaName != null) {
+        capacity += schemaName.length()
+           + 1; // .
+      }
+      capacity += + functionName.length()
+        + 1 // (
+        + Math.max(parameterCount * 2 - 1, 0) // ?,?
+        + 2; // )}
+      StringBuilder builder = new StringBuilder(capacity);
       builder.append("{call ");
-      builder.append(schemaName);
-      builder.append('.');
+      if (schemaName != null) {
+        builder.append(schemaName);
+        builder.append('.');
+      }
       builder.append(functionName);
       builder.append('(');
       for (int i = 0; i < parameterCount; i++) {
@@ -496,7 +480,13 @@ public final class ProcedureCallerFactory<T> {
         return;
       }
       for (int i = 0; i < args.length; i++) {
-        statement.setObject(i + 1, args[i], types[i]);
+        Object arg = args[i];
+        int type = types[i];
+        if (arg != null) {
+          statement.setObject(i + 1, arg, type);
+        } else {
+          statement.setNull(i + 1, type);
+        }
       }
     }
 
@@ -514,7 +504,14 @@ public final class ProcedureCallerFactory<T> {
         return;
       }
       for (int i = 0; i < args.length; i++) {
-        statement.setObject(names[i], args[i], types[i]);
+        String name = names[i];
+        Object arg = args[i];
+        int type = types[i];
+        if (arg != null) {
+          statement.setObject(name, arg, type);
+        } else {
+          statement.setNull(name, type);
+        }
       }
     }
 
@@ -525,6 +522,7 @@ public final class ProcedureCallerFactory<T> {
     String functionName;
     String callString;
     int outParameterIndex;
+    int outParameterType;
     int[] types;
     String[] names;
 
