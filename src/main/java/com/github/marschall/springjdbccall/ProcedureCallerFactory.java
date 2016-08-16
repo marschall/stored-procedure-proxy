@@ -132,10 +132,37 @@ public final class ProcedureCallerFactory<T> {
     return INCORRECT_RESULT_SIZE_EXCEPTION_GENERATOR.newIncorrectResultSizeException(expectedSize, actualSize);
   }
 
+  /**
+   * Determines how parameters should be bound.
+   */
   public enum ParameterRegistration {
+
+    /**
+     * Binds by index only.
+     *
+     * @see CallableStatement#setObject(int, Object)
+     */
     INDEX_ONLY,
+
+    /**
+     * Binds by name only.
+     *
+     * @see CallableStatement#setObject(String, Object)
+     */
     NAME_ONLY,
+
+    /**
+     * Binds by index and type.
+     *
+     * @see CallableStatement#setObject(int, Object, int)
+     */
     INDEX_AND_TYPE,
+
+    /**
+     * Binds by name and type.
+     *
+     * @see CallableStatement#setObject(int, Object, int)
+     */
     NAME_AND_TYPE;
   }
 
@@ -261,26 +288,41 @@ public final class ProcedureCallerFactory<T> {
       int count = 0;
       Object last = null;
       boolean hasResultSet = statement.execute();
-      // TODO bind by name
       if (hasResultSet) {
         // hack for H2 which doesn't have out paramters
         try (ResultSet rs = statement.executeQuery()) {
           while (rs.next()) {
-            last = rs.getObject(1);
+            if (this.isUseParameterNames()) {
+//              last = rs.getObject(callInfo.outParameterName, returnType);
+              // H2 supports #getObject(String, Class) but always returns null
+              last = rs.getObject(callInfo.outParameterName);
+            } else {
+//              last = rs.getObject(1, returnType);
+              // H2 supports #getObject(int, Class) but always returns null
+              last = rs.getObject(1);
+            }
             count += 1;
           }
         }
       } else {
         try {
-          last = statement.getObject(callInfo.outParameterIndex, returnType);
+          if (this.isUseParameterNames()) {
+            last = statement.getObject(callInfo.outParameterName, returnType);
+          } else {
+            last = statement.getObject(callInfo.outParameterIndex, returnType);
+          }
         } catch (SQLFeatureNotSupportedException e) {
           // we need to pass the class for Java 8 Date Time support
-          // however the Postgres JDBC driver does not (yet) support this
-          last = statement.getObject(callInfo.outParameterIndex);
+          // however the Postgres JDBC driver does not support this
+          // so lets try again and hope it works this time
+          if (this.isUseParameterNames()) {
+            last = statement.getObject(callInfo.outParameterName);
+          } else {
+            last = statement.getObject(callInfo.outParameterIndex);
+          }
         }
         count = 1;
       }
-
       if (count != 1) {
         ProcedureCallerFactory.newIncorrectResultSizeException(1, count);
       }
@@ -288,23 +330,26 @@ public final class ProcedureCallerFactory<T> {
     }
 
     private Object executeVoidMethod(CallableStatement statement) throws SQLException {
-      int count = 0;
-      try (ResultSet rs = statement.executeQuery()) {
-        while (rs.next()) {
-          count += 1;
+      boolean hasResultSet = statement.execute();
+      if (hasResultSet) {
+        int count = 0;
+        try (ResultSet rs = statement.executeQuery()) {
+          while (rs.next()) {
+            count += 1;
+          }
         }
+        // don't check count H2 just returns NULL
       }
-      // don't check count H2 just returns NULL
       return null;
     }
 
-    private boolean isExtractParameterNames() {
+    private boolean isUseParameterNames() {
       ParameterRegistration registration = this.parameterRegistration;
       return registration == ParameterRegistration.NAME_ONLY
               || registration == ParameterRegistration.NAME_AND_TYPE;
     }
 
-    private boolean isExtractParameterTypes() {
+    private boolean isUseParameterTypes() {
       ParameterRegistration registration = this.parameterRegistration;
       return registration == ParameterRegistration.INDEX_AND_TYPE
               || registration == ParameterRegistration.NAME_AND_TYPE;
@@ -337,8 +382,7 @@ public final class ProcedureCallerFactory<T> {
         if (annotation != null) {
           type = annotation.value();
         } else {
-          // TODO basic type mapping
-          type = Types.OTHER;
+          type = this.typeMapper.mapToSqlType(parameter.getType());
         }
         types[i] = type;
       }
@@ -357,8 +401,8 @@ public final class ProcedureCallerFactory<T> {
       Class<?> methodReturnType = method.getReturnType();
       boolean methodHasReturnValue = methodReturnType != void.class;
       String callString = buildCallString(schemaName, procedureName, parameterCount, isFunction, !methodHasReturnValue);
-      int[] inParameterTypes = this.isExtractParameterTypes() ? this.extractParameterTypes(method) : null;
-      String[] inParameterNames = this.isExtractParameterNames() ? extractParameterNames(method) : null;
+      int[] inParameterTypes = this.isUseParameterTypes() ? this.extractParameterTypes(method) : null;
+      String[] inParameterNames = this.isUseParameterNames() ? extractParameterNames(method) : null;
 
       int outParameterIndex;
       int outParameterType;
@@ -535,7 +579,7 @@ public final class ProcedureCallerFactory<T> {
           return schemaName;
         }
       }
-      return this.schemaNamingStrategy.translateToDatabase(declaringClass.getName());
+      return this.schemaNamingStrategy.translateToDatabase(declaringClass.getSimpleName());
     }
 
     private void bindOutParameter(CallableStatement statement, CallInfo callInfo) throws SQLException {
@@ -585,6 +629,7 @@ public final class ProcedureCallerFactory<T> {
         return;
       }
       for (int i = 0; i < args.length; i++) {
+        // REVIEW null check?
         statement.setObject(callInfo.inParameterIndices[i], args[i]);
       }
     }
@@ -610,6 +655,7 @@ public final class ProcedureCallerFactory<T> {
         return;
       }
       for (int i = 0; i < args.length; i++) {
+        // REVIEW null check?
         statement.setObject(callInfo.inParameterNames[i], args[i]);
       }
     }
