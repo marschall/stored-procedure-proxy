@@ -18,6 +18,9 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 
+import com.github.marschall.springjdbccall.configuration.H2Configuration;
+import com.github.marschall.springjdbccall.configuration.TestConfiguration;
+import com.github.marschall.springjdbccall.procedures.H2Procedures;
 import com.github.marschall.springjdbccall.spi.NamingStrategy;
 
 @ContextConfiguration(classes = {H2Configuration.class, TestConfiguration.class})

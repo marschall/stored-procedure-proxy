@@ -1,4 +1,4 @@
-package com.github.marschall.springjdbccall;
+package com.github.marschall.springjdbccall.configuration;
 
 import javax.sql.DataSource;
 

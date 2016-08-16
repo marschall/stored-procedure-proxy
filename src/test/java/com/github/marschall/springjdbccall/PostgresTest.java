@@ -28,6 +28,10 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 
+import com.github.marschall.springjdbccall.configuration.PostgresConfiguration;
+import com.github.marschall.springjdbccall.configuration.TestConfiguration;
+import com.github.marschall.springjdbccall.procedures.PostgresProcedures;
+
 @ContextConfiguration(classes = {PostgresConfiguration.class, TestConfiguration.class})
 public class PostgresTest {
 

@@ -14,6 +14,10 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 
+import com.github.marschall.springjdbccall.configuration.MysqlConfiguration;
+import com.github.marschall.springjdbccall.configuration.TestConfiguration;
+import com.github.marschall.springjdbccall.procedures.MysqlProcedures;
+
 @Sql("classpath:mysql_procedures.sql")
 @ContextConfiguration(classes = {MysqlConfiguration.class, TestConfiguration.class})
 public class MysqlTest {

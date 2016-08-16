@@ -1,4 +1,4 @@
-package com.github.marschall.springjdbccall;
+package com.github.marschall.springjdbccall.procedures;
 
 import com.github.marschall.springjdbccall.annotations.OutParameter;
 import com.github.marschall.springjdbccall.annotations.ProcedureName;
