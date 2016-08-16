@@ -36,5 +36,6 @@ Caveats
 -------
 - no support for `java.util.Date` or `java.util.Calendar`, because JDBC doesn't support it
 - no support for `BigInteger`, because JDBC doesn't support it
+- all H2 procedures must be annotated with `@ReturnValue` because H2 does not support OUT paramters
 
 

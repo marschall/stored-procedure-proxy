@@ -261,22 +261,26 @@ public final class ProcedureCallerFactory<T> {
       int count = 0;
       Object last = null;
       boolean hasResultSet = statement.execute();
-
       // TODO bind by name
-      try {
-        last = statement.getObject(callInfo.outParameterIndex, returnType);
-      } catch (SQLFeatureNotSupportedException e) {
-        // we need to pass the class for Java 8 Date Time support
-        // however the Postgres JDBC driver does not (yet) support this
-        last = statement.getObject(callInfo.outParameterIndex);
+      if (hasResultSet) {
+        // hack for H2 which doesn't have out paramters
+        try (ResultSet rs = statement.executeQuery()) {
+          while (rs.next()) {
+            last = rs.getObject(1);
+            count += 1;
+          }
+        }
+      } else {
+        try {
+          last = statement.getObject(callInfo.outParameterIndex, returnType);
+        } catch (SQLFeatureNotSupportedException e) {
+          // we need to pass the class for Java 8 Date Time support
+          // however the Postgres JDBC driver does not (yet) support this
+          last = statement.getObject(callInfo.outParameterIndex);
+        }
+        count = 1;
       }
-      count = 1;
-//      try (ResultSet rs = statement.executeQuery()) {
-//        while (rs.next()) {
-//          last = rs.getObject(1);
-//          count += 1;
-//        }
-//      }
+
       if (count != 1) {
         ProcedureCallerFactory.newIncorrectResultSizeException(1, count);
       }
