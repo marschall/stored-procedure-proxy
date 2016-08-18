@@ -56,15 +56,6 @@ public class H2Test {
           assertEquals("pre" + input + "post", rs.getString(1));
         }
       }
-
-//      if (statement.execute()) {
-//        System.out.println(true);
-//        statement.getRe
-//      } else {
-//        System.out.println(false);
-//        statement.getUpdateCount();
-//      }
-
     }
   }
 
@@ -72,11 +63,6 @@ public class H2Test {
   public void callScalarProcedure() {
     String input = "test";
     assertEquals("pre" + input + "post", functions.stringProcedure(input));
-  }
-
-  @Test
-  public void callVoidProcedure() {
-    functions.voidProcedure("test");
   }
 
 }
