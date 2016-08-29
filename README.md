@@ -1,7 +1,12 @@
 Stored Procedure Proxy
 ======================
 
-Proxies through which to call stored procedures.
+A more convenient and type safe way to call stored procedures from Java.
+
+Allows you to define a Java interface method for every stored procedure. Then creates a dynamic instance of that interface that calls the stored procedure whenever you call the method.
+
+Features
+--------
 
 - works with Oracle packages
 - works with functions as well as procedures with out parameters
@@ -15,8 +20,10 @@ Proxies through which to call stored procedures.
 - supports primitive types
 - supports Java 8 Date and Time API
  - if the driver supports it
+- does reflection only once per method and caches the meta data for future calls
 
 Not supported
+-------------
 
  - more than one out parameter
  - in out parameters
@@ -60,5 +67,6 @@ Unsure
 - Is there a better way to avoid 
 - Should we support other collections than list?
 - Should we support a ValueExtractor without an int
+- Out parameter default last
 
 

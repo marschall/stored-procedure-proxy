@@ -27,6 +27,41 @@ import com.github.marschall.springjdbccall.annotations.SchemaName;
 import com.github.marschall.springjdbccall.spi.NamingStrategy;
 import com.github.marschall.springjdbccall.spi.TypeMapper;
 
+/**
+ * Creates instances of an interface containing stored procedure declarations.
+ * The instances will call the stored procedure.
+ *
+ * <p>This class implements the
+ * <a href="https://en.wikipedia.org/wiki/Builder_pattern">builder pattern</a>
+ * allowing you to override various defaults. If you're fine with the
+ * defaults you can create interface instances directly with
+ * {@link #build(Class, DataSource)}.</p>
+ *
+ * <p>This class is not thread safe but the instances returned by
+ * {@link #build()} and {@link #build(Class, DataSource)} are.</p>
+ *
+ * <h3>Simple Usage</h3>
+ * In the simplest case this class can be used like this:
+ * <pre><code>
+ *  DataSource dataSource = ...; // some way to get the data source, either injection or look up
+ *  Class&lt;MyProcedures&gt; inferfaceDeclaration = MyProcedures.class; // your interface containing your procedure declarations
+ *  MyProcedures procedures = ProcedureCallerFactory.build(inferfaceDeclaration, dataSource);
+ *  procedures.aProcedure("param1", "param2"); // actual procedure with actual parameters
+ * </code></pre>
+ *
+ * <h3>Advanced Usage</h3>
+ * If you want to customize the defaults you can use this class like this:
+ * <pre><code>
+ *  DataSource dataSource = ...; // some way to get the data source, either injection or look up
+ *  Class&lt;MyProcedures&gt; inferfaceDeclaration = MyProcedures.class; // your interface containing your procedure declarations
+ *  MyProcedures procedures = ProcedureCallerFactory.of(inferfaceDeclaration, dataSource)
+ *    .withParameterRegistration(ParameterRegistration.INDEX_AND_TYPE) // change one or multiple defaults
+ *    .build();
+ *  procedures.aProcedure("param1", "param2"); // actual procedure with actual parameters
+ * </code></pre>
+ *
+ * @param <T> the interface for with to build the caller
+ */
 public final class ProcedureCallerFactory<T> {
 
   private static final boolean HAS_SPRING;
@@ -86,7 +121,13 @@ public final class ProcedureCallerFactory<T> {
     }
   }
 
-
+  /**
+   * Creates a caller for the interface of stored procedures using the defaults.
+   *
+   * @param inferfaceDeclaration the interface containing the store procedure declarations
+   * @param dataSource the datasource through with to make the calls
+   * @return the interface instance
+   */
   public static <T> ProcedureCallerFactory<T> of(Class<T> inferfaceDeclaration, DataSource dataSource) {
     Objects.requireNonNull(inferfaceDeclaration);
     Objects.requireNonNull(dataSource);
@@ -96,12 +137,27 @@ public final class ProcedureCallerFactory<T> {
   public static <T> T build(Class<T> inferfaceDeclaration, DataSource dataSource) {
     return of(inferfaceDeclaration, dataSource).build();
   }
+  /**
+   * Allows you to use a custom way how parameter names are derived from Java names.
+   *
+   * <p>The given object is only applied if the parameter registration is either
+   * {@link ParameterRegistration#NAME_ONLY} or {@link ParameterRegistration#NAME_AND_TYPE}
+   * and {@link ParameterName} is not present.
+   * The given object is never applied to an out parameter.
+   * Source level parameter names are only available with you compile with
+   * <a href="https://docs.oracle.com/javase/tutorial/reflect/member/methodparameterreflection.html">-parameters</a>.</p>
+   *
+   * @param parameterNamingStrategy the naming strategy for parameters, not {@code null}
+   * @return this builder for chaining
+   */
   public ProcedureCallerFactory<T> withParameterNamingStrategy(NamingStrategy parameterNamingStrategy) {
+    Objects.requireNonNull(parameterNamingStrategy);
     this.parameterNamingStrategy = parameterNamingStrategy;
     return this;
   }
 
   public ProcedureCallerFactory<T> withProcedureNamingStrategy(NamingStrategy procedureNamingStrategy) {
+    Objects.requireNonNull(procedureNamingStrategy);
     this.procedureNamingStrategy = procedureNamingStrategy;
     return this;
   }
@@ -135,6 +191,11 @@ public final class ProcedureCallerFactory<T> {
     return this;
   }
 
+  /**
+   * Creates a caller for the interface of stored procedures using the configured options.
+   *
+   * @return the interface instance
+   */
   public T build() {
     ProcedureCaller caller = new ProcedureCaller(this.dataSource, this.parameterNamingStrategy,
             this.procedureNamingStrategy, this.schemaNamingStrategy, this.hasSchemaName,
