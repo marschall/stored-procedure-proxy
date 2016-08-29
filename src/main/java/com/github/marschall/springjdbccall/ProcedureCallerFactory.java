@@ -18,6 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.sql.DataSource;
 
+import org.springframework.jdbc.support.SQLErrorCodeSQLExceptionTranslator;
+
 import com.github.marschall.springjdbccall.annotations.OutParameter;
 import com.github.marschall.springjdbccall.annotations.ParameterName;
 import com.github.marschall.springjdbccall.annotations.ParameterType;
@@ -37,7 +39,7 @@ import com.github.marschall.springjdbccall.spi.TypeMapper;
  * defaults you can create interface instances directly with
  * {@link #build(Class, DataSource)}.</p>
  *
- * <p>This class is not thread safe but the instances returned by
+ * <p>Instances of this class are not thread safe but the instances returned by
  * {@link #build()} and {@link #build(Class, DataSource)} are.</p>
  *
  * <h3>Simple Usage</h3>
@@ -60,7 +62,7 @@ import com.github.marschall.springjdbccall.spi.TypeMapper;
  *  procedures.aProcedure("param1", "param2"); // actual procedure with actual parameters
  * </code></pre>
  *
- * @param <T> the interface for with to build the caller
+ * @param <T> the interface containing the stored procedure declarations
  */
 public final class ProcedureCallerFactory<T> {
 
@@ -122,12 +124,12 @@ public final class ProcedureCallerFactory<T> {
   }
 
   /**
-   * Creates a caller for the interface of stored procedures using the defaults.
+   * Creates a builder for the caller for the interface of stored procedures.
    *
    * @param inferfaceDeclaration the interface containing the store procedure declarations
    * @param dataSource the data source through with to make the calls
    * @param <T> the interface type containing the stored procedure declarations
-   * @return the interface instance
+   * @return the builder for the caller
    */
   public static <T> ProcedureCallerFactory<T> of(Class<T> inferfaceDeclaration, DataSource dataSource) {
     Objects.requireNonNull(inferfaceDeclaration);
@@ -135,9 +137,18 @@ public final class ProcedureCallerFactory<T> {
     return new ProcedureCallerFactory<>(inferfaceDeclaration, dataSource);
   }
 
+  /**
+   * Creates a caller for the interface of stored procedures using the defaults.
+   *
+   * @param inferfaceDeclaration the interface containing the store procedure declarations
+   * @param dataSource the data source through with to make the calls
+   * @param <T> the interface type containing the stored procedure declarations
+   * @return the interface instance
+   */
   public static <T> T build(Class<T> inferfaceDeclaration, DataSource dataSource) {
     return of(inferfaceDeclaration, dataSource).build();
   }
+
   /**
    * Allows you to use a custom way how parameter names are derived from Java names.
    *
@@ -157,6 +168,14 @@ public final class ProcedureCallerFactory<T> {
     return this;
   }
 
+  /**
+   * Allows you to use a custom way how procedure names are derived from Java names.
+   *
+   * <p>The given object is only applied if {@link ProcedureName} is not present.
+   *
+   * @param procedureNamingStrategy the naming strategy for procedures, not {@code null}
+   * @return this builder for chaining
+   */
   public ProcedureCallerFactory<T> withProcedureNamingStrategy(NamingStrategy procedureNamingStrategy) {
     Objects.requireNonNull(procedureNamingStrategy);
     this.procedureNamingStrategy = procedureNamingStrategy;
@@ -174,18 +193,46 @@ public final class ProcedureCallerFactory<T> {
     return this;
   }
 
+  /**
+   * Allows you to change the way procedure parameters are registered. The default
+   * is {@link ParameterRegistration#INDEX_ONLY}.
+   *
+   * @param parameterRegistration the parameter registration
+   * @return this builder for chaining
+   */
   public ProcedureCallerFactory<T> withParameterRegistration(ParameterRegistration parameterRegistration) {
     Objects.requireNonNull(parameterRegistration);
     this.parameterRegistration = parameterRegistration;
     return this;
   }
 
+  /**
+   * Allows you to change the way {@link SQLException}s are translated into
+   * unchecked exceptions.
+   *
+   * <p>Only applied if the method is not {@code throws SQLException}. The default
+   * if Spring is not present is to use {@link UncheckedSQLException}. The default
+   * if Spring is present is to use {@link SQLErrorCodeSQLExceptionTranslator}.</p>
+   *
+   * @param exceptionAdapter the exception adapter
+   * @return this builder for chaining
+   */
   public ProcedureCallerFactory<T> withExceptionAdapter(SQLExceptionAdapter exceptionAdapter) {
     Objects.requireNonNull(exceptionAdapter);
     this.exceptionAdapter = exceptionAdapter;
     return this;
   }
 
+  /**
+   * Allows you to change the way Java types are translated to SQL types.
+   *
+   * <p>Only applied if {@link ParameterType}, {@link OutParameter#type()} or
+   * {@link ReturnValue#type()} are not present. The default is defined in
+   * {@link TypeMapper}.</p>
+   *
+   * @param typeMapper the type mapper
+   * @return this builder for chaining
+   */
   public ProcedureCallerFactory<T> withTypeMapper(TypeMapper typeMapper) {
     Objects.requireNonNull(typeMapper);
     this.typeMapper = typeMapper;
@@ -212,7 +259,7 @@ public final class ProcedureCallerFactory<T> {
   }
 
   /**
-   * Determines how parameters should be bound.
+   * Determines how parameters should be registered.
    */
   public enum ParameterRegistration {
 

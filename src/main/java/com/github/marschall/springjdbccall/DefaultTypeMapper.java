@@ -28,7 +28,7 @@ final class DefaultTypeMapper implements TypeMapper {
 
     // char is not mapped
 
-    // primitive integers
+    // limited precision integers
     this.typeMap.put(Integer.class, Types.INTEGER);
     this.typeMap.put(int.class, Types.INTEGER);
     this.typeMap.put(Long.class, Types.BIGINT);
@@ -43,10 +43,10 @@ final class DefaultTypeMapper implements TypeMapper {
     this.typeMap.put(BigInteger.class, Types.NUMERIC);
 
     // floating points
-    this.typeMap.put(float.class, Types.REAL);
-    this.typeMap.put(double.class, Types.DOUBLE);
     this.typeMap.put(Float.class, Types.REAL);
+    this.typeMap.put(float.class, Types.REAL);
     this.typeMap.put(Double.class, Types.DOUBLE);
+    this.typeMap.put(double.class, Types.DOUBLE);
 
     // LOBs
     this.typeMap.put(Blob.class, Types.BLOB);
@@ -67,6 +67,7 @@ final class DefaultTypeMapper implements TypeMapper {
     this.typeMap.put(SQLXML.class, Types.SQLXML);
     // boolean
     this.typeMap.put(Boolean.class, Types.BOOLEAN);
+    this.typeMap.put(boolean.class, Types.BOOLEAN);
   }
 
   @Override

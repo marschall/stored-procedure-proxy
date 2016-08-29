@@ -58,6 +58,7 @@ Caveats
 -------
 - no support for `java.util.Date` or `java.util.Calendar`, because JDBC doesn't support it
 - no support for `BigInteger`, because JDBC doesn't support it
+- no support for `ZonedDateTime`, because JDBC doesn't support it
 - all H2 procedures must be annotated with `@ReturnValue` because H2 does not support OUT parameters
 - uses [@Annotations](http://www.annotatiomania.com)
 
@@ -68,5 +69,6 @@ Unsure
 - Should we support other collections than list?
 - Should we support a ValueExtractor without an int
 - Out parameter default last
+- name of the SPI package
 
 

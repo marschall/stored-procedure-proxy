@@ -20,6 +20,12 @@ public final class UncheckedSQLException extends RuntimeException {
     super(message, Objects.requireNonNull(cause));
   }
 
+  /**
+   * Convenience method that returns the cause as type {@link SQLException}
+   * avoiding the need to cast the result.
+   *
+   * @return the exception cause, never {@code null}
+   */
   @Override
   public SQLException getCause() {
     return (SQLException) super.getCause();

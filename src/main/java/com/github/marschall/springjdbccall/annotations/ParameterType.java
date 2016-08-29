@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
 import com.github.marschall.springjdbccall.spi.TypeMapper;
 
 /**
- * Defines the SQL type of an IN parameter.
+ * Defines the SQL type of an in parameter.
  */
 @Documented
 @Retention(RUNTIME)
@@ -18,7 +18,7 @@ import com.github.marschall.springjdbccall.spi.TypeMapper;
 public @interface ParameterType {
 
   /**
-   * Defines the SQL type of an IN parameter. If nothing is specified the default
+   * Defines the SQL type of an in parameter. If nothing is specified the default
    * from {@link TypeMapper} is used.
    *
    * @return the parameter SQL type, can be a vendor type
