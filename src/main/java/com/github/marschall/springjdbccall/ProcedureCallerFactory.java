@@ -202,18 +202,17 @@ public final class ProcedureCallerFactory<T> {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-      Class<?> returnType = getBoxedClass(method.getReturnType());
       CallInfo callInfo = this.buildCallInfo(method, args);
       Object returnValue;
       try (Connection connection = this.dataSource.getConnection()) {
         try (CallableStatement statement = this.prepareCall(connection, callInfo)) {
           bindParameters(args, callInfo, statement);
-          returnValue = this.execute(statement, callInfo, returnType);
+          returnValue = this.execute(statement, callInfo);
         }
       } catch (SQLException e) {
         throw translate(e, method, callInfo);
       }
-      return checkReturnType(returnType, returnValue);
+      return checkReturnType(callInfo, returnValue);
     }
 
     private void bindParameters(Object[] args, CallInfo callInfo, CallableStatement statement) throws SQLException {
@@ -223,11 +222,12 @@ public final class ProcedureCallerFactory<T> {
       }
     }
 
-    private static Object checkReturnType(Class<?> returnType, Object returnValue) {
-      if (returnType == void.class) {
+    private static Object checkReturnType(CallInfo callInfo, Object returnValue) {
+      Class<?> boxedReturnType = callInfo.boxedReturnType;
+      if (boxedReturnType == void.class) {
         return null;
       }
-      return returnType.cast(returnValue);
+      return boxedReturnType.cast(returnValue);
     }
 
     private static Class<?> getBoxedClass(Class<?> clazz) {
@@ -271,15 +271,16 @@ public final class ProcedureCallerFactory<T> {
       }
     }
 
-    private Object execute(CallableStatement statement, CallInfo callInfo, Class<?> returnType) throws SQLException {
-      if (returnType == void.class) {
+    private Object execute(CallableStatement statement, CallInfo callInfo) throws SQLException {
+      Class<?> boxedReturnType = callInfo.boxedReturnType;
+      if (boxedReturnType == void.class) {
         return executeVoidMethod(statement);
       } else {
-        if (Collection.class.isAssignableFrom(returnType)) {
+        if (Collection.class.isAssignableFrom(boxedReturnType)) {
           // TODO Auto-generated method stub
           throw new IllegalArgumentException("collections not yet implemented");
         }
-        return executeScalarMethod(statement, callInfo, returnType);
+        return executeScalarMethod(statement, callInfo, boxedReturnType);
       }
     }
 
@@ -371,12 +372,19 @@ public final class ProcedureCallerFactory<T> {
         String parameterName;
         if (annotation != null) {
           parameterName = annotation.value();
-        } else {
+        } else if (parameter.isNamePresent()) {
           parameterName = this.parameterNamingStrategy.translateToDatabase(parameter.getName());
+        } else {
+          throw new IllegalArgumentException(parameterNameMissingMessage(method, i));
         }
         names[i] = parameterName;
       }
       return names;
+    }
+
+    private static String parameterNameMissingMessage(Method method, int i) {
+      return "can't deduce name for parameter " + i + " in " + method
+              + " either use "  + ParameterName.class + " or compile with -parameters";
     }
 
     private int[] extractParameterTypes(Method method) {
@@ -455,9 +463,13 @@ public final class ProcedureCallerFactory<T> {
         inParameterIndices = buildInParameterIndices(parameterCount, outParameterIndex);
       }
 
+      boolean wantsExceptionTranslation = wantsExceptionTranslation(method);
+      Class<?> boxedReturnType = getBoxedClass(method.getReturnType());
+
       return new CallInfo(procedureName, callString,
               outParameterIndex, outParameterType, outParameterName,
-              inParameterIndices, inParameterTypes, inParameterNames);
+              inParameterIndices, inParameterTypes, inParameterNames,
+              wantsExceptionTranslation, boxedReturnType);
 
     }
 
@@ -695,12 +707,18 @@ public final class ProcedureCallerFactory<T> {
     final int[] inParameterIndices;
     final int[] inParameterTypes;
     final String[] inParameterNames;
+    final boolean wantsExceptionTranslation;
+    /**
+     * Instead of {@code int.class} contains {@code Integer.class}.
+     */
+    final Class<?> boxedReturnType;
 
 
     CallInfo(String procedureName, String callString, int outParameterIndex,
             int outParameterType, String outParameterName,
             int[] inParameterIndices, int[] inParameterTypes,
-            String[] inParameterNames) {
+            String[] inParameterNames, boolean wantsExceptionTranslation,
+            Class<?> boxedReturnType) {
       this.procedureName = procedureName;
       this.callString = callString;
       this.outParameterIndex = outParameterIndex;
@@ -709,6 +727,8 @@ public final class ProcedureCallerFactory<T> {
       this.inParameterIndices = inParameterIndices;
       this.inParameterTypes = inParameterTypes;
       this.inParameterNames = inParameterNames;
+      this.wantsExceptionTranslation = wantsExceptionTranslation;
+      this.boxedReturnType = boxedReturnType;
     }
 
 

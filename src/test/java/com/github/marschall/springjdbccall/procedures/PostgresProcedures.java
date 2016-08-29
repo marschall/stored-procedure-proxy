@@ -1,7 +1,9 @@
 package com.github.marschall.springjdbccall.procedures;
 
 import java.sql.SQLException;
+import java.util.List;
 
+import com.github.marschall.springjdbccall.ValueExtractor;
 import com.github.marschall.springjdbccall.annotations.OutParameter;
 import com.github.marschall.springjdbccall.annotations.ProcedureName;
 import com.github.marschall.springjdbccall.annotations.ReturnValue;
@@ -25,5 +27,11 @@ public interface PostgresProcedures {
 
   @ProcedureName("raise_exception")
   void raiseUncheckedException();
+
+  @OutParameter
+  List<String> simpleRefCursor();
+
+  @OutParameter
+  List<String> mappedRefCursor(ValueExtractor<String> extractor);
 
 }
