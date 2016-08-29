@@ -10,7 +10,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.sql.DataSource;
 
@@ -103,6 +107,7 @@ public final class ProcedureCallerFactory<T> {
   }
 
   public ProcedureCallerFactory<T> withSchemaNamingStrategy(NamingStrategy schemaNamingStrategy) {
+    Objects.requireNonNull(schemaNamingStrategy);
     this.schemaNamingStrategy = schemaNamingStrategy;
     return this;
   }
@@ -113,7 +118,20 @@ public final class ProcedureCallerFactory<T> {
   }
 
   public ProcedureCallerFactory<T> withParameterRegistration(ParameterRegistration parameterRegistration) {
+    Objects.requireNonNull(parameterRegistration);
     this.parameterRegistration = parameterRegistration;
+    return this;
+  }
+
+  public ProcedureCallerFactory<T> withExceptionAdapter(SQLExceptionAdapter exceptionAdapter) {
+    Objects.requireNonNull(exceptionAdapter);
+    this.exceptionAdapter = exceptionAdapter;
+    return this;
+  }
+
+  public ProcedureCallerFactory<T> withTypeMapper(TypeMapper typeMapper) {
+    Objects.requireNonNull(typeMapper);
+    this.typeMapper = typeMapper;
     return this;
   }
 
@@ -183,6 +201,12 @@ public final class ProcedureCallerFactory<T> {
 
     private final TypeMapper typeMapper;
 
+    /**
+     * We assume this is uncontended since we only do a few lookups and gets.
+     * Save the memory overhead of a {@link ConcurrentHashMap}.
+     */
+    private final Map<Method, CallInfo> callInfoCache;
+
     ProcedureCaller(DataSource dataSource,
             NamingStrategy parameterNamingStrategy,
             NamingStrategy procedureNamingStrategy,
@@ -198,11 +222,12 @@ public final class ProcedureCallerFactory<T> {
       this.parameterRegistration = parameterRegistration;
       this.exceptionAdapter = exceptionAdapter;
       this.typeMapper = typeMapper;
+      this.callInfoCache = Collections.synchronizedMap(new HashMap<>());
     }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-      CallInfo callInfo = this.buildCallInfo(method, args);
+      CallInfo callInfo = this.getCallInfo(method, args);
       Object returnValue;
       try (Connection connection = this.dataSource.getConnection()) {
         try (CallableStatement statement = this.prepareCall(connection, callInfo)) {
@@ -210,7 +235,7 @@ public final class ProcedureCallerFactory<T> {
           returnValue = this.execute(statement, callInfo);
         }
       } catch (SQLException e) {
-        throw translate(e, method, callInfo);
+        throw translate(e, callInfo);
       }
       return checkReturnType(callInfo, returnValue);
     }
@@ -242,6 +267,7 @@ public final class ProcedureCallerFactory<T> {
     }
 
     private static Class<?> getWrapperClass(Class<?> primitiveClass) {
+      // http://stackoverflow.com/questions/38953842/going-from-a-primitive-class-to-a-wrapper-class
       if (primitiveClass == int.class) {
         return Integer.class;
       } else if (primitiveClass == long.class) {
@@ -263,8 +289,8 @@ public final class ProcedureCallerFactory<T> {
       }
     }
 
-    private Exception translate(SQLException exception, Method method, CallInfo callInfo) {
-      if (wantsExceptionTranslation(method)) {
+    private Exception translate(SQLException exception, CallInfo callInfo) {
+      if (callInfo.wantsExceptionTranslation) {
         return this.exceptionAdapter.translate(callInfo.procedureName, callInfo.callString, exception);
       } else {
         return exception;
@@ -406,6 +432,19 @@ public final class ProcedureCallerFactory<T> {
 
     private CallableStatement prepareCall(Connection connection, CallInfo callInfo) throws SQLException {
       return connection.prepareCall(callInfo.callString);
+    }
+
+
+    private CallInfo getCallInfo(Method method, Object[] args) {
+      CallInfo callInfo = this.callInfoCache.get(method);
+      if (callInfo != null) {
+        return callInfo;
+      }
+      // potentially compute callInfo multiple times
+      // rather than locking for a long time
+      callInfo = this.buildCallInfo(method, args);
+      CallInfo previous = this.callInfoCache.putIfAbsent(method, callInfo);
+      return previous != null ? previous : callInfo;
     }
 
     private CallInfo buildCallInfo(Method method, Object[] args) {
