@@ -125,7 +125,8 @@ public final class ProcedureCallerFactory<T> {
    * Creates a caller for the interface of stored procedures using the defaults.
    *
    * @param inferfaceDeclaration the interface containing the store procedure declarations
-   * @param dataSource the datasource through with to make the calls
+   * @param dataSource the data source through with to make the calls
+   * @param <T> the interface type containing the stored procedure declarations
    * @return the interface instance
    */
   public static <T> ProcedureCallerFactory<T> of(Class<T> inferfaceDeclaration, DataSource dataSource) {

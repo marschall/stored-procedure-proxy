@@ -35,16 +35,16 @@ public @interface OutParameter {
   int index() default -1;
 
   /**
-   * Defines the name out parameter. Only used if the parameter registration
+   * Defines the name of the out parameter. Only used if the parameter registration
    * is either {@link ParameterRegistration#NAME_ONLY} or
    * {@link ParameterRegistration#NAME_AND_TYPE}.
    *
-   * @return the name out parameter
+   * @return the name of the out parameter
    */
   String name() default "";
 
   /**
-   * Defines the out parameter SQL type. If nothing is specified the default
+   * Defines the SQL type of the out parameter. If nothing is specified the default
    * from {@link TypeMapper} is used.
    *
    * @return the out parameter SQL type, can be a vendor type
