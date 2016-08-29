@@ -3,13 +3,21 @@ package com.github.marschall.springjdbccall;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.lang.reflect.AnnotatedType;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.sql.DataSource;
 
@@ -120,6 +128,30 @@ public class PostgresTest {
       assertTrue(cause instanceof PSQLException);
       assertEquals("22000", ((SQLException) cause).getSQLState());
     }
+  }
+
+  @Test
+  public void simpleRefCursor() {
+    try {
+      Method m1 = PostgresProcedures.class.getDeclaredMethod("simpleRefCursor");
+      Type genericReturnType = m1.getGenericReturnType();
+      if (genericReturnType instanceof ParameterizedType) {
+        ParameterizedType pt = (ParameterizedType) genericReturnType;
+        Type[] actualTypeArguments = pt.getActualTypeArguments();
+        assertNotNull(actualTypeArguments);
+        assertEquals(1, actualTypeArguments.length);
+        Type actualType = actualTypeArguments[0];
+        assertEquals(String.class, actualType);
+      } else {
+        fail();
+      }
+    } catch (ReflectiveOperationException e) {
+      throw new RuntimeException(e);
+    }
+
+    List<String> refCursor = this.procedures.simpleRefCursor();
+    assertEquals(Arrays.asList("hello", "postgres"), refCursor);
+
   }
 
 }

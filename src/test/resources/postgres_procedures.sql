@@ -34,3 +34,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- https://www.postgresql.org/docs/9.5/static/plpgsql-cursors.html
+
+CREATE OR REPLACE FUNCTION simple_ref_cursor(refcursor) RETURNS refcursor AS $$
+BEGIN
+    OPEN $1 FOR SELECT 'hello' UNION ALL SELECT 'postgres';
+    RETURN $1;
+END;
+$$ LANGUAGE plpgsql;
+

@@ -29,6 +29,7 @@ public interface PostgresProcedures {
   void raiseUncheckedException();
 
   @OutParameter
+  @ProcedureName("simple_ref_cursor")
   List<String> simpleRefCursor();
 
   @OutParameter

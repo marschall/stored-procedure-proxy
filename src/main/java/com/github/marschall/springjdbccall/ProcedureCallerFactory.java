@@ -3,15 +3,19 @@ package com.github.marschall.springjdbccall;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
-import java.util.Collection;
+import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -411,9 +415,8 @@ public final class ProcedureCallerFactory<T> {
       if (boxedReturnType == void.class) {
         return executeVoidMethod(statement);
       } else {
-        if (Collection.class.isAssignableFrom(boxedReturnType)) {
-          // TODO Auto-generated method stub
-          throw new IllegalArgumentException("collections not yet implemented");
+        if (callInfo.isList) {
+          return readListFromResultSet(statement, callInfo);
         }
         return executeScalarMethod(statement, callInfo, boxedReturnType);
       }
@@ -438,7 +441,7 @@ public final class ProcedureCallerFactory<T> {
         }
       } catch (SQLFeatureNotSupportedException e) {
         // we need to pass the class for Java 8 Date Time support
-        // however the Postgres JDBC driver does not support this
+        // however the PostgreS JDBC driver does not support this
         // so lets try again and hope it works this time
         if (this.isUseParameterNames()) {
           return statement.getObject(callInfo.outParameterName);
@@ -451,7 +454,7 @@ public final class ProcedureCallerFactory<T> {
     private Object readFromResultSet(CallableStatement statement, CallInfo callInfo) throws SQLException {
       Object last = null;
       int count = 0;
-      // hack for H2 which doesn't have out paramters
+      // hack for H2 which doesn't have out parameters
       try (ResultSet rs = statement.executeQuery()) {
         while (rs.next()) {
           if (this.isUseParameterNames()) {
@@ -470,6 +473,36 @@ public final class ProcedureCallerFactory<T> {
         }
       }
       return last;
+    }
+
+    private Object readListFromResultSet(CallableStatement statement, CallInfo callInfo) throws SQLException {
+      boolean hasResultSet = statement.execute();
+      List<Object> result = new ArrayList<>(5);
+      try (ResultSet rs = this.getOutResultSet(statement, callInfo)) {
+        while (rs.next()) {
+          Object element = rs.getObject(1, callInfo.listElementType);
+          result.add(element);
+        }
+      }
+      return result;
+    }
+
+    private ResultSet getOutResultSet(CallableStatement statement, CallInfo callInfo) throws SQLException {
+      if (this.isUseParameterNames()) {
+        try {
+          return statement.getObject(callInfo.outParameterName, ResultSet.class);
+        } catch (SQLFeatureNotSupportedException e) {
+          // Postgres hack
+          return (ResultSet) statement.getObject(callInfo.outParameterName);
+        }
+      } else {
+        try {
+          return statement.getObject(callInfo.outParameterIndex, ResultSet.class);
+        } catch (SQLFeatureNotSupportedException e) {
+          // Postgres hack
+          return (ResultSet) statement.getObject(callInfo.outParameterIndex);
+        }
+      }
     }
 
     private Object executeVoidMethod(CallableStatement statement) throws SQLException {
@@ -570,6 +603,8 @@ public final class ProcedureCallerFactory<T> {
       int outParameterIndex;
       int outParameterType;
       String outParameterName;
+      boolean isList;
+      Class<?> listElementType;
       if (methodHasReturnValue) {
         OutParameter outParameter = method.getAnnotation(OutParameter.class);
         ReturnValue returnValue = method.getAnnotation(ReturnValue.class);
@@ -594,13 +629,25 @@ public final class ProcedureCallerFactory<T> {
         if (outParameterIndex == -1) {
           outParameterIndex = parameterCount + 1;
         }
+        isList = methodReturnType == List.class;
         if (outParameterType == Integer.MIN_VALUE) {
-          outParameterType = this.typeMapper.mapToSqlType(methodReturnType);
+          if (isList) {
+            outParameterType = Types.REF_CURSOR;
+          } else {
+            outParameterType = this.typeMapper.mapToSqlType(methodReturnType);
+          }
+        }
+        if (isList) {
+          listElementType = getListReturnTypeParamter(method);
+        } else {
+          listElementType = null;
         }
       } else {
         outParameterIndex = -1;
         outParameterType = 0;
         outParameterName = null;
+        isList = false;
+        listElementType = null;
       }
 
       int[] inParameterIndices;
@@ -617,8 +664,27 @@ public final class ProcedureCallerFactory<T> {
       return new CallInfo(procedureName, callString,
               outParameterIndex, outParameterType, outParameterName,
               inParameterIndices, inParameterTypes, inParameterNames,
-              wantsExceptionTranslation, boxedReturnType);
+              wantsExceptionTranslation, boxedReturnType,
+              isList, listElementType);
 
+    }
+
+    private static Class<?> getListReturnTypeParamter(Method method) {
+      Type genericReturnType = method.getGenericReturnType();
+      if (genericReturnType instanceof ParameterizedType) {
+        ParameterizedType pt = (ParameterizedType) genericReturnType;
+        Type[] actualTypeArguments = pt.getActualTypeArguments();
+        if (actualTypeArguments.length != 1) {
+          throw new IllegalArgumentException("type arguments return type of " + method + " are missing");
+        }
+        Type actualTypeArgument = actualTypeArguments[0];
+        if (!(actualTypeArgument instanceof Class)) {
+          throw new IllegalArgumentException("type arguments return type of " + method + " is not a class");
+        }
+        return (Class<?>) actualTypeArgument;
+      } else {
+        throw new IllegalArgumentException("method " + method + " is missing type paramter for " + List.class);
+      }
     }
 
     static int[] buildInParameterIndices(int parameterCount) {
@@ -856,17 +922,20 @@ public final class ProcedureCallerFactory<T> {
     final int[] inParameterTypes;
     final String[] inParameterNames;
     final boolean wantsExceptionTranslation;
+
     /**
      * Instead of {@code int.class} contains {@code Integer.class}.
      */
     final Class<?> boxedReturnType;
-
+    final boolean isList;
+    final Class<?> listElementType;
 
     CallInfo(String procedureName, String callString, int outParameterIndex,
             int outParameterType, String outParameterName,
             int[] inParameterIndices, int[] inParameterTypes,
             String[] inParameterNames, boolean wantsExceptionTranslation,
-            Class<?> boxedReturnType) {
+            Class<?> boxedReturnType,
+            boolean isList, Class<?> listElementType) {
       this.procedureName = procedureName;
       this.callString = callString;
       this.outParameterIndex = outParameterIndex;
@@ -877,14 +946,13 @@ public final class ProcedureCallerFactory<T> {
       this.inParameterNames = inParameterNames;
       this.wantsExceptionTranslation = wantsExceptionTranslation;
       this.boxedReturnType = boxedReturnType;
+      this.isList = isList;
+      this.listElementType = listElementType;
     }
-
-
 
     boolean hasOutParamter() {
       return this.outParameterIndex != -1;
     }
-
 
   }
 
