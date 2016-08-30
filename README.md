@@ -3,7 +3,7 @@ Stored Procedure Proxy
 
 A more convenient and type safe way to call stored procedures from Java.
 
-Allows you to define a Java interface method for every stored procedure. Then creates a dynamic instance of that interface that calls the stored procedure whenever you call the method.
+This project allows you to define a Java interface method for every stored procedure you want to call. Then it creates a dynamic instance of that interface that calls the stored procedure whenever you call the method.
 
 Features
 --------
@@ -21,6 +21,7 @@ Features
 - supports Java 8 Date and Time API
  - if the driver supports it
 - does reflection only once per method and caches the meta data for future calls
+- interfaces can be mocked or stubbed easily for tests that don't require database access
 
 Not supported
 -------------
@@ -62,6 +63,7 @@ Caveats
 - all H2 procedures must be annotated with `@ReturnValue` because H2 does not support OUT parameters
 - uses [@Annotations](http://www.annotatiomania.com)
 - pgjdbc requires Types.OTHER for ref cursors
+- mysql ref cursors don't work
 
 Unsure
 ------

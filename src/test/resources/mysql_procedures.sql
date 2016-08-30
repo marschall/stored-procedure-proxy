@@ -12,5 +12,8 @@ SET result = CONCAT('Hello, ',s,'!');
 -- END
 -- END //
 
-
+DROP PROCEDURE IF EXISTS fake_refcursor;
+CREATE PROCEDURE fake_refcursor ()
+-- BEGIN
+SELECT 'hello' UNION ALL SELECT 'mysql';
 

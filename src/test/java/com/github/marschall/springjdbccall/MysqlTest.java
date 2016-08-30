@@ -1,11 +1,21 @@
 package com.github.marschall.springjdbccall;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.sql.DataSource;
 
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +59,36 @@ public class MysqlTest {
   @Test
   public void helloProcedure() {
     assertEquals("Hello, Monty!", this.procedures.helloProcedure("Monty"));
+  }
+
+  @Test
+  public void manualCall() throws SQLException {
+    try (Connection con = this.dataSource.getConnection()) {
+//      String query = "{? = CALL fake_refcursor()}";
+      String query = "{CALL fake_refcursor()}";
+      try (CallableStatement cs = con.prepareCall(query)) {
+//        cs.registerOutParameter(1, Types.OTHER);
+        boolean hasResultSet = cs.execute();
+        assertTrue(hasResultSet);
+        // try (ResultSet rs = cs.executeQuery()) {
+        try (ResultSet rs = cs.getResultSet()) {
+          int count = 0;
+          while (rs.next()) {
+            assertNotNull(rs.getObject(1));
+            count += 1;
+          }
+          assertEquals(2, count);
+        }
+      }
+    }
+  }
+
+  @Test
+  @Ignore
+  public void simpleRefCursor() {
+    // http://stackoverflow.com/questions/273929/what-is-the-equivalent-of-oracle-s-ref-cursor-in-mysql-when-using-jdbc
+    List<String> refCursor = this.procedures.fakeRefcursor();
+    assertEquals(Arrays.asList("hello", "mysql"), refCursor);
   }
 
 }

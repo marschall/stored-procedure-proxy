@@ -37,6 +37,12 @@ import com.github.marschall.springjdbccall.spi.TypeMapper;
  * Creates instances of an interface containing stored procedure declarations.
  * The instances will call the stored procedure.
  *
+ * <p>The instances created by {@link #build()} and
+ * {@link #build(Class, DataSource)} should have the life time of the
+ * application. They should be reused instead of creating new instances
+ * for every call. They are prime candidates for
+ * <a href="https://en.wikipedia.org/wiki/Dependency_injection">injection</a>.</p>
+ *
  * <p>This class implements the
  * <a href="https://en.wikipedia.org/wiki/Builder_pattern">builder pattern</a>
  * allowing you to override various defaults. If you're fine with the
