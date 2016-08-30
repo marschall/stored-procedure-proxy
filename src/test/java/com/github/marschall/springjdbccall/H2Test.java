@@ -17,12 +17,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.github.marschall.springjdbccall.configuration.H2Configuration;
 import com.github.marschall.springjdbccall.configuration.TestConfiguration;
 import com.github.marschall.springjdbccall.procedures.H2Procedures;
 import com.github.marschall.springjdbccall.spi.NamingStrategy;
 
+@Transactional
 @ContextConfiguration(classes = {H2Configuration.class, TestConfiguration.class})
 public class H2Test {
 

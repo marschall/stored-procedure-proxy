@@ -13,11 +13,13 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.github.marschall.springjdbccall.configuration.MysqlConfiguration;
 import com.github.marschall.springjdbccall.configuration.TestConfiguration;
 import com.github.marschall.springjdbccall.procedures.MysqlProcedures;
 
+@Transactional
 @Sql("classpath:mysql_procedures.sql")
 @ContextConfiguration(classes = {MysqlConfiguration.class, TestConfiguration.class})
 public class MysqlTest {
