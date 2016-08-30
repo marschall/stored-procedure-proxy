@@ -3,15 +3,9 @@ package com.github.marschall.springjdbccall;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.lang.reflect.AnnotatedType;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -35,11 +29,13 @@ import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.github.marschall.springjdbccall.configuration.PostgresConfiguration;
 import com.github.marschall.springjdbccall.configuration.TestConfiguration;
 import com.github.marschall.springjdbccall.procedures.PostgresProcedures;
 
+@Transactional
 @ContextConfiguration(classes = {PostgresConfiguration.class, TestConfiguration.class})
 public class PostgresTest {
 
@@ -132,26 +128,14 @@ public class PostgresTest {
 
   @Test
   public void simpleRefCursor() {
-    try {
-      Method m1 = PostgresProcedures.class.getDeclaredMethod("simpleRefCursor");
-      Type genericReturnType = m1.getGenericReturnType();
-      if (genericReturnType instanceof ParameterizedType) {
-        ParameterizedType pt = (ParameterizedType) genericReturnType;
-        Type[] actualTypeArguments = pt.getActualTypeArguments();
-        assertNotNull(actualTypeArguments);
-        assertEquals(1, actualTypeArguments.length);
-        Type actualType = actualTypeArguments[0];
-        assertEquals(String.class, actualType);
-      } else {
-        fail();
-      }
-    } catch (ReflectiveOperationException e) {
-      throw new RuntimeException(e);
-    }
-
     List<String> refCursor = this.procedures.simpleRefCursor();
     assertEquals(Arrays.asList("hello", "postgres"), refCursor);
+  }
 
+  @Test
+  public void simpleRefCursorOut() {
+    List<String> refCursor = this.procedures.simpleRefCursorOut();
+    assertEquals(Arrays.asList("hello", "postgres"), refCursor);
   }
 
 }

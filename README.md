@@ -61,6 +61,7 @@ Caveats
 - no support for `ZonedDateTime`, because JDBC doesn't support it
 - all H2 procedures must be annotated with `@ReturnValue` because H2 does not support OUT parameters
 - uses [@Annotations](http://www.annotatiomania.com)
+- pgjdbc requires Types.OTHER for ref cursors
 
 Unsure
 ------

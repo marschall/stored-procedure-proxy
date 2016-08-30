@@ -36,10 +36,19 @@ $$ LANGUAGE plpgsql;
 
 -- https://www.postgresql.org/docs/9.5/static/plpgsql-cursors.html
 
-CREATE OR REPLACE FUNCTION simple_ref_cursor(refcursor) RETURNS refcursor AS $$
+-- CREATE OR REPLACE FUNCTION simple_ref_cursor(refcursor) RETURNS refcursor AS $$
+CREATE OR REPLACE FUNCTION simple_ref_cursor() RETURNS refcursor AS $$
+DECLARE
+    ref refcursor;
 BEGIN
-    OPEN $1 FOR SELECT 'hello' UNION ALL SELECT 'postgres';
-    RETURN $1;
+    OPEN ref FOR SELECT 'hello' UNION ALL SELECT 'postgres';
+    RETURN ref;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION simple_ref_cursor_out(OUT o_strings refcursor) AS $$
+BEGIN
+    OPEN o_strings FOR SELECT 'hello' UNION ALL SELECT 'postgres';
 END;
 $$ LANGUAGE plpgsql;
 

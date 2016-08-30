@@ -478,10 +478,19 @@ public final class ProcedureCallerFactory<T> {
     private Object readListFromResultSet(CallableStatement statement, CallInfo callInfo) throws SQLException {
       boolean hasResultSet = statement.execute();
       List<Object> result = new ArrayList<>(5);
-      try (ResultSet rs = this.getOutResultSet(statement, callInfo)) {
-        while (rs.next()) {
-          Object element = rs.getObject(1, callInfo.listElementType);
-          result.add(element);
+      if (hasResultSet) {
+        try (ResultSet rs = statement.getResultSet()) {
+          while (rs.next()) {
+            Object element = rs.getObject(1, callInfo.listElementType);
+            result.add(element);
+          }
+        }
+      } else {
+        try (ResultSet rs = this.getOutResultSet(statement, callInfo)) {
+          while (rs.next()) {
+            Object element = rs.getObject(1, callInfo.listElementType);
+            result.add(element);
+          }
         }
       }
       return result;
