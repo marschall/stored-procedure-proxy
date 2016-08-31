@@ -1,6 +1,5 @@
 package com.github.marschall.springjdbccall.procedures;
 
-import java.sql.Types;
 import java.util.List;
 
 import com.github.marschall.springjdbccall.annotations.OutParameter;
@@ -18,7 +17,6 @@ public interface MysqlProcedures {
   String helloProcedure(String s);
 
   @ProcedureName("fake_refcursor")
-  @ReturnValue(type = Types.OTHER)
   List<String> fakeRefcursor();
 
 }

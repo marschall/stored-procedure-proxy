@@ -9,7 +9,10 @@ Features
 --------
 
 - works with Oracle packages
-- works with functions as well as procedures with out parameters
+- supports different ways of retrieving results
+ - procedures with out parameters
+ - functions with out parameters
+ - database drivers that return `ResultSet`s
 - avoids JDBC metadata
  - works if the database user is not the schema owner
  - works if there are hundreds of visible schemas
@@ -74,5 +77,6 @@ Unsure
 - Out parameter default last
 - name of the SPI package
 - type annotation for element in ref cursor
+- procedures that use result sets instead of out parameter or return values
 
 

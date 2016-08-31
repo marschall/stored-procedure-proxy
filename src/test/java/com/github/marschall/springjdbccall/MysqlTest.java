@@ -15,7 +15,6 @@ import javax.sql.DataSource;
 
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,7 +83,6 @@ public class MysqlTest {
   }
 
   @Test
-  @Ignore
   public void simpleRefCursor() {
     // http://stackoverflow.com/questions/273929/what-is-the-equivalent-of-oracle-s-ref-cursor-in-mysql-when-using-jdbc
     List<String> refCursor = this.procedures.fakeRefcursor();

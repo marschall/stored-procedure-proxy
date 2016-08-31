@@ -605,13 +605,12 @@ public final class ProcedureCallerFactory<T> {
     }
 
     private CallInfo buildCallInfo(Method method, Object[] args) {
-      int parameterCount = getParameterCount(args);
+      int parameterCount = getParameterCount(method);
       String procedureName = this.extractProcedureName(method);
       String schemaName = this.hasSchemaName(method) ? this.extractSchemaName(method) : null;
       boolean isFunction = procedureHasReturnValue(method);
       Class<?> methodReturnType = method.getReturnType();
       boolean methodHasReturnValue = methodReturnType != void.class;
-      String callString = buildCallString(schemaName, procedureName, parameterCount, isFunction, !methodHasReturnValue);
       int[] inParameterTypes = this.isUseParameterTypes() ? this.extractParameterTypes(method) : null;
       String[] inParameterNames = this.isUseParameterNames() ? extractParameterNames(method) : null;
 
@@ -635,13 +634,20 @@ public final class ProcedureCallerFactory<T> {
           outParameterIndex = 1;
           outParameterType = returnValue.type();
         } else {
-          throw new IllegalArgumentException("method " + method + " needs to be annotated with " + OutParameter.class + " or " + ReturnValue.class);
+          // we will use a ResultSet instead of an out parameter or function return value
+          // eg for Mysql or H2
+          outParameterIndex = -1;
+          outParameterName = null;
+          outParameterType = Integer.MIN_VALUE;
         }
         // correct annotation default values
-        if (outParameterName.isEmpty()) {
+        if (outParameterName != null && outParameterName.isEmpty()) {
           outParameterName = null;
         }
-        if (outParameterIndex == -1) {
+        if (outParameterIndex == -1 && (outParameter != null || returnValue != null)) {
+          // default for the out parameter index is the last index
+          // but only if we use an out parameter for function return value
+          // if we use a result set then we have no out parameter
           outParameterIndex = parameterCount + 1;
         }
         isList = methodReturnType == List.class;
@@ -666,13 +672,17 @@ public final class ProcedureCallerFactory<T> {
       }
 
       int[] inParameterIndices;
-      if (!isFunction && outParameterIndex == parameterCount) {
+      boolean hasOutParameter = outParameterIndex != -1;
+      if (!hasOutParameter || (hasOutParameter && outParameterIndex == parameterCount + 1)) {
+        // we have an no out parameter or
         // we have an out parameter and it's the last parameter
         inParameterIndices = buildInParameterIndices(parameterCount);
       } else {
         inParameterIndices = buildInParameterIndices(parameterCount, outParameterIndex);
       }
 
+
+      String callString = buildCallString(schemaName, procedureName, parameterCount, isFunction, hasOutParameter);
       boolean wantsExceptionTranslation = wantsExceptionTranslation(method);
       Class<?> boxedReturnType = getBoxedClass(method.getReturnType());
 
@@ -722,15 +732,15 @@ public final class ProcedureCallerFactory<T> {
       return indices;
     }
 
-    private static int getParameterCount(Object[] args) {
-      return args != null ? args.length : 0;
+    private static int getParameterCount(Method method) {
+      return method.getParameterCount();
     }
 
-    private static String buildCallString(String schemaName, String procedureName, int parameterCount, boolean isFunction, boolean isVoid) {
+    private static String buildCallString(String schemaName, String procedureName, int parameterCount, boolean isFunction, boolean hasOutParameter) {
       if (isFunction) {
         return buildQualifiedFunctionCallString(schemaName, procedureName, parameterCount);
       } else {
-        return buildQualifiedProcedureCallString(schemaName, procedureName, isVoid ? parameterCount : parameterCount + 1);
+        return buildQualifiedProcedureCallString(schemaName, procedureName, hasOutParameter ? parameterCount + 1 : parameterCount);
       }
     }
 

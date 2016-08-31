@@ -67,4 +67,9 @@ public class H2Test {
     assertEquals("pre" + input + "post", functions.stringProcedure(input));
   }
 
+  @Test
+  public void callVoidProcedure() {
+    functions.voidProcedure("test");
+  }
+
 }
