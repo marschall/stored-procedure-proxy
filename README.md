@@ -26,6 +26,8 @@ Features
 - does reflection only once per method and caches the meta data for future calls
 - interfaces can be mocked or stubbed easily for tests that don't require database access
 - no dependencies, Spring is merely an [optional dependency](https://maven.apache.org/guides/introduction/introduction-to-optional-and-excludes-dependencies.html)
+- no bytecode parsing
+- no runtime bytecode generation or manipulation
 
 Not supported
 -------------
@@ -51,26 +53,36 @@ While they all have their use case none of them fitted out use case.
 Assumptions
 -----------
 
-This projects makes a few assumptions about the environment it runs in.
+This projects makes a few assumptions about the environment it runs in:
 
 - You have a connection pool.
 - You manage transactions either directly or indirectly through JTA or through Spring or a similar way.
 
 Exception Translation
 ---------------------
-- if the method declares `throws SQLException` no exception translation will happen
-- if the does not method declare `throws SQLException` exception translation to an `UncheckedSQLException` will happen
-- if the does not method declare `throws SQLException` exception and Spring is present translation will happen using Spring
+
+Different ways of handling exceptions are offered:
+
+- If the method declares `throws SQLException` no exception translation will happen and the original exception will be propagated.
+- If the does not method declare `throws SQLException` exception translation to an `UncheckedSQLException` will happen.
+- If the does not method declare `throws SQLException` exception and Spring is present translation will happen using Spring [DataAccessException](http://docs.spring.io/autorepo/docs/spring/current/spring-framework-reference/html/dao.html) hierarchy.
 
 Caveats
 -------
 - no support for `java.util.Date` or `java.util.Calendar`, because JDBC doesn't support it
 - no support for `BigInteger`, because JDBC doesn't support it
 - no support for `ZonedDateTime`, because JDBC doesn't support it
-- all H2 procedures must be annotated with `@ReturnValue` because H2 does not support OUT parameters
 - uses [@Annotations](http://www.annotatiomania.com)
-- pgjdbc requires Types.OTHER for ref cursors
-- mysql ref cursors don't work
+- requires some knowledge about how the database driver handles calls (see below)
+
+#### H2
+- does not support out parameters, use either `@ReturnValue` or no annotation at all
+
+#### Postgres
+- pgjdbc requires `Types.OTHER` for ref cursors
+
+#### Mysql
+- mysql ref cursors only work if you use neither `@OutParameter` nor `@ReturnValue`
 
 Unsure
 ------
