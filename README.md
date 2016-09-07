@@ -28,6 +28,7 @@ Features
 - no dependencies, Spring is merely an [optional dependency](https://maven.apache.org/guides/introduction/introduction-to-optional-and-excludes-dependencies.html)
 - no bytecode parsing
 - no runtime bytecode generation or manipulation
+- permissive license (MIT)
 
 Not supported
 -------------
@@ -79,20 +80,22 @@ Caveats
 - does not support out parameters, use either `@ReturnValue` or no annotation at all
 
 #### Postgres
-- pgjdbc requires `Types.OTHER` for ref cursors
+- pgjdbc 9.4.1210 or later is recommended
 
 #### Mysql
-- mysql ref cursors only work if you use neither `@OutParameter` nor `@ReturnValue`
+- ref cursors only work if you use neither `@OutParameter` nor `@ReturnValue`
 
 Unsure
 ------
 - Do we need a package name in addition to a schema name?
-- Is there a better way to avoid 
+- Is there a better way to avoid having `@OutParameter` or `@ReturnValue`
+- procedures that use result sets instead of out parameter or return values
 - Should we support other collections than list?
 - Should we support a ValueExtractor without an int
 - Out parameter default last
 - name of the SPI package
 - type annotation for element in ref cursor
-- procedures that use result sets instead of out parameter or return values
+- rename `@OutParameter` to `@Procedure`, `@ReturnValue` to `@Function`
+- combine `@OutParameter` and `@Function` and remove attirbutes from `@Function`?
 
 
