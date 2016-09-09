@@ -24,6 +24,7 @@ import javax.sql.DataSource;
 
 import org.springframework.jdbc.support.SQLErrorCodeSQLExceptionTranslator;
 
+import com.github.marschall.springjdbccall.annotations.FetchSize;
 import com.github.marschall.springjdbccall.annotations.OutParameter;
 import com.github.marschall.springjdbccall.annotations.ParameterName;
 import com.github.marschall.springjdbccall.annotations.ParameterType;
@@ -304,6 +305,10 @@ public final class ProcedureCallerFactory<T> {
 
   static final class ProcedureCaller implements InvocationHandler {
 
+    private static final int DEFAULT_FETCH_SIZE = 0;
+
+    private static final int NO_OUT_PARAMTER = -1;
+
     private final DataSource dataSource;
 
     private final NamingStrategy parameterNamingStrategy;
@@ -482,8 +487,12 @@ public final class ProcedureCallerFactory<T> {
     }
 
     private Object readListFromResultSet(CallableStatement statement, CallInfo callInfo) throws SQLException {
+      int fetchSize = callInfo.fetchSize;
+      if (fetchSize != DEFAULT_FETCH_SIZE) {
+        statement.setFetchSize(fetchSize);
+      }
       boolean hasResultSet = statement.execute();
-      List<Object> result = new ArrayList<>(5);
+      List<Object> result = new ArrayList<>();
       if (hasResultSet) {
         try (ResultSet rs = statement.getResultSet()) {
           while (rs.next()) {
@@ -492,6 +501,9 @@ public final class ProcedureCallerFactory<T> {
           }
         }
       } else {
+        if (!callInfo.hasOutParamter()) {
+          throw new IllegalStateException("@" + OutParameter.class + " for @" + ReturnValue.class + "  missing");
+        }
         try (ResultSet rs = this.getOutResultSet(statement, callInfo)) {
           while (rs.next()) {
             Object element = rs.getObject(1, callInfo.listElementType);
@@ -636,7 +648,7 @@ public final class ProcedureCallerFactory<T> {
         } else {
           // we will use a ResultSet instead of an out parameter or function return value
           // eg for Mysql or H2
-          outParameterIndex = -1;
+          outParameterIndex = NO_OUT_PARAMTER;
           outParameterName = null;
           outParameterType = Integer.MIN_VALUE;
         }
@@ -644,7 +656,7 @@ public final class ProcedureCallerFactory<T> {
         if (outParameterName != null && outParameterName.isEmpty()) {
           outParameterName = null;
         }
-        if (outParameterIndex == -1 && (outParameter != null || returnValue != null)) {
+        if (outParameterIndex == NO_OUT_PARAMTER && (outParameter != null || returnValue != null)) {
           // default for the out parameter index is the last index
           // but only if we use an out parameter for function return value
           // if we use a result set then we have no out parameter
@@ -664,7 +676,7 @@ public final class ProcedureCallerFactory<T> {
           listElementType = null;
         }
       } else {
-        outParameterIndex = -1;
+        outParameterIndex = NO_OUT_PARAMTER;
         outParameterType = 0;
         outParameterName = null;
         isList = false;
@@ -672,7 +684,7 @@ public final class ProcedureCallerFactory<T> {
       }
 
       int[] inParameterIndices;
-      boolean hasOutParameter = outParameterIndex != -1;
+      boolean hasOutParameter = outParameterIndex != NO_OUT_PARAMTER;
       if (!hasOutParameter || (hasOutParameter && outParameterIndex == parameterCount + 1)) {
         // we have an no out parameter or
         // we have an out parameter and it's the last parameter
@@ -690,8 +702,20 @@ public final class ProcedureCallerFactory<T> {
               outParameterIndex, outParameterType, outParameterName,
               inParameterIndices, inParameterTypes, inParameterNames,
               wantsExceptionTranslation, boxedReturnType,
-              isList, listElementType);
+              isList, listElementType,
+              getFetchSize(method));
 
+    }
+
+    private static int getFetchSize(Method method) {
+      if (method.isAnnotationPresent(FetchSize.class)) {
+        return method.getAnnotation(FetchSize.class).value();
+      }
+      Class<?> declaringClass = method.getDeclaringClass();
+      if (declaringClass.isAnnotationPresent(FetchSize.class)) {
+        return declaringClass.getAnnotation(FetchSize.class).value();
+      }
+      return DEFAULT_FETCH_SIZE;
     }
 
     private static Class<?> getListReturnTypeParamter(Method method) {
@@ -947,6 +971,7 @@ public final class ProcedureCallerFactory<T> {
     final int[] inParameterTypes;
     final String[] inParameterNames;
     final boolean wantsExceptionTranslation;
+    final int fetchSize;
 
     /**
      * Instead of {@code int.class} contains {@code Integer.class}.
@@ -960,7 +985,8 @@ public final class ProcedureCallerFactory<T> {
             int[] inParameterIndices, int[] inParameterTypes,
             String[] inParameterNames, boolean wantsExceptionTranslation,
             Class<?> boxedReturnType,
-            boolean isList, Class<?> listElementType) {
+            boolean isList, Class<?> listElementType,
+            int fetchSize) {
       this.procedureName = procedureName;
       this.callString = callString;
       this.outParameterIndex = outParameterIndex;
@@ -973,10 +999,11 @@ public final class ProcedureCallerFactory<T> {
       this.boxedReturnType = boxedReturnType;
       this.isList = isList;
       this.listElementType = listElementType;
+      this.fetchSize = fetchSize;
     }
 
     boolean hasOutParamter() {
-      return this.outParameterIndex != -1;
+      return this.outParameterIndex != ProcedureCaller.NO_OUT_PARAMTER;
     }
 
   }

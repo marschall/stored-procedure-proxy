@@ -2,10 +2,24 @@ package com.github.marschall.springjdbccall;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyString;
+
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+
+import javax.sql.DataSource;
 
 import org.junit.Test;
 
 import com.github.marschall.springjdbccall.ProcedureCallerFactory.ProcedureCaller;
+import com.github.marschall.springjdbccall.annotations.FetchSize;
+import com.github.marschall.springjdbccall.annotations.OutParameter;
 
 public class ProcedureCallerTest {
 
@@ -51,5 +65,6 @@ public class ProcedureCallerTest {
     assertArrayEquals(new int[] {1, 3, 4}, ProcedureCaller.buildInParameterIndices(3, 2));
     assertArrayEquals(new int[] {1, 2, 4}, ProcedureCaller.buildInParameterIndices(3, 3));
   }
+
 
 }
