@@ -30,7 +30,7 @@ import com.github.marschall.springjdbccall.annotations.ParameterName;
 import com.github.marschall.springjdbccall.annotations.ParameterType;
 import com.github.marschall.springjdbccall.annotations.ProcedureName;
 import com.github.marschall.springjdbccall.annotations.ReturnValue;
-import com.github.marschall.springjdbccall.annotations.SchemaName;
+import com.github.marschall.springjdbccall.annotations.Schema;
 import com.github.marschall.springjdbccall.spi.NamingStrategy;
 import com.github.marschall.springjdbccall.spi.TypeMapper;
 
@@ -196,6 +196,7 @@ public final class ProcedureCallerFactory<T> {
   public ProcedureCallerFactory<T> withSchemaNamingStrategy(NamingStrategy schemaNamingStrategy) {
     Objects.requireNonNull(schemaNamingStrategy);
     this.schemaNamingStrategy = schemaNamingStrategy;
+    this.hasSchemaName = true;
     return this;
   }
 
@@ -849,12 +850,12 @@ public final class ProcedureCallerFactory<T> {
     }
 
     private boolean hasSchemaName(Method method) {
-      return this.hasSchemaName || method.getDeclaringClass().isAnnotationPresent(SchemaName.class);
+      return this.hasSchemaName || method.getDeclaringClass().isAnnotationPresent(Schema.class);
     }
 
     private String extractSchemaName(Method method) {
       Class<?> declaringClass = method.getDeclaringClass();
-      SchemaName schemaNameAnnotation = declaringClass.getAnnotation(SchemaName.class);
+      Schema schemaNameAnnotation = declaringClass.getAnnotation(Schema.class);
       if (schemaNameAnnotation != null) {
         String schemaName = schemaNameAnnotation.value();
         if (!schemaName.isEmpty()) {

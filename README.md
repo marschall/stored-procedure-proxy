@@ -8,10 +8,11 @@ This project allows you to define a Java interface method for every stored proce
 Features
 --------
 
-- avoids JDBC metadata
+- avoids JDBC metadata access
  - works if the database user is not the schema owner
  - works if there are hundreds of visible schemas
 - works with Oracle packages
+- works with DB2 modules
 - supports different ways of retrieving results
  - procedures with out parameters
  - functions with out parameters

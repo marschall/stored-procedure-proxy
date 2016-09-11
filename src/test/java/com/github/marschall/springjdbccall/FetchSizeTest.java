@@ -9,12 +9,14 @@ import static org.mockito.Mockito.when;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.github.marschall.springjdbccall.annotations.FetchSize;
@@ -22,19 +24,30 @@ import com.github.marschall.springjdbccall.annotations.OutParameter;
 
 public class FetchSizeTest {
 
-  @Test
-  public void defaultFetchSize() throws SQLException {
-    // given
-    DataSource dataSource = mock(DataSource.class);
+  private DataSource dataSource;
+
+  private CallableStatement statement;
+
+  @Before
+  public void setUp() throws SQLException {
+    dataSource = mock(DataSource.class);
     Connection connection = mock(Connection.class);
-    CallableStatement statement = mock(CallableStatement.class);
+    DatabaseMetaData metaData = mock(DatabaseMetaData.class);
+    statement = mock(CallableStatement.class);
     ResultSet resultSet = mock(ResultSet.class);
 
     when(dataSource.getConnection()).thenReturn(connection);
+    when(connection.getMetaData()).thenReturn(metaData);
+    when(metaData.getDatabaseProductName()).thenReturn("junit");
     when(connection.prepareCall(anyString())).thenReturn(statement);
     when(statement.execute()).thenReturn(false);
     when(statement.getObject(1, ResultSet.class)).thenReturn(resultSet);
     when(resultSet.next()).thenReturn(false);
+  }
+
+  @Test
+  public void defaultFetchSize() throws SQLException {
+    // given
 
     CustomFetchSize procedures = ProcedureCallerFactory.build(CustomFetchSize.class, dataSource);
 
@@ -48,16 +61,6 @@ public class FetchSizeTest {
   @Test
   public void customFetchSize() throws SQLException {
     // given
-    DataSource dataSource = mock(DataSource.class);
-    Connection connection = mock(Connection.class);
-    CallableStatement statement = mock(CallableStatement.class);
-    ResultSet resultSet = mock(ResultSet.class);
-
-    when(dataSource.getConnection()).thenReturn(connection);
-    when(connection.prepareCall(anyString())).thenReturn(statement);
-    when(statement.execute()).thenReturn(false);
-    when(statement.getObject(1, ResultSet.class)).thenReturn(resultSet);
-    when(resultSet.next()).thenReturn(false);
 
     CustomFetchSize procedures = ProcedureCallerFactory.build(CustomFetchSize.class, dataSource);
 
@@ -71,16 +74,6 @@ public class FetchSizeTest {
   @Test
   public void noFetchSize() throws SQLException {
     // given
-    DataSource dataSource = mock(DataSource.class);
-    Connection connection = mock(Connection.class);
-    CallableStatement statement = mock(CallableStatement.class);
-    ResultSet resultSet = mock(ResultSet.class);
-
-    when(dataSource.getConnection()).thenReturn(connection);
-    when(connection.prepareCall(anyString())).thenReturn(statement);
-    when(statement.execute()).thenReturn(false);
-    when(statement.getObject(1, ResultSet.class)).thenReturn(resultSet);
-    when(resultSet.next()).thenReturn(false);
 
     NoFetchSize procedures = ProcedureCallerFactory.build(NoFetchSize.class, dataSource);
 
