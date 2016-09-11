@@ -11,9 +11,18 @@ import com.github.marschall.springjdbccall.ProcedureCallerFactory.ParameterRegis
 import com.github.marschall.springjdbccall.spi.TypeMapper;
 
 /**
- * Applied to a method means that the return value should be retrieved using an
+ * Signals that the procedure uses an out parameter rather than a
+ * return value or result set.
+ *
+ * <p>Applied to a method means that the return value should be retrieved using an
  * <a href="https://en.wikipedia.org/wiki/Parameter_(computer_programming)#Output_parameters">out parameter</a>.
- * In addition allows to provide additional information about the out parameter.
+ * In addition allows to provide additional information about the out parameter.</p>
+ *
+ * <p>Causes a call string to be generated in the form of
+ * {@code {@code "{call function_name(?)}" instead of "{ ? = call function_name()}"}}
+ * where one of the function arguments is an out parameter.</p>
+ *
+ * @see ReturnValue
  */
 @Documented
 @Retention(RUNTIME)

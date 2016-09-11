@@ -12,9 +12,16 @@ import com.github.marschall.springjdbccall.spi.TypeMapper;
 
 /**
  * Signals that the procedure uses a return value rather than an out
- * parameter.
+ * parameter or result set.
  *
- * <p>You would use this for functions versus procedures.</p>
+ * <p>Also allows to provide additional information about the return value.</p>
+ *
+ * <p>You would use this for functions as opposed to procedures.</p>
+ *
+ * <p>Causes a call string to be generated in the form of
+ * {@code "{ ? = call function_name()}"} instead of {@code "{call function_name(?)}"}.</p>
+ *
+ * @see OutParameter
  */
 @Documented
 @Retention(RUNTIME)

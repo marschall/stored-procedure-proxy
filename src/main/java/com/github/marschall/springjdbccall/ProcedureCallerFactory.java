@@ -25,6 +25,7 @@ import javax.sql.DataSource;
 import org.springframework.jdbc.support.SQLErrorCodeSQLExceptionTranslator;
 
 import com.github.marschall.springjdbccall.annotations.FetchSize;
+import com.github.marschall.springjdbccall.annotations.Namespace;
 import com.github.marschall.springjdbccall.annotations.OutParameter;
 import com.github.marschall.springjdbccall.annotations.ParameterName;
 import com.github.marschall.springjdbccall.annotations.ParameterType;
@@ -106,7 +107,11 @@ public final class ProcedureCallerFactory<T> {
 
   private NamingStrategy schemaNamingStrategy;
 
-  private boolean hasSchemaName;
+  private NamingStrategy namespaceNamingStrategy;
+
+  private boolean hasSchema;
+
+  private boolean hasNamespace;
 
   private ParameterRegistration parameterRegistration;
 
@@ -120,7 +125,9 @@ public final class ProcedureCallerFactory<T> {
     this.parameterNamingStrategy = NamingStrategy.IDENTITY;
     this.procedureNamingStrategy = NamingStrategy.IDENTITY;
     this.schemaNamingStrategy = NamingStrategy.IDENTITY;
-    this.hasSchemaName = false;
+    this.namespaceNamingStrategy = NamingStrategy.IDENTITY;
+    this.hasSchema = false;
+    this.hasNamespace = false;
     this.parameterRegistration = ParameterRegistration.INDEX_ONLY;
     this.exceptionAdapter = getDefaultExceptionAdapter(dataSource);
     this.typeMapper = DefaultTypeMapper.INSTANCE;
@@ -193,15 +200,59 @@ public final class ProcedureCallerFactory<T> {
     return this;
   }
 
+  /**
+   * Causes a schema name to be added to the call string by applying
+   * the given function to the interface name.
+   *
+   * @param schemaNamingStrategy the naming strategy for schemas, not {@code null}
+   * @return this builder for chaining
+   */
   public ProcedureCallerFactory<T> withSchemaNamingStrategy(NamingStrategy schemaNamingStrategy) {
     Objects.requireNonNull(schemaNamingStrategy);
     this.schemaNamingStrategy = schemaNamingStrategy;
-    this.hasSchemaName = true;
+    this.hasSchema = true;
     return this;
   }
 
-  public ProcedureCallerFactory<T> withSchemaName() {
-    this.hasSchemaName = true;
+  /**
+   * Causes a schema name to be added to the call string.
+   *
+   * <p>Per default the interface name is used.</p>
+   *
+   * @return this builder for chaining
+   * @see Schema
+   * @see ProcedureCallerFactory#withSchemaNamingStrategy(NamingStrategy)
+   */
+  public ProcedureCallerFactory<T> withSchema() {
+    this.hasSchema = true;
+    return this;
+  }
+
+  /**
+   * Causes a namespace to be added to the call string by applying
+   * the given function to the interface name.
+   *
+   * @param namespaceNamingStrategy the naming strategy for namespaces, not {@code null}
+   * @return this builder for chaining
+   */
+  public ProcedureCallerFactory<T> withNamespaceNamingStrategy(NamingStrategy namespaceNamingStrategy) {
+    Objects.requireNonNull(namespaceNamingStrategy);
+    this.namespaceNamingStrategy = namespaceNamingStrategy;
+    this.hasNamespace = true;
+    return this;
+  }
+
+  /**
+   * Causes a namespace to be added to the call string.
+   *
+   * <p>Per default the interface name is used.</p>
+   *
+   * @return this builder for chaining
+   * @see Namespace
+   * @see ProcedureCallerFactory#withNamespaceNamingStrategy(NamingStrategy)
+   */
+  public ProcedureCallerFactory<T> withNamespace() {
+    this.hasNamespace = true;
     return this;
   }
 
@@ -258,7 +309,8 @@ public final class ProcedureCallerFactory<T> {
    */
   public T build() {
     ProcedureCaller caller = new ProcedureCaller(this.dataSource, this.parameterNamingStrategy,
-            this.procedureNamingStrategy, this.schemaNamingStrategy, this.hasSchemaName,
+            this.procedureNamingStrategy, this.schemaNamingStrategy, this.hasSchema,
+            this.namespaceNamingStrategy, this.hasNamespace,
             this.parameterRegistration, this.exceptionAdapter, this.typeMapper);
     // REVIEW correct class loader
     Object proxy = Proxy.newProxyInstance(this.inferfaceDeclaration.getClassLoader(),
@@ -318,7 +370,11 @@ public final class ProcedureCallerFactory<T> {
 
     private final NamingStrategy schemaNamingStrategy;
 
-    private final boolean hasSchemaName;
+    private final NamingStrategy namespaceNamingStrategy;
+
+    private final boolean hasSchema;
+
+    private final boolean hasNamespace;
 
     private final ParameterRegistration parameterRegistration;
 
@@ -336,6 +392,7 @@ public final class ProcedureCallerFactory<T> {
             NamingStrategy parameterNamingStrategy,
             NamingStrategy procedureNamingStrategy,
             NamingStrategy schemaNamingStrategy, boolean hasSchemaName,
+            NamingStrategy namespaceNamingStrategy, boolean hasNamespace,
             ParameterRegistration parameterRegistration,
             SQLExceptionAdapter exceptionAdapter,
             TypeMapper typeMapper) {
@@ -343,7 +400,9 @@ public final class ProcedureCallerFactory<T> {
       this.parameterNamingStrategy = parameterNamingStrategy;
       this.procedureNamingStrategy = procedureNamingStrategy;
       this.schemaNamingStrategy = schemaNamingStrategy;
-      this.hasSchemaName = hasSchemaName;
+      this.hasSchema = hasSchemaName;
+      this.namespaceNamingStrategy = namespaceNamingStrategy;
+      this.hasNamespace = hasNamespace;
       this.parameterRegistration = parameterRegistration;
       this.exceptionAdapter = exceptionAdapter;
       this.typeMapper = typeMapper;
@@ -620,7 +679,8 @@ public final class ProcedureCallerFactory<T> {
     private CallInfo buildCallInfo(Method method, Object[] args) {
       int parameterCount = getParameterCount(method);
       String procedureName = this.extractProcedureName(method);
-      String schemaName = this.hasSchemaName(method) ? this.extractSchemaName(method) : null;
+      String schemaName = this.hasSchema(method) ? this.extractSchema(method) : null;
+      String namespace = this.hasNamespace(method) ? this.extractsNamespace(method) : null;
       boolean isFunction = procedureHasReturnValue(method);
       Class<?> methodReturnType = method.getReturnType();
       boolean methodHasReturnValue = methodReturnType != void.class;
@@ -829,20 +889,36 @@ public final class ProcedureCallerFactory<T> {
       }
     }
 
-    private boolean hasSchemaName(Method method) {
-      return this.hasSchemaName || method.getDeclaringClass().isAnnotationPresent(Schema.class);
+    private boolean hasSchema(Method method) {
+      return this.hasSchema || method.getDeclaringClass().isAnnotationPresent(Schema.class);
     }
 
-    private String extractSchemaName(Method method) {
+    private String extractSchema(Method method) {
       Class<?> declaringClass = method.getDeclaringClass();
-      Schema schemaNameAnnotation = declaringClass.getAnnotation(Schema.class);
-      if (schemaNameAnnotation != null) {
-        String schemaName = schemaNameAnnotation.value();
-        if (!schemaName.isEmpty()) {
-          return schemaName;
+      Schema schemaAnnotation = declaringClass.getAnnotation(Schema.class);
+      if (schemaAnnotation != null) {
+        String schema = schemaAnnotation.value();
+        if (!schema.isEmpty()) {
+          return schema;
         }
       }
       return this.schemaNamingStrategy.translateToDatabase(declaringClass.getSimpleName());
+    }
+
+    private boolean hasNamespace(Method method) {
+      return this.hasNamespace || method.getDeclaringClass().isAnnotationPresent(Schema.class);
+    }
+
+    private String extractsNamespace(Method method) {
+      Class<?> declaringClass = method.getDeclaringClass();
+      Namespace namespaceAnnotation = declaringClass.getAnnotation(Namespace.class);
+      if (namespaceAnnotation != null) {
+        String namespace = namespaceAnnotation.value();
+        if (!namespace.isEmpty()) {
+          return namespace;
+        }
+      }
+      return this.namespaceNamingStrategy.translateToDatabase(declaringClass.getSimpleName());
     }
 
     private void bindOutParameter(CallableStatement statement, CallInfo callInfo) throws SQLException {
