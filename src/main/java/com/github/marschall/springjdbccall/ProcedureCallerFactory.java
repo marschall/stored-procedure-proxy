@@ -679,7 +679,7 @@ public final class ProcedureCallerFactory<T> {
     private CallInfo buildCallInfo(Method method, Object[] args) {
       int parameterCount = getParameterCount(method);
       String procedureName = this.extractProcedureName(method);
-      String schemaName = this.hasSchema(method) ? this.extractSchema(method) : null;
+      String schema = this.hasSchema(method) ? this.extractSchema(method) : null;
       String namespace = this.hasNamespace(method) ? this.extractsNamespace(method) : null;
       boolean isFunction = procedureHasReturnValue(method);
       Class<?> methodReturnType = method.getReturnType();
@@ -755,7 +755,7 @@ public final class ProcedureCallerFactory<T> {
       }
 
 
-      String callString = buildCallString(schemaName, procedureName, parameterCount, isFunction, hasOutParameter);
+      String callString = buildCallString(namespace, schema, procedureName, parameterCount, isFunction, hasOutParameter);
       boolean wantsExceptionTranslation = wantsExceptionTranslation(method);
       Class<?> boxedReturnType = getBoxedClass(method.getReturnType());
 
@@ -821,26 +821,32 @@ public final class ProcedureCallerFactory<T> {
       return method.getParameterCount();
     }
 
-    private static String buildCallString(String schemaName, String procedureName, int parameterCount, boolean isFunction, boolean hasOutParameter) {
+    private static String buildCallString(String namespace, String schemaName, String procedureName,
+            int parameterCount, boolean isFunction, boolean hasOutParameter) {
       if (isFunction) {
-        return buildQualifiedFunctionCallString(schemaName, procedureName, parameterCount);
+        return buildQualifiedFunctionCallString(namespace, schemaName, procedureName, parameterCount);
       } else {
-        return buildQualifiedProcedureCallString(schemaName, procedureName, hasOutParameter ? parameterCount + 1 : parameterCount);
+        return buildQualifiedProcedureCallString(namespace, schemaName, procedureName, hasOutParameter ? parameterCount + 1 : parameterCount);
       }
     }
 
-    static String buildQualifiedProcedureCallString(String schemaName, String functionName, int parameterCount) {
+    static String buildQualifiedProcedureCallString(String namespace, String schemaName, String functionName, int parameterCount) {
       // {call RAISE_PRICE(?,?,?)}
-      return buildCallString("{call ", schemaName, functionName, parameterCount);
+      return buildCallString("{call ", namespace, schemaName, functionName, parameterCount);
     }
 
-    static String buildQualifiedFunctionCallString(String schemaName, String functionName, int parameterCount) {
+    static String buildQualifiedFunctionCallString(String namespace, String schemaName, String functionName, int parameterCount) {
       // { ? = call RAISE_PRICE(?,?,?)}
-      return buildCallString("{ ? = call ", schemaName, functionName, parameterCount);
+      return buildCallString("{ ? = call ", namespace, schemaName, functionName, parameterCount);
     }
 
-    static String buildCallString(String prefix, String schemaName, String functionName, int parameterCount) {
+    static String buildCallString(String prefix, String namespace, String schemaName, String functionName, int parameterCount) {
+      // compute the capacity
       int capacity = prefix.length(); // { ? = call
+      if (namespace != null) {
+        capacity += namespace.length()
+                + 1; // .
+      }
       if (schemaName != null) {
         capacity += schemaName.length()
                 + 1; // .
@@ -849,8 +855,14 @@ public final class ProcedureCallerFactory<T> {
               + 1 // (
               + Math.max(parameterCount * 2 - 1, 0) // ?,?
               + 2; // )}
+
+      // build the string
       StringBuilder builder = new StringBuilder(capacity);
       builder.append(prefix);
+      if (namespace != null) {
+        builder.append(namespace);
+        builder.append('.');
+      }
       if (schemaName != null) {
         builder.append(schemaName);
         builder.append('.');

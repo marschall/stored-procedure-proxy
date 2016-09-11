@@ -127,6 +127,68 @@ public class CallStringTest {
     verify(connection).prepareCall(eq("{call dynamic.out_parameter(?)}"));
   }
 
+  @Test
+  public void returnValueAndNamespace() throws SQLException {
+    // given
+
+    SimpleProcedures procedures = ProcedureCallerFactory.of(SimpleProcedures.class, dataSource)
+            .withProcedureNamingStrategy(NamingStrategy.snakeCase().thenLowerCase())
+            .withNamespaceNamingStrategy(ignored -> "scope")
+            .build();
+
+    // when
+    procedures.returnValue();
+
+    verify(connection).prepareCall(eq("{ ? = call scope.return_value()}"));
+  }
+
+  @Test
+  public void returnValueDynamicSchemaAndNamespace() throws SQLException {
+    // given
+
+    SimpleProcedures procedures = ProcedureCallerFactory.of(SimpleProcedures.class, dataSource)
+            .withProcedureNamingStrategy(NamingStrategy.snakeCase().thenLowerCase())
+            .withSchemaNamingStrategy(ignored -> "dynamic")
+            .withNamespaceNamingStrategy(ignored -> "scope")
+            .build();
+
+    // when
+    procedures.returnValue();
+
+    verify(connection).prepareCall(eq("{ ? = call scope.dynamic.return_value()}"));
+  }
+
+  @Test
+  public void outParameterAndNamespace() throws SQLException {
+    // given
+
+    SimpleProcedures procedures = ProcedureCallerFactory.of(SimpleProcedures.class, dataSource)
+            .withProcedureNamingStrategy(NamingStrategy.snakeCase().thenLowerCase())
+            .withNamespaceNamingStrategy(ignored -> "scope")
+            .build();
+
+    // when
+    procedures.outParameter();
+
+    verify(connection).prepareCall(eq("{call scope.out_parameter(?)}"));
+  }
+
+  @Test
+  public void outParameterDynamicSchemaAndNamespace() throws SQLException {
+    // given
+
+    SimpleProcedures procedures = ProcedureCallerFactory.of(SimpleProcedures.class, dataSource)
+            .withProcedureNamingStrategy(NamingStrategy.snakeCase().thenLowerCase())
+            .withSchemaNamingStrategy(ignored -> "dynamic")
+            .withNamespaceNamingStrategy(ignored -> "scope")
+            .build();
+
+    // when
+    procedures.outParameter();
+
+    verify(connection).prepareCall(eq("{call scope.dynamic.out_parameter(?)}"));
+  }
+
   interface SimpleProcedures {
 
     void simpleFunction();

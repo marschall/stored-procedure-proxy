@@ -11,30 +11,30 @@ public class ProcedureCallerTest {
 
   @Test
   public void buildQualifiedProcedureCallString() {
-    assertEquals("{call p.n()}", ProcedureCaller.buildQualifiedProcedureCallString("p", "n", 0));
-    assertEquals("{call p.n(?)}", ProcedureCaller.buildQualifiedProcedureCallString("p", "n", 1));
-    assertEquals("{call p.n(?,?)}", ProcedureCaller.buildQualifiedProcedureCallString("p", "n", 2));
+    assertEquals("{call p.n()}", ProcedureCaller.buildQualifiedProcedureCallString(null, "p", "n", 0));
+    assertEquals("{call p.n(?)}", ProcedureCaller.buildQualifiedProcedureCallString(null, "p", "n", 1));
+    assertEquals("{call p.n(?,?)}", ProcedureCaller.buildQualifiedProcedureCallString(null, "p", "n", 2));
   }
 
   @Test
   public void buildSimpleProcudureCallString() {
-    assertEquals("{call n()}", ProcedureCaller.buildQualifiedProcedureCallString(null, "n", 0));
-    assertEquals("{call n(?)}", ProcedureCaller.buildQualifiedProcedureCallString(null, "n", 1));
-    assertEquals("{call n(?,?)}", ProcedureCaller.buildQualifiedProcedureCallString(null, "n", 2));
+    assertEquals("{call n()}", ProcedureCaller.buildQualifiedProcedureCallString(null, null, "n", 0));
+    assertEquals("{call n(?)}", ProcedureCaller.buildQualifiedProcedureCallString(null, null, "n", 1));
+    assertEquals("{call n(?,?)}", ProcedureCaller.buildQualifiedProcedureCallString(null, null, "n", 2));
   }
 
   @Test
   public void buildQualifiedFunctionCallString() {
-    assertEquals("{ ? = call p.n()}", ProcedureCaller.buildQualifiedFunctionCallString("p", "n", 0));
-    assertEquals("{ ? = call p.n(?)}", ProcedureCaller.buildQualifiedFunctionCallString("p", "n", 1));
-    assertEquals("{ ? = call p.n(?,?)}", ProcedureCaller.buildQualifiedFunctionCallString("p", "n", 2));
+    assertEquals("{ ? = call p.n()}", ProcedureCaller.buildQualifiedFunctionCallString(null, "p", "n", 0));
+    assertEquals("{ ? = call p.n(?)}", ProcedureCaller.buildQualifiedFunctionCallString(null, "p", "n", 1));
+    assertEquals("{ ? = call p.n(?,?)}", ProcedureCaller.buildQualifiedFunctionCallString(null, "p", "n", 2));
   }
 
   @Test
   public void buildSimpleFunctionCallString() {
-    assertEquals("{ ? = call n()}", ProcedureCaller.buildQualifiedFunctionCallString(null, "n", 0));
-    assertEquals("{ ? = call n(?)}", ProcedureCaller.buildQualifiedFunctionCallString(null, "n", 1));
-    assertEquals("{ ? = call n(?,?)}", ProcedureCaller.buildQualifiedFunctionCallString(null, "n", 2));
+    assertEquals("{ ? = call n()}", ProcedureCaller.buildQualifiedFunctionCallString(null, null, "n", 0));
+    assertEquals("{ ? = call n(?)}", ProcedureCaller.buildQualifiedFunctionCallString(null, null, "n", 1));
+    assertEquals("{ ? = call n(?,?)}", ProcedureCaller.buildQualifiedFunctionCallString(null, null, "n", 2));
   }
 
   @Test
