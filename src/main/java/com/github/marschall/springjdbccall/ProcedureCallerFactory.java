@@ -771,36 +771,16 @@ public final class ProcedureCallerFactory<T> {
 
     static String buildQualifiedProcedureCallString(String schemaName, String functionName, int parameterCount) {
       // {call RAISE_PRICE(?,?,?)}
-      int capacity = 6; // {call
-      if (schemaName != null) {
-        capacity += schemaName.length()
-                + 1; // .
-      }
-      capacity += functionName.length()
-              + 1 // (
-              + Math.max(parameterCount * 2 - 1, 0) // ?,?
-              + 2; // )}
-      StringBuilder builder = new StringBuilder(capacity);
-      builder.append("{call ");
-      if (schemaName != null) {
-        builder.append(schemaName);
-        builder.append('.');
-      }
-      builder.append(functionName);
-      builder.append('(');
-      for (int i = 0; i < parameterCount; i++) {
-        if (i != 0) {
-          builder.append(',');
-        }
-        builder.append('?');
-      }
-      builder.append(")}");
-      return builder.toString();
+      return buildCallString("{call ", schemaName, functionName, parameterCount);
     }
 
     static String buildQualifiedFunctionCallString(String schemaName, String functionName, int parameterCount) {
       // { ? = call RAISE_PRICE(?,?,?)}
-      int capacity = 11; // { ? = call
+      return buildCallString("{ ? = call ", schemaName, functionName, parameterCount);
+    }
+
+    static String buildCallString(String prefix, String schemaName, String functionName, int parameterCount) {
+      int capacity = prefix.length(); // { ? = call
       if (schemaName != null) {
         capacity += schemaName.length()
                 + 1; // .
@@ -810,7 +790,7 @@ public final class ProcedureCallerFactory<T> {
               + Math.max(parameterCount * 2 - 1, 0) // ?,?
               + 2; // )}
       StringBuilder builder = new StringBuilder(capacity);
-      builder.append("{ ? = call ");
+      builder.append(prefix);
       if (schemaName != null) {
         builder.append(schemaName);
         builder.append('.');
