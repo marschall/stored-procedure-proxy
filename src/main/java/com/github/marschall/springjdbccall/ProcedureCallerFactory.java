@@ -552,24 +552,25 @@ public final class ProcedureCallerFactory<T> {
         statement.setFetchSize(fetchSize);
       }
       boolean hasResultSet = statement.execute();
-      List<Object> result = new ArrayList<>();
       if (hasResultSet) {
         try (ResultSet rs = statement.getResultSet()) {
-          while (rs.next()) {
-            Object element = rs.getObject(1, callInfo.listElementType);
-            result.add(element);
-          }
+          return read(rs, callInfo.listElementType);
         }
       } else {
         if (!callInfo.hasOutParamter()) {
           throw new IllegalStateException("@" + OutParameter.class + " for @" + ReturnValue.class + "  missing");
         }
         try (ResultSet rs = this.getOutResultSet(statement, callInfo)) {
-          while (rs.next()) {
-            Object element = rs.getObject(1, callInfo.listElementType);
-            result.add(element);
-          }
+          return read(rs, callInfo.listElementType);
         }
+      }
+    }
+
+    private static List<Object> read(ResultSet resultSet, Class<?> type) throws SQLException {
+      List<Object> result = new ArrayList<>();
+      while (resultSet.next()) {
+        Object element = resultSet.getObject(1, type);
+        result.add(element);
       }
       return result;
     }

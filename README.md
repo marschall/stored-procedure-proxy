@@ -49,6 +49,7 @@ Calling simple stored procedures in JDBC or JPA is unnecessarily [cumbersome](ht
 - [Spring Data JPA](https://github.com/spring-projects/spring-data-examples/tree/master/jpa/jpa21) is close.
 - [jOOQ](http://www.jooq.org/doc/3.8/manual/sql-execution/stored-procedures/) requires a class for every call, passing a configuration object and calling setters.
 - [jDBI](https://github.com/jdbi/jdbi/issues/135) falls back to manual parameter registration for out parameters as well.
+- [Querydsl](https://github.com/querydsl/querydsl/issues/15) has no support at all
 
 While they all have their use case none of them fitted out use case.
 
@@ -88,9 +89,7 @@ Caveats
 
 Unsure
 ------
-- Do we need a package name in addition to a schema name?
 - Is there a better way to avoid having `@OutParameter` or `@ReturnValue`
-- procedures that use result sets instead of out parameter or return values
 - Should we support other collections than list?
 - Should we support a ValueExtractor without an int
 - Out parameter default last
