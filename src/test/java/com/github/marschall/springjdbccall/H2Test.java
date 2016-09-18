@@ -37,11 +37,11 @@ public class H2Test {
   @Autowired
   private DataSource dataSource;
 
-  private H2Procedures functions;
+  private H2Procedures procedures;
 
   @Before
   public void setUp() {
-    this.functions = ProcedureCallerFactory.of(H2Procedures.class, this.dataSource)
+    this.procedures = ProcedureCallerFactory.of(H2Procedures.class, this.dataSource)
             .withProcedureNamingStrategy(NamingStrategy.snakeCase().thenUpperCase())
             .build();
   }
@@ -64,12 +64,12 @@ public class H2Test {
   @Test
   public void callScalarProcedure() {
     String input = "test";
-    assertEquals("pre" + input + "post", functions.stringProcedure(input));
+    assertEquals("pre" + input + "post", procedures.stringProcedure(input));
   }
 
   @Test
   public void callVoidProcedure() {
-    functions.voidProcedure("test");
+    procedures.voidProcedure("test");
   }
 
 }
