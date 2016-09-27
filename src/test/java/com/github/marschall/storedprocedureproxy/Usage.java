@@ -4,7 +4,6 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 
-import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory;
 import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration;
 import com.github.marschall.storedprocedureproxy.procedures.PostgresProcedures;
 

@@ -4,8 +4,6 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import com.github.marschall.storedprocedureproxy.spi.NamingStrategy;
-
 public class NamingStrategyTest {
 
   @Test

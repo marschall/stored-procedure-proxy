@@ -19,7 +19,6 @@ import javax.sql.DataSource;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory;
 import com.github.marschall.storedprocedureproxy.annotations.FetchSize;
 import com.github.marschall.storedprocedureproxy.annotations.OutParameter;
 

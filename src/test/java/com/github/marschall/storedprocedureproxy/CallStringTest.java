@@ -3,8 +3,8 @@ package com.github.marschall.storedprocedureproxy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -16,7 +16,6 @@ import javax.sql.DataSource;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory;
 import com.github.marschall.storedprocedureproxy.annotations.OutParameter;
 import com.github.marschall.storedprocedureproxy.annotations.ReturnValue;
 import com.github.marschall.storedprocedureproxy.spi.NamingStrategy;

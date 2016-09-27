@@ -31,7 +31,6 @@ import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory;
 import com.github.marschall.storedprocedureproxy.configuration.PostgresConfiguration;
 import com.github.marschall.storedprocedureproxy.configuration.TestConfiguration;
 import com.github.marschall.storedprocedureproxy.procedures.PostgresProcedures;
