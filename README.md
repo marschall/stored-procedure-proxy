@@ -5,6 +5,16 @@ A more convenient and type safe way to call stored procedures from Java.
 
 This project allows you to define a Java interface method for every stored procedure you want to call. Then it creates a dynamic instance of that interface that calls the stored procedure whenever you call the method.
 
+```xml
+<dependency>
+  <groupId>com.github.marschall</groupId>
+  <artifactId>stored-procedure-proxy</artifactId>
+  <version>0.1.0</version>
+</dependency>
+```
+
+Check out the [wiki](https://github.com/marschall/stored-procedure-proxy/wiki) for more information.
+
 Features
 --------
 
@@ -31,12 +41,6 @@ Features
 - no runtime bytecode generation or manipulation
 - permissive license (MIT)
 
-Not supported
--------------
-
- - more than one out parameter
- - in out parameters
-
 What problem does this project solve?
 -------------------------------------
 
@@ -53,13 +57,6 @@ Calling simple stored procedures in JDBC or JPA is unnecessarily [cumbersome](ht
 
 While they all have their use case none of them fitted out use case.
 
-Assumptions
------------
-
-This projects makes a few assumptions about the environment it runs in:
-
-- You have a connection pool.
-- You manage transactions either directly or indirectly through JTA or through Spring or a similar way.
 
 Exception Translation
 ---------------------
@@ -78,14 +75,6 @@ Caveats
 - uses [@Annotations](http://www.annotatiomania.com)
 - requires some knowledge about how the database driver handles calls (see below)
 
-#### H2
-- does not support out parameters, use either `@ReturnValue` or no annotation at all
-
-#### Postgres
-- pgjdbc 9.4.1210 or later is recommended
-
-#### Mysql
-- ref cursors only work if you use neither `@OutParameter` nor `@ReturnValue`
 
 Unsure
 ------
