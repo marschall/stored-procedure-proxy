@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
  *
  * <p>If the schema name is not static you can use something like this:</p>
  * <pre><code>ProcedureCallerFactory.of(MyProcedures.class, dataSource)
- *  .withSchemaNamingStrategy(ignored -> computeSchemaName())
+ *  .withSchemaNamingStrategy(ignored -&gt; computeSchemaName())
  *  .build();</code></pre>
  *
  * <p>For PL/SQL packages or DB2 modules {@link Namespace} should be
