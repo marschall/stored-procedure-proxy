@@ -79,7 +79,6 @@ public interface NamingStrategy {
     return SnakeCase.INSTANCE;
   }
 
-
   /**
    * Creates a new transformation that applies a prefix to the string.
    *
@@ -89,6 +88,17 @@ public interface NamingStrategy {
   public static NamingStrategy prefix(String prefix) {
     Objects.requireNonNull(prefix);
     return new Prefix(prefix);
+  }
+
+  /**
+   * Creates a new transformation that skips a given number of characters
+   * from the start of the java name.
+   *
+   * @param skipped the number of characters from the start
+   * @return a new transformation that skips the first characters
+   */
+  public static NamingStrategy withoutFirst(int skipped) {
+    return new WithoutFirst(skipped);
   }
 
   /**
@@ -160,6 +170,17 @@ public interface NamingStrategy {
   default NamingStrategy thenPrefix(String prefix) {
     Objects.requireNonNull(prefix);
     return then(prefix(prefix));
+  }
+
+  /**
+   * Skips a number of characters from the start of the name after the current
+   * transformation.
+   *
+   * @param skipped the number of characters from the start
+   * @return a new transformation that skips {@code skipped} characters after the current transformation
+   */
+  default NamingStrategy thenWithoutFirst(int skipped) {
+    return then(withoutFirst(skipped));
   }
 
 }

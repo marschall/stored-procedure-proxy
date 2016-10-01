@@ -20,4 +20,25 @@ public class NamingStrategyTest {
     assertEquals("JAVA_NAME", strategy.translateToDatabase("javaName"));
   }
 
+  @Test
+  public void lowerCase() {
+    NamingStrategy strategy = NamingStrategy.snakeCase()
+            .thenLowerCase();
+    assertEquals("java_name", strategy.translateToDatabase("javaName"));
+  }
+
+  @Test
+  public void withoutFirst() {
+    NamingStrategy strategy = NamingStrategy.withoutFirst(2);
+    assertEquals("javaName", strategy.translateToDatabase("x_javaName"));
+  }
+
+  @Test
+  public void compound() {
+    NamingStrategy strategy = NamingStrategy.withoutFirst(2)
+            .thenSnakeCase()
+            .thenLowerCase();
+    assertEquals("java_name", strategy.translateToDatabase("x_javaName"));
+  }
+
 }
