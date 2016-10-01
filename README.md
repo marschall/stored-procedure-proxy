@@ -57,16 +57,6 @@ Calling simple stored procedures in JDBC or JPA is unnecessarily [cumbersome](ht
 
 While they all have their use case none of them fitted out use case.
 
-
-Exception Translation
----------------------
-
-Different ways of handling exceptions are offered:
-
-- If the method declares `throws SQLException` no exception translation will happen and the original exception will be propagated.
-- If the does not method declare `throws SQLException` exception translation to an `UncheckedSQLException` will happen.
-- If the does not method declare `throws SQLException` exception and Spring is present translation will happen using Spring [DataAccessException](http://docs.spring.io/autorepo/docs/spring/current/spring-framework-reference/html/dao.html) hierarchy.
-
 Caveats
 -------
 - no support for `java.util.Date` or `java.util.Calendar`, because JDBC doesn't support it
@@ -74,7 +64,6 @@ Caveats
 - no support for `ZonedDateTime`, because JDBC doesn't support it
 - uses [@Annotations](http://www.annotatiomania.com)
 - requires some knowledge about how the database driver handles calls (see below)
-
 
 Unsure
 ------
@@ -86,5 +75,4 @@ Unsure
 - type annotation for element in ref cursor
 - rename `@OutParameter` to `@Procedure`, `@ReturnValue` to `@Function`
 - combine `@OutParameter` and `@Function` and remove attirbutes from `@Function`?
-
 
