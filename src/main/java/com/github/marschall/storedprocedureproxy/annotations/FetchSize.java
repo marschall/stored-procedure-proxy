@@ -11,7 +11,8 @@ import java.lang.annotation.Target;
 /**
  * Allows manual control over the fetch size.
  *
- * <p>This is only really useful for methods .</p>
+ * <p>This is only really useful for methods that use cursors to return
+ * multiple rows.</p>
  *
  * <p>When applied to a class applies to all methods in the class
  * unless also applied to a method.</p>
