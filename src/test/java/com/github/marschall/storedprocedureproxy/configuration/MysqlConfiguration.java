@@ -18,8 +18,13 @@ public class MysqlConfiguration {
     // https://dev.mysql.com/doc/connector-j/6.0/en/connector-j-reference-configuration-properties.html
     dataSource.setUrl("jdbc:mysql://localhost:3306/" + database);
     dataSource.setUsername(userName);
-    dataSource.setPassword(userName);
+    String password = this.isTravis() ? "" : userName;
+    dataSource.setPassword(password);
     return dataSource;
+  }
+
+  private boolean isTravis() {
+    return System.getenv().getOrDefault("TRAVIS", "false").equals("true");
   }
 
 }
