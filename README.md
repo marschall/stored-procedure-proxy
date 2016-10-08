@@ -13,6 +13,36 @@ This project allows you to define a Java interface method for every stored proce
 </dependency>
 ```
 
+Overview
+--------
+
+Simply create an interface that represents the stored procedures you want to call.
+
+```java
+public interface TaxProcedures {
+
+  BigDecimal salesTax(BigDecimal subtotal);
+
+}
+
+```
+
+Then create an instance using only a `javax.sql.DataSource`
+
+```java
+TaxProcedures taxProcedures = ProcedureCallerFactory.build(TaxProcedures.class, dataSource);
+
+```
+
+Invoking interface methods will then call stored procedure.
+
+```java
+taxProcedures.salesTax(new BigDecimal("100.00"));
+```
+
+will actually call the stored procedure.
+
+
 Check out the [wiki](https://github.com/marschall/stored-procedure-proxy/wiki) for more information.
 
 Features
@@ -55,7 +85,7 @@ Calling simple stored procedures in JDBC or JPA is unnecessarily [cumbersome](ht
 - [jDBI](https://github.com/jdbi/jdbi/issues/135) falls back to manual parameter registration for out parameters as well.
 - [Querydsl](https://github.com/querydsl/querydsl/issues/15) has no support at all
 
-While they all have their use case none of them fitted out use case.
+While they all have their use case none of them fitted our needs.
 
 Unsure
 ------
