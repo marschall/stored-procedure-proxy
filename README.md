@@ -57,14 +57,6 @@ Calling simple stored procedures in JDBC or JPA is unnecessarily [cumbersome](ht
 
 While they all have their use case none of them fitted out use case.
 
-Caveats
--------
-- no support for `java.util.Date` or `java.util.Calendar`, because JDBC doesn't support it
-- no support for `BigInteger`, because JDBC doesn't support it
-- no support for `ZonedDateTime`, because JDBC doesn't support it
-- uses [@Annotations](http://www.annotatiomania.com)
-- requires some knowledge about how the database driver handles calls (see below)
-
 Unsure
 ------
 - Is there a better way to avoid having `@OutParameter` or `@ReturnValue`

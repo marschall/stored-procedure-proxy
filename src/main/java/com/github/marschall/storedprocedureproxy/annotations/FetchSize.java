@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
  * <p>This is only really useful for methods that use cursors to return
  * multiple rows.</p>
  *
- * <p>When applied to a class applies to all methods in the class
+ * <p>When applied to an interface applies to all methods in the class
  * unless also applied to a method.</p>
  */
 @Documented
