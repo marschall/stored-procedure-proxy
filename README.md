@@ -1,4 +1,4 @@
-Stored Procedure Proxy [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.marschall/stored-procedure-proxy/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.marschall/stored-procedure-proxy) [![Javadocs](http://www.javadoc.io/badge/com.github.marschall/stored-procedure-proxy.svg)](http://www.javadoc.io/doc/com.github.marschall/stored-procedure-proxy)
+Stored Procedure Proxy [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.marschall/stored-procedure-proxy/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.marschall/stored-procedure-proxy) [![Javadocs](http://www.javadoc.io/badge/com.github.marschall/stored-procedure-proxy.svg)](http://www.javadoc.io/doc/com.github.marschall/stored-procedure-proxy) [![Build Status](https://travis-ci.org/marschall/stored-procedure-proxy.svg?branch=master)](https://travis-ci.org/marschall/stored-procedure-proxy)
 ======================
 
 A more convenient and type safe way to call stored procedures from Java.
