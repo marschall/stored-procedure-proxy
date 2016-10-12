@@ -23,6 +23,7 @@ import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration;
 import com.github.marschall.storedprocedureproxy.configuration.HsqlConfiguration;
 import com.github.marschall.storedprocedureproxy.configuration.TestConfiguration;
 import com.github.marschall.storedprocedureproxy.procedures.HsqlProcedures;
@@ -53,25 +54,10 @@ public class HsqlTest {
   }
 
   @Test
-  @Ignore("buggy")
-  public void function() throws SQLException {
-    try (Connection connection = this.dataSource.getConnection()) {
-      DatabaseMetaData metaData = connection.getMetaData();
-      try (ResultSet functions = metaData.getFunctions(null, null, null)) {
-        while (functions.next()) {
-          System.out.println(functions.getString("FUNCTION_NAME"));
-        }
-      }
-//      try (CallableStatement call = connection.prepareCall("{ call an_hour_before(?)}")) {
-//
-//      }
-      try (CallableStatement call = connection.prepareCall("{ ? = call an_hour_before(?)}")) {
-
-      }
-    }
+  public void function() {
     LocalDateTime after = LocalDateTime.of(2016, 10, 12, 17, 19);
     LocalDateTime before = after.minusHours(1L);
-    assertEquals(Timestamp.valueOf(before), this.procedures.anHourBefore(Timestamp.valueOf(before)));
+    assertEquals(Timestamp.valueOf(before), this.procedures.anHourBefore(Timestamp.valueOf(after)));
   }
 
 }

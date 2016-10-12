@@ -10,8 +10,7 @@ public interface HsqlProcedures {
   @OutParameter
   int plus1inout(int arg);
 
-//  @ReturnValue
-  @ProcedureName("AN_HOUR_BEFORE")
+  @ProcedureName("an_hour_before")
   Timestamp anHourBefore(Timestamp t);
 
 }
