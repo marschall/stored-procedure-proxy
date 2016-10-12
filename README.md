@@ -42,31 +42,6 @@ Check out the [wiki](https://github.com/marschall/stored-procedure-proxy/wiki) f
 </dependency>
 ```
 
-Features
---------
-
-- avoids JDBC metadata access
- - works if the database user is not the schema owner
- - works if there are hundreds of visible schemas
-- works with Oracle packages
-- works with DB2 modules
-- supports different ways of retrieving results
- - procedures with out parameters
- - functions with out parameters
- - database drivers that return `ResultSet`s
-- names for schemas, procedures and parameters can be supplied explicitly or derived if you have a naming convention
- - supports binding by parameter names
- - parameter names can be read from [source](https://docs.oracle.com/javase/tutorial/reflect/member/methodparameterreflection.html) (if you compile with `-parameters`)
-- integrates with Spring but does not require Spring
-- supports primitive types
-- supports Java 8 Date and Time API
- - if the driver supports it
-- does reflection only once per method and caches the meta data for future calls
-- interfaces can be mocked or stubbed easily for tests that don't require database access
-- no dependencies, Spring is merely an [optional dependency](https://maven.apache.org/guides/introduction/introduction-to-optional-and-excludes-dependencies.html)
-- no bytecode parsing
-- no runtime bytecode generation or manipulation
-- permissive license (MIT)
 
 What problem does this project solve?
 -------------------------------------
