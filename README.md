@@ -52,7 +52,7 @@ Calling simple stored procedures in JDBC or JPA is unnecessarily [cumbersome](ht
  - call [JdbcOperations#cal](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/jdbc/core/JdbcOperations.html#call-org.springframework.jdbc.core.CallableStatementCreator-java.util.List-)
  - sublcass [StoredProcedure](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/jdbc/object/StoredProcedure.html)
  - use [SimpleJdbcCall](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/jdbc/core/simple/SimpleJdbcCall.html)
-- [Spring Data JPA](https://github.com/spring-projects/spring-data-examples/tree/master/jpa/jpa21) is close.
+- [Spring Data JPA](https://github.com/spring-projects/spring-data-examples/tree/master/jpa/jpa21) is hardly an improvement since it still needs a `@NamedStoredProcedureQuery`.
 - [jOOQ](http://www.jooq.org/doc/3.8/manual/sql-execution/stored-procedures/) requires a class for every call, passing a configuration object and calling setters.
 - [jDBI](https://github.com/jdbi/jdbi/issues/135) falls back to manual parameter registration for out parameters as well.
 - [Querydsl](https://github.com/querydsl/querydsl/issues/15) has no support at all
