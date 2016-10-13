@@ -97,7 +97,7 @@ public final class ProcedureCallerFactory<T> {
     INCORRECT_RESULT_SIZE_EXCEPTION_GENERATOR = incorrectResultSizeExceptionGenerator;
   }
 
-  private final Class<T> inferfaceDeclaration;
+  private final Class<T> interfaceDeclaration;
 
   private final DataSource dataSource;
 
@@ -119,8 +119,8 @@ public final class ProcedureCallerFactory<T> {
 
   private TypeMapper typeMapper;
 
-  private ProcedureCallerFactory(Class<T> inferfaceDeclaration, DataSource dataSource) {
-    this.inferfaceDeclaration = inferfaceDeclaration;
+  private ProcedureCallerFactory(Class<T> interfaceDeclaration, DataSource dataSource) {
+    this.interfaceDeclaration = interfaceDeclaration;
     this.dataSource = dataSource;
     this.parameterNamingStrategy = NamingStrategy.IDENTITY;
     this.procedureNamingStrategy = NamingStrategy.IDENTITY;
@@ -308,14 +308,15 @@ public final class ProcedureCallerFactory<T> {
    * @return the interface instance
    */
   public T build() {
-    ProcedureCaller caller = new ProcedureCaller(this.dataSource, this.parameterNamingStrategy,
-            this.procedureNamingStrategy, this.schemaNamingStrategy, this.hasSchema,
+    ProcedureCaller caller = new ProcedureCaller(this.dataSource, this.interfaceDeclaration,
+            this.parameterNamingStrategy, this.procedureNamingStrategy, this.schemaNamingStrategy,
+            this.hasSchema,
             this.namespaceNamingStrategy, this.hasNamespace,
             this.parameterRegistration, this.exceptionAdapter, this.typeMapper);
     // REVIEW correct class loader
-    Object proxy = Proxy.newProxyInstance(this.inferfaceDeclaration.getClassLoader(),
-            new Class<?>[]{this.inferfaceDeclaration}, caller);
-    return this.inferfaceDeclaration.cast(proxy);
+    Object proxy = Proxy.newProxyInstance(this.interfaceDeclaration.getClassLoader(),
+            new Class<?>[]{this.interfaceDeclaration}, caller);
+    return this.interfaceDeclaration.cast(proxy);
   }
 
   static RuntimeException newIncorrectResultSizeException(int expectedSize, int actualSize) {
@@ -364,6 +365,8 @@ public final class ProcedureCallerFactory<T> {
 
     private final DataSource dataSource;
 
+    private final Class<?> interfaceDeclaration;
+
     private final NamingStrategy parameterNamingStrategy;
 
     private final NamingStrategy procedureNamingStrategy;
@@ -389,6 +392,7 @@ public final class ProcedureCallerFactory<T> {
     private final Map<Method, CallInfo> callInfoCache;
 
     ProcedureCaller(DataSource dataSource,
+            Class<?> interfaceDeclaration,
             NamingStrategy parameterNamingStrategy,
             NamingStrategy procedureNamingStrategy,
             NamingStrategy schemaNamingStrategy, boolean hasSchemaName,
@@ -397,6 +401,7 @@ public final class ProcedureCallerFactory<T> {
             SQLExceptionAdapter exceptionAdapter,
             TypeMapper typeMapper) {
       this.dataSource = dataSource;
+      this.interfaceDeclaration = interfaceDeclaration;
       this.parameterNamingStrategy = parameterNamingStrategy;
       this.procedureNamingStrategy = procedureNamingStrategy;
       this.schemaNamingStrategy = schemaNamingStrategy;
@@ -411,6 +416,18 @@ public final class ProcedureCallerFactory<T> {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+      // handle methods defined in Object: toString, hashCode, equals
+      String methodName = method.getName();
+      int argCount = args == null ? 0 : args.length;
+      if (methodName.equals("toString") && argCount == 0) {
+        return "stored procedures defined in " + this.interfaceDeclaration.getName();
+      } else if (methodName.equals("hashCode") && argCount == 0) {
+        return System.identityHashCode(proxy);
+      } else if (methodName.equals("equals") && argCount == 1) {
+        return proxy == args[0];
+      }
+
+      // handle actual interface methods
       CallInfo callInfo = this.getCallInfo(method, args);
       Object returnValue;
       try (Connection connection = this.dataSource.getConnection()) {
