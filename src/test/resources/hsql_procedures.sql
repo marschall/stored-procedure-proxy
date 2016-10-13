@@ -1,6 +1,6 @@
 CREATE procedure plus1inout (IN arg int, OUT res int)
 BEGIN ATOMIC
-  set res = arg + 1;
+  SET res = arg + 1;
 END
 /;
 
@@ -8,4 +8,13 @@ CREATE FUNCTION an_hour_before (t TIMESTAMP)
    RETURNS TIMESTAMP
    RETURN t - 1 HOUR;
 /;
+
+CREATE FUNCTION one_two() 
+RETURNS TABLE(id integer) 
+READS SQL DATA BEGIN ATOMIC 
+   RETURN TABLE(SELECT 1 FROM (VALUES(0)) UNION ALL SELECT 2 FROM (VALUES(0))); 
+END 
+/;
+
+
 

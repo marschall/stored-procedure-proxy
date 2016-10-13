@@ -194,6 +194,13 @@
           <arguments>-Pdeploy-to-sonatype-oss</arguments>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>com.github.marschall</groupId>
+        <artifactId>jdeps-maven-plugin</artifactId>
+        <configuration>
+          <profile>true</profile>
+        </configuration>
+      </plugin>
     </plugins>
     <pluginManagement>
       <plugins>
@@ -253,6 +260,11 @@
         <plugin>
           <artifactId>maven-scm-plugin</artifactId>
           <version>1.9.5</version>
+        </plugin>
+        <plugin>
+          <groupId>com.github.marschall</groupId>
+          <artifactId>jdeps-maven-plugin</artifactId>
+          <version>0.4.0</version>
         </plugin>
         <!--This plugin's configuration is used to store Eclipse m2e settings 
           only. It has no influence on the Maven build itself. -->
