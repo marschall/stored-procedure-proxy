@@ -39,17 +39,17 @@ public class ProcedureCallerTest {
 
   @Test
   public void buildInParameterIndicesNoOut() {
-    assertArrayEquals(new int[] {}, ProcedureCaller.buildInParameterIndices(0));
-    assertArrayEquals(new int[] {1}, ProcedureCaller.buildInParameterIndices(1));
-    assertArrayEquals(new int[] {1, 2}, ProcedureCaller.buildInParameterIndices(2));
+    assertArrayEquals(new byte[] {}, ProcedureCaller.buildInParameterIndices(0));
+    assertArrayEquals(new byte[] {1}, ProcedureCaller.buildInParameterIndices(1));
+    assertArrayEquals(new byte[] {1, 2}, ProcedureCaller.buildInParameterIndices(2));
   }
 
   @Test
   public void buildInParameterIndicesWithOut() {
-    assertArrayEquals(new int[] {}, ProcedureCaller.buildInParameterIndices(0, 1));
-    assertArrayEquals(new int[] {2, 3, 4}, ProcedureCaller.buildInParameterIndices(3, 1));
-    assertArrayEquals(new int[] {1, 3, 4}, ProcedureCaller.buildInParameterIndices(3, 2));
-    assertArrayEquals(new int[] {1, 2, 4}, ProcedureCaller.buildInParameterIndices(3, 3));
+    assertArrayEquals(new byte[] {}, ProcedureCaller.buildInParameterIndices(0, 1));
+    assertArrayEquals(new byte[] {2, 3, 4}, ProcedureCaller.buildInParameterIndices(3, 1));
+    assertArrayEquals(new byte[] {1, 3, 4}, ProcedureCaller.buildInParameterIndices(3, 2));
+    assertArrayEquals(new byte[] {1, 2, 4}, ProcedureCaller.buildInParameterIndices(3, 3));
   }
 
 

@@ -363,6 +363,8 @@ public final class ProcedureCallerFactory<T> {
 
     private static final int NO_OUT_PARAMTER = -1;
 
+    private static final int NO_VALUE_EXTRACTOR = -1;
+
     private final DataSource dataSource;
 
     private final Class<?> interfaceDeclaration;
@@ -762,7 +764,7 @@ public final class ProcedureCallerFactory<T> {
         listElementType = null;
       }
 
-      int[] inParameterIndices;
+      byte[] inParameterIndices;
       boolean hasOutParameter = outParameterIndex != NO_OUT_PARAMTER;
       if (!hasOutParameter || (hasOutParameter && outParameterIndex == parameterCount + 1)) {
         // we have an no out parameter or
@@ -815,21 +817,21 @@ public final class ProcedureCallerFactory<T> {
       }
     }
 
-    static int[] buildInParameterIndices(int parameterCount) {
-      int[] indices = new int[parameterCount];
+    static byte[] buildInParameterIndices(int parameterCount) {
+      byte[] indices = new byte[parameterCount];
       for (int i = 0; i < indices.length; i++) {
-        indices[i] = i + 1;
+        indices[i] = (byte) (i + 1);
       }
       return indices;
     }
 
-    static int[] buildInParameterIndices(int parameterCount, int outParameterIndex) {
-      int[] indices = new int[parameterCount];
+    static byte[] buildInParameterIndices(int parameterCount, int outParameterIndex) {
+      byte[] indices = new byte[parameterCount];
       for (int i = 0; i < indices.length; i++) {
         if (outParameterIndex > i + 1) {
-          indices[i] = i + 1;
+          indices[i] = (byte) (i + 1);
         } else {
-          indices[i] = i + 2;
+          indices[i] = (byte) (i + 2);
         }
       }
       return indices;
@@ -999,7 +1001,7 @@ public final class ProcedureCallerFactory<T> {
       }
       for (int i = 0; i < args.length; i++) {
         // REVIEW null check?
-        statement.setObject(callInfo.inParameterIndices[i], args[i]);
+        statement.setObject(callInfo.inParameterIndexAt(i), args[i]);
       }
     }
 
@@ -1008,7 +1010,7 @@ public final class ProcedureCallerFactory<T> {
         return;
       }
       for (int i = 0; i < args.length; i++) {
-        int parameterIndex = callInfo.inParameterIndices[i];
+        int parameterIndex = callInfo.inParameterIndexAt(i);
         Object arg = args[i];
         int type = callInfo.inParameterTypes[i];
         if (arg != null) {
@@ -1054,11 +1056,13 @@ public final class ProcedureCallerFactory<T> {
     final int outParameterIndex;
     final int outParameterType;
     final String outParameterName;
-    final int[] inParameterIndices;
+    // an interface method can not have more than 254 parameters
+    final byte[] inParameterIndices;
     final int[] inParameterTypes;
     final String[] inParameterNames;
     final boolean wantsExceptionTranslation;
     final int fetchSize;
+    final int extractorIndex;
 
     /**
      * Instead of {@code int.class} contains {@code Integer.class}.
@@ -1069,7 +1073,7 @@ public final class ProcedureCallerFactory<T> {
 
     CallInfo(String procedureName, String callString, int outParameterIndex,
             int outParameterType, String outParameterName,
-            int[] inParameterIndices, int[] inParameterTypes,
+            byte[] inParameterIndices, int[] inParameterTypes,
             String[] inParameterNames, boolean wantsExceptionTranslation,
             Class<?> boxedReturnType,
             boolean isList, Class<?> listElementType,
@@ -1087,10 +1091,19 @@ public final class ProcedureCallerFactory<T> {
       this.isList = isList;
       this.listElementType = listElementType;
       this.fetchSize = fetchSize;
+      this.extractorIndex = ProcedureCaller.NO_VALUE_EXTRACTOR;
+    }
+
+    int inParameterIndexAt(int i) {
+      return Byte.toUnsignedInt(this.inParameterIndices[i]);
     }
 
     boolean hasOutParamter() {
       return this.outParameterIndex != ProcedureCaller.NO_OUT_PARAMTER;
+    }
+
+    boolean hasValueExtractor() {
+      return this.extractorIndex != ProcedureCaller.NO_VALUE_EXTRACTOR;
     }
 
   }
