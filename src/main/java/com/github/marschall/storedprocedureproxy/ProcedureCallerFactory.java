@@ -361,6 +361,7 @@ public final class ProcedureCallerFactory<T> {
 
     private static final int DEFAULT_FETCH_SIZE = 0;
 
+    // an interface method can not have more than 254 parameters
     private static final int NO_OUT_PARAMTER = -1;
 
     private static final int NO_VALUE_EXTRACTOR = -1;
@@ -527,7 +528,7 @@ public final class ProcedureCallerFactory<T> {
         if (this.isUseParameterNames()) {
           return statement.getObject(callInfo.outParameterName, returnType);
         } else {
-          return statement.getObject(callInfo.outParameterIndex, returnType);
+          return statement.getObject(callInfo.getOutParameterIndex(), returnType);
         }
       } catch (SQLFeatureNotSupportedException e) {
         // we need to pass the class for Java 8 Date Time support
@@ -536,7 +537,7 @@ public final class ProcedureCallerFactory<T> {
         if (this.isUseParameterNames()) {
           return statement.getObject(callInfo.outParameterName);
         } else {
-          return statement.getObject(callInfo.outParameterIndex);
+          return statement.getObject(callInfo.getOutParameterIndex());
         }
       }
     }
@@ -604,10 +605,10 @@ public final class ProcedureCallerFactory<T> {
         }
       } else {
         try {
-          return statement.getObject(callInfo.outParameterIndex, ResultSet.class);
+          return statement.getObject(callInfo.getOutParameterIndex(), ResultSet.class);
         } catch (SQLFeatureNotSupportedException e) {
           // Postgres hack
-          return (ResultSet) statement.getObject(callInfo.outParameterIndex);
+          return (ResultSet) statement.getObject(callInfo.getOutParameterIndex());
         }
       }
     }
@@ -969,7 +970,7 @@ public final class ProcedureCallerFactory<T> {
     }
 
     private void bindOutParameterByIndex(CallableStatement statement, CallInfo callInfo) throws SQLException {
-      statement.registerOutParameter(callInfo.outParameterIndex, callInfo.outParameterType);
+      statement.registerOutParameter(callInfo.getOutParameterIndex(), callInfo.outParameterType);
     }
 
     private void bindOutParameterByName(CallableStatement statement, CallInfo callInfo) throws SQLException {
@@ -1012,7 +1013,7 @@ public final class ProcedureCallerFactory<T> {
       for (int i = 0; i < args.length; i++) {
         int parameterIndex = callInfo.inParameterIndexAt(i);
         Object arg = args[i];
-        int type = callInfo.inParameterTypes[i];
+        int type = callInfo.inParameterTypeAt(i);
         if (arg != null) {
           statement.setObject(parameterIndex, arg, type);
         } else {
@@ -1027,7 +1028,7 @@ public final class ProcedureCallerFactory<T> {
       }
       for (int i = 0; i < args.length; i++) {
         // REVIEW null check?
-        statement.setObject(callInfo.inParameterNames[i], args[i]);
+        statement.setObject(callInfo.inParameterNameAt(i), args[i]);
       }
     }
 
@@ -1036,9 +1037,9 @@ public final class ProcedureCallerFactory<T> {
         return;
       }
       for (int i = 0; i < args.length; i++) {
-        String name = callInfo.inParameterNames[i];
+        String name = callInfo.inParameterNameAt(i);
         Object arg = args[i];
-        int type = callInfo.inParameterTypes[i];
+        int type = callInfo.inParameterTypeAt(i);
         if (arg != null) {
           statement.setObject(name, arg, type);
         } else {
@@ -1053,13 +1054,14 @@ public final class ProcedureCallerFactory<T> {
 
     final String procedureName;
     final String callString;
+    // an interface method can not have more than 254 parameters
     final int outParameterIndex;
     final int outParameterType;
     final String outParameterName;
     // an interface method can not have more than 254 parameters
-    final byte[] inParameterIndices;
-    final int[] inParameterTypes;
-    final String[] inParameterNames;
+    private final byte[] inParameterIndices;
+    private final int[] inParameterTypes;
+    private final String[] inParameterNames;
     final boolean wantsExceptionTranslation;
     final int fetchSize;
     final int extractorIndex;
@@ -1098,8 +1100,20 @@ public final class ProcedureCallerFactory<T> {
       return Byte.toUnsignedInt(this.inParameterIndices[i]);
     }
 
+    String inParameterNameAt(int i) {
+      return this.inParameterNames[i];
+    }
+
+    int inParameterTypeAt(int i) {
+      return this.inParameterTypes[i];
+    }
+
+    int getOutParameterIndex() {
+      return this.outParameterIndex;
+    }
+
     boolean hasOutParamter() {
-      return this.outParameterIndex != ProcedureCaller.NO_OUT_PARAMTER;
+      return this.getOutParameterIndex() != ProcedureCaller.NO_OUT_PARAMTER;
     }
 
     boolean hasValueExtractor() {

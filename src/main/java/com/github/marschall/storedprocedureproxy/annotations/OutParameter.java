@@ -39,8 +39,6 @@ public @interface OutParameter {
    *
    * @return the 1 based index of the out parameter
    */
-  // TODO default index 1 or last
-  // TODO 1 or 0 based
   int index() default -1;
 
   /**
