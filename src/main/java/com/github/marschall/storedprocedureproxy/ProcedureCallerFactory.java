@@ -765,14 +765,15 @@ public final class ProcedureCallerFactory<T> {
         listElementType = null;
       }
 
-      byte[] inParameterIndices;
       boolean hasOutParameter = outParameterIndex != NO_OUT_PARAMTER;
+      byte[] inParameterIndices;
+      Class<?>[] methodParameterTypes = method.getParameterTypes();
       if (!hasOutParameter || (hasOutParameter && outParameterIndex == parameterCount + 1)) {
         // we have an no out parameter or
         // we have an out parameter and it's the last parameter
-        inParameterIndices = buildInParameterIndices(parameterCount);
+        inParameterIndices = buildInParameterIndices(parameterCount, methodParameterTypes);
       } else {
-        inParameterIndices = buildInParameterIndices(parameterCount, outParameterIndex);
+        inParameterIndices = buildInParameterIndices(parameterCount, outParameterIndex, methodParameterTypes);
       }
 
 
@@ -818,7 +819,7 @@ public final class ProcedureCallerFactory<T> {
       }
     }
 
-    static byte[] buildInParameterIndices(int parameterCount) {
+    static byte[] buildInParameterIndices(int parameterCount, Class<?>[] methodParameterTypes) {
       byte[] indices = new byte[parameterCount];
       for (int i = 0; i < indices.length; i++) {
         indices[i] = (byte) (i + 1);
@@ -826,7 +827,7 @@ public final class ProcedureCallerFactory<T> {
       return indices;
     }
 
-    static byte[] buildInParameterIndices(int parameterCount, int outParameterIndex) {
+    static byte[] buildInParameterIndices(int parameterCount, int outParameterIndex, Class<?>[] methodParameterTypes) {
       byte[] indices = new byte[parameterCount];
       for (int i = 0; i < indices.length; i++) {
         if (outParameterIndex > i + 1) {
