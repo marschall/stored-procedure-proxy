@@ -527,44 +527,22 @@ public final class ProcedureCallerFactory<T> {
     }
 
     private Object readFromStatement(CallableStatement statement, CallInfo callInfo, Class<?> returnType) throws SQLException {
-      try {
-        if (this.isUseParameterNames()) {
-          return statement.getObject(callInfo.outParameterName, returnType);
-        } else {
-          return statement.getObject(callInfo.getOutParameterIndex(), returnType);
-        }
-      } catch (SQLFeatureNotSupportedException e) {
-        // we need to pass the class for Java 8 Date Time support
-        // however the PostgreS JDBC driver does not support this
-        // so lets try again and hope it works this time
-        if (this.isUseParameterNames()) {
-          return statement.getObject(callInfo.outParameterName);
-        } else {
-          return statement.getObject(callInfo.getOutParameterIndex());
-        }
-      }
+      return callInfo.outParameterRegistration.getOutParamter(statement, returnType);
     }
 
     private Object readFromResultSet(CallableStatement statement, CallInfo callInfo) throws SQLException {
       Object last = null;
       int count = 0;
-      // hack for H2 which doesn't have out parameters
-      try (ResultSet rs = statement.executeQuery()) {
+      try (ResultSet rs = statement.getResultSet()) {
         while (rs.next()) {
-          if (this.isUseParameterNames()) {
-//              last = rs.getObject(callInfo.outParameterName, returnType);
-            // H2 supports #getObject(String, Class) but always returns null
-            last = rs.getObject(callInfo.outParameterName);
-          } else {
-//              last = rs.getObject(1, returnType);
-            // H2 supports #getObject(int, Class) but always returns null
-            last = rs.getObject(1);
-          }
-          count += 1;
+          //              last = rs.getObject(1, returnType);
+          // H2 supports #getObject(int, Class) but always returns null
+          last = rs.getObject(1);
         }
-        if (count != 1) {
-          ProcedureCallerFactory.newIncorrectResultSizeException(1, count);
-        }
+        count += 1;
+      }
+      if (count != 1) {
+        ProcedureCallerFactory.newIncorrectResultSizeException(1, count);
       }
       return last;
     }
@@ -580,9 +558,6 @@ public final class ProcedureCallerFactory<T> {
           return read(rs, callInfo.listElementType);
         }
       } else {
-        if (!callInfo.hasOutParamter()) {
-          throw new IllegalStateException("@" + OutParameter.class + " for @" + ReturnValue.class + "  missing");
-        }
         try (ResultSet rs = this.getOutResultSet(statement, callInfo)) {
           return read(rs, callInfo.listElementType);
         }
@@ -599,21 +574,7 @@ public final class ProcedureCallerFactory<T> {
     }
 
     private ResultSet getOutResultSet(CallableStatement statement, CallInfo callInfo) throws SQLException {
-      if (this.isUseParameterNames()) {
-        try {
-          return statement.getObject(callInfo.outParameterName, ResultSet.class);
-        } catch (SQLFeatureNotSupportedException e) {
-          // Postgres hack
-          return (ResultSet) statement.getObject(callInfo.outParameterName);
-        }
-      } else {
-        try {
-          return statement.getObject(callInfo.getOutParameterIndex(), ResultSet.class);
-        } catch (SQLFeatureNotSupportedException e) {
-          // Postgres hack
-          return (ResultSet) statement.getObject(callInfo.getOutParameterIndex());
-        }
-      }
+      return callInfo.outParameterRegistration.getOutParamter(statement, ResultSet.class);
     }
 
     private Object executeVoidMethod(CallableStatement statement) throws SQLException {
@@ -840,10 +801,9 @@ public final class ProcedureCallerFactory<T> {
       Class<?> boxedReturnType = getBoxedClass(method.getReturnType());
 
       return new CallInfo(procedureName, callString,
-              outParameterIndex, outParameterType, outParameterName,
               wantsExceptionTranslation, boxedReturnType, isList,
-              listElementType, getFetchSize(method),
-              outParameterRegistration, inParameterRegistration);
+              listElementType, getFetchSize(method), outParameterRegistration,
+              inParameterRegistration);
 
     }
 
@@ -1024,6 +984,8 @@ public final class ProcedureCallerFactory<T> {
 
       void bindOutParamter(CallableStatement statement) throws SQLException;
 
+      <T> T getOutParamter(CallableStatement statement, Class<T> type) throws SQLException;
+
     }
 
     static final class ByIndexOutParameterRegistration implements OutParameterRegistration {
@@ -1040,6 +1002,16 @@ public final class ProcedureCallerFactory<T> {
       @Override
       public void bindOutParamter(CallableStatement statement) throws SQLException {
         statement.registerOutParameter(outParameterIndex, outParameterType);
+      }
+
+      @Override
+      public <T> T getOutParamter(CallableStatement statement, Class<T> type) throws SQLException {
+        try {
+          return statement.getObject(this.outParameterIndex, type);
+        } catch (SQLFeatureNotSupportedException e) {
+          // Postgres hack
+          return type.cast(statement.getObject(this.outParameterIndex));
+        }
       }
 
     }
@@ -1059,6 +1031,16 @@ public final class ProcedureCallerFactory<T> {
         statement.registerOutParameter(outParameterName, outParameterType);
       }
 
+      @Override
+      public <T> T getOutParamter(CallableStatement statement, Class<T> type) throws SQLException {
+        try {
+          return statement.getObject(this.outParameterName, type);
+        } catch (SQLFeatureNotSupportedException e) {
+          // Postgres hack
+          return type.cast(statement.getObject(this.outParameterName));
+        }
+      }
+
     }
 
     enum NoOutParameterRegistration implements OutParameterRegistration {
@@ -1068,6 +1050,14 @@ public final class ProcedureCallerFactory<T> {
       @Override
       public void bindOutParamter(CallableStatement statement) {
         // nothing
+      }
+
+      @Override
+      public <T> T getOutParamter(CallableStatement statement, Class<T> type) throws SQLException {
+        if (type != void.class) {
+          throw new IllegalArgumentException("no out parameter registered");
+        }
+        return null;
       }
 
     }
@@ -1223,9 +1213,6 @@ public final class ProcedureCallerFactory<T> {
 
     final String procedureName;
     final String callString;
-    // an interface method can not have more than 254 parameters
-    final int outParameterIndex;
-    final String outParameterName;
     final boolean wantsExceptionTranslation;
     final int fetchSize;
     final int extractorIndex;
@@ -1239,16 +1226,12 @@ public final class ProcedureCallerFactory<T> {
     final boolean isList;
     final Class<?> listElementType;
 
-    CallInfo(String procedureName, String callString, int outParameterIndex,
-            int outParameterType, String outParameterName,
-            boolean wantsExceptionTranslation, Class<?> boxedReturnType,
-            boolean isList, Class<?> listElementType,
-            int fetchSize,
+    CallInfo(String procedureName, String callString, boolean wantsExceptionTranslation,
+            Class<?> boxedReturnType, boolean isList,
+            Class<?> listElementType, int fetchSize,
             OutParameterRegistration outParameterRegistration, InParameterRegistration inParameterRegistration) {
       this.procedureName = procedureName;
       this.callString = callString;
-      this.outParameterIndex = outParameterIndex;
-      this.outParameterName = outParameterName;
       this.wantsExceptionTranslation = wantsExceptionTranslation;
       this.boxedReturnType = boxedReturnType;
       this.isList = isList;
@@ -1257,14 +1240,6 @@ public final class ProcedureCallerFactory<T> {
       this.outParameterRegistration = outParameterRegistration;
       this.inParameterRegistration = inParameterRegistration;
       this.extractorIndex = ProcedureCaller.NO_VALUE_EXTRACTOR;
-    }
-
-    int getOutParameterIndex() {
-      return this.outParameterIndex;
-    }
-
-    boolean hasOutParamter() {
-      return this.getOutParameterIndex() != ProcedureCaller.NO_OUT_PARAMTER;
     }
 
     boolean hasValueExtractor() {
