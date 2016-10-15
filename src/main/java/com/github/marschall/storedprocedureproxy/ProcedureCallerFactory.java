@@ -24,6 +24,8 @@ import javax.sql.DataSource;
 
 import org.springframework.jdbc.support.SQLErrorCodeSQLExceptionTranslator;
 
+import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ProcedureCaller.InParameterRegistration;
+import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ProcedureCaller.OutParameterRegistration;
 import com.github.marschall.storedprocedureproxy.annotations.FetchSize;
 import com.github.marschall.storedprocedureproxy.annotations.Namespace;
 import com.github.marschall.storedprocedureproxy.annotations.OutParameter;
@@ -448,10 +450,8 @@ public final class ProcedureCallerFactory<T> {
     }
 
     private void bindParameters(Object[] args, CallInfo callInfo, CallableStatement statement) throws SQLException {
-      this.bindInParameters(statement, callInfo, args);
-      if (callInfo.hasOutParamter()) {
-        this.bindOutParameter(statement, callInfo);
-      }
+      callInfo.outParameterRegistration.bindOutParamter(statement);
+      callInfo.inParameterRegistration.bindInParamters(statement, args);
     }
 
     private static Object checkReturnType(CallInfo callInfo, Object returnValue) {
@@ -795,16 +795,52 @@ public final class ProcedureCallerFactory<T> {
       }
 
 
+
+      InParameterRegistration inParameterRegistration;
+      switch (this.parameterRegistration) {
+        case INDEX_ONLY:
+          inParameterRegistration = new ByIndexInParameterRegistration(inParameterIndices);
+          break;
+        case INDEX_AND_TYPE:
+          inParameterRegistration = new ByIndexAndTypeInParameterRegistration(inParameterIndices, inParameterTypes);
+          break;
+        case NAME_ONLY:
+          inParameterRegistration = new ByNameInParameterRegistration(inParameterNames);
+          break;
+        case NAME_AND_TYPE:
+          inParameterRegistration = new ByNameAndTypeInParameterRegistration(inParameterNames, inParameterTypes);
+          break;
+        default:
+          throw new IllegalStateException("unknown parameter registration: " + this.parameterRegistration);
+      }
+      OutParameterRegistration outParameterRegistration;
+      if (hasOutParameter) {
+        switch (this.parameterRegistration) {
+          case INDEX_ONLY:
+          case INDEX_AND_TYPE:
+            outParameterRegistration = new ByIndexOutParameterRegistration(outParameterIndex, outParameterType);
+            break;
+          case NAME_ONLY:
+          case NAME_AND_TYPE:
+            outParameterRegistration = new ByNameOutParameterRegistration(outParameterName, outParameterType);
+            break;
+          default:
+            throw new IllegalStateException("unknown parameter registration: " + this.parameterRegistration);
+        }
+      } else {
+        outParameterRegistration = NoOutParameterRegistration.INSTANCE;
+      }
+
+
       String callString = buildCallString(namespace, schema, procedureName, parameterCount, isFunction, hasOutParameter);
       boolean wantsExceptionTranslation = wantsExceptionTranslation(method);
       Class<?> boxedReturnType = getBoxedClass(method.getReturnType());
 
       return new CallInfo(procedureName, callString,
               outParameterIndex, outParameterType, outParameterName,
-              inParameterIndices, inParameterTypes, inParameterNames,
-              wantsExceptionTranslation, boxedReturnType,
-              isList, listElementType,
-              getFetchSize(method));
+              wantsExceptionTranslation, boxedReturnType, isList,
+              listElementType, getFetchSize(method),
+              outParameterRegistration, inParameterRegistration);
 
     }
 
@@ -981,118 +1017,6 @@ public final class ProcedureCallerFactory<T> {
       return this.namespaceNamingStrategy.translateToDatabase(declaringClass.getSimpleName());
     }
 
-    private void bindOutParameter(CallableStatement statement, CallInfo callInfo) throws SQLException {
-      switch (this.parameterRegistration) {
-        case INDEX_ONLY:
-        case INDEX_AND_TYPE:
-          this.bindOutParameterByIndex(statement, callInfo);
-          break;
-        case NAME_ONLY:
-        case NAME_AND_TYPE:
-          this.bindOutParameterByName(statement, callInfo);
-          break;
-        default:
-          throw new IllegalStateException("unknown parameter registration: " + this.parameterRegistration);
-      }
-    }
-
-    private void bindOutParameterByIndex(CallableStatement statement, CallInfo callInfo) throws SQLException {
-      statement.registerOutParameter(callInfo.getOutParameterIndex(), callInfo.outParameterType);
-    }
-
-    private void bindOutParameterByName(CallableStatement statement, CallInfo callInfo) throws SQLException {
-      statement.registerOutParameter(callInfo.outParameterName, callInfo.outParameterType);
-    }
-
-    private void bindInParameters(CallableStatement statement, CallInfo callInfo, Object[] args) throws SQLException {
-      switch (this.parameterRegistration) {
-        case INDEX_ONLY:
-          this.bindParametersByIndex(statement, callInfo, args);
-          break;
-        case NAME_ONLY:
-          this.bindParametersByName(statement, callInfo, args);
-          break;
-        case INDEX_AND_TYPE:
-          this.bindParametersByIndexAndType(statement, callInfo, args);
-          break;
-        case NAME_AND_TYPE:
-          this.bindParametersByNameAndType(statement, callInfo, args);
-          break;
-        default:
-          throw new IllegalStateException("unknown parameter registration: " + this.parameterRegistration);
-      }
-    }
-
-    private void bindParametersByIndex(CallableStatement statement, CallInfo callInfo, Object[] args) throws SQLException {
-      if (args == null) {
-        return;
-      }
-      for (int i = 0; i < args.length; i++) {
-        // REVIEW null check?
-        int parameterIndex = callInfo.inParameterIndexAt(i);
-        if (parameterIndex == VALUE_EXTRACTOR) {
-          // -> is a value extractor
-          continue;
-        }
-        statement.setObject(parameterIndex, args[i]);
-      }
-    }
-
-    private void bindParametersByIndexAndType(CallableStatement statement, CallInfo callInfo, Object[] args) throws SQLException {
-      if (args == null) {
-        return;
-      }
-      for (int i = 0; i < args.length; i++) {
-        int parameterIndex = callInfo.inParameterIndexAt(i);
-        if (parameterIndex == VALUE_EXTRACTOR) {
-          // -> is a value extractor
-          continue;
-        }
-        Object arg = args[i];
-        int type = callInfo.inParameterTypeAt(i);
-        if (arg != null) {
-          statement.setObject(parameterIndex, arg, type);
-        } else {
-          statement.setNull(parameterIndex, type);
-        }
-      }
-    }
-
-    private void bindParametersByName(CallableStatement statement, CallInfo callInfo, Object[] args) throws SQLException {
-      if (args == null) {
-        return;
-      }
-      for (int i = 0; i < args.length; i++) {
-        String parameterName = callInfo.inParameterNameAt(i);
-        if (parameterName == null) {
-          // -> is a value extractor
-          continue;
-        }
-        // REVIEW null check?
-        statement.setObject(parameterName, args[i]);
-      }
-    }
-
-    private void bindParametersByNameAndType(CallableStatement statement, CallInfo callInfo, Object[] args) throws SQLException {
-      if (args == null) {
-        return;
-      }
-      for (int i = 0; i < args.length; i++) {
-        String parameterName = callInfo.inParameterNameAt(i);
-        if (parameterName == null) {
-          // -> is a value extractor
-          continue;
-        }
-        Object arg = args[i];
-        int type = callInfo.inParameterTypeAt(i);
-        if (arg != null) {
-          statement.setObject(parameterName, arg, type);
-        } else {
-          statement.setNull(parameterName, type);
-        }
-      }
-    }
-
     interface OutParameterRegistration {
 
       void bindOutParamter(CallableStatement statement) throws SQLException;
@@ -1117,12 +1041,12 @@ public final class ProcedureCallerFactory<T> {
 
     }
 
-    static final class ByNameIndexOutParameterRegistration implements OutParameterRegistration {
+    static final class ByNameOutParameterRegistration implements OutParameterRegistration {
 
       private final int outParameterType;
       private final String outParameterName;
 
-      ByNameIndexOutParameterRegistration(String outParameterName, int outParameterType) {
+      ByNameOutParameterRegistration(String outParameterName, int outParameterType) {
         this.outParameterType = outParameterType;
         this.outParameterName = outParameterName;
       }
@@ -1175,6 +1099,7 @@ public final class ProcedureCallerFactory<T> {
         return Byte.toUnsignedInt(this.inParameterIndices[i]);
       }
 
+      @Override
       public void bindInParamters(CallableStatement statement, Object[] args) throws SQLException {
         if (args == null) {
           return;
@@ -1200,6 +1125,7 @@ public final class ProcedureCallerFactory<T> {
         this.inParameterNames = inParameterNames;
       }
 
+      @Override
       public void bindInParamters(CallableStatement statement, Object[] args) throws SQLException {
         if (args == null) {
           return;
@@ -1232,6 +1158,7 @@ public final class ProcedureCallerFactory<T> {
         return Byte.toUnsignedInt(this.inParameterIndices[i]);
       }
 
+      @Override
       public void bindInParamters(CallableStatement statement, Object[] args) throws SQLException {
         if (args == null) {
           return;
@@ -1264,6 +1191,7 @@ public final class ProcedureCallerFactory<T> {
         this.inParameterNames = inParameterNames;
       }
 
+      @Override
       public void bindInParamters(CallableStatement statement, Object[] args) throws SQLException {
         if (args == null) {
           return;
@@ -1294,15 +1222,12 @@ public final class ProcedureCallerFactory<T> {
     final String callString;
     // an interface method can not have more than 254 parameters
     final int outParameterIndex;
-    final int outParameterType;
     final String outParameterName;
-    // an interface method can not have more than 254 parameters
-    private final byte[] inParameterIndices;
-    private final int[] inParameterTypes;
-    private final String[] inParameterNames;
     final boolean wantsExceptionTranslation;
     final int fetchSize;
     final int extractorIndex;
+    final OutParameterRegistration outParameterRegistration;
+    final InParameterRegistration inParameterRegistration;
 
     /**
      * Instead of {@code int.class} contains {@code Integer.class}.
@@ -1313,37 +1238,22 @@ public final class ProcedureCallerFactory<T> {
 
     CallInfo(String procedureName, String callString, int outParameterIndex,
             int outParameterType, String outParameterName,
-            byte[] inParameterIndices, int[] inParameterTypes,
-            String[] inParameterNames, boolean wantsExceptionTranslation,
-            Class<?> boxedReturnType,
+            boolean wantsExceptionTranslation, Class<?> boxedReturnType,
             boolean isList, Class<?> listElementType,
-            int fetchSize) {
+            int fetchSize,
+            OutParameterRegistration outParameterRegistration, InParameterRegistration inParameterRegistration) {
       this.procedureName = procedureName;
       this.callString = callString;
       this.outParameterIndex = outParameterIndex;
-      this.outParameterType = outParameterType;
       this.outParameterName = outParameterName;
-      this.inParameterIndices = inParameterIndices;
-      this.inParameterTypes = inParameterTypes;
-      this.inParameterNames = inParameterNames;
       this.wantsExceptionTranslation = wantsExceptionTranslation;
       this.boxedReturnType = boxedReturnType;
       this.isList = isList;
       this.listElementType = listElementType;
       this.fetchSize = fetchSize;
+      this.outParameterRegistration = outParameterRegistration;
+      this.inParameterRegistration = inParameterRegistration;
       this.extractorIndex = ProcedureCaller.NO_VALUE_EXTRACTOR;
-    }
-
-    int inParameterIndexAt(int i) {
-      return Byte.toUnsignedInt(this.inParameterIndices[i]);
-    }
-
-    String inParameterNameAt(int i) {
-      return this.inParameterNames[i];
-    }
-
-    int inParameterTypeAt(int i) {
-      return this.inParameterTypes[i];
     }
 
     int getOutParameterIndex() {
