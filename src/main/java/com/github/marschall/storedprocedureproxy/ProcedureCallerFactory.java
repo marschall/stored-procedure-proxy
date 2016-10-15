@@ -366,6 +366,9 @@ public final class ProcedureCallerFactory<T> {
 
     private static final int NO_VALUE_EXTRACTOR = -1;
 
+    // 0 is not a valid parameter index
+    private static final int VALUE_EXTRACTOR = 0;
+
     private final DataSource dataSource;
 
     private final Class<?> interfaceDeclaration;
@@ -627,6 +630,12 @@ public final class ProcedureCallerFactory<T> {
       return null;
     }
 
+    private boolean isUseParameterIndices() {
+      ParameterRegistration registration = this.parameterRegistration;
+      return registration == ParameterRegistration.INDEX_ONLY
+              || registration == ParameterRegistration.INDEX_AND_TYPE;
+    }
+
     private boolean isUseParameterNames() {
       ParameterRegistration registration = this.parameterRegistration;
       return registration == ParameterRegistration.NAME_ONLY
@@ -644,6 +653,11 @@ public final class ProcedureCallerFactory<T> {
       String[] names = new String[parameters.length];
       for (int i = 0; i < parameters.length; i++) {
         Parameter parameter = parameters[i];
+        if (parameter.getType().isAssignableFrom(ValueExtractor.class)) {
+          names[i] = null;
+          continue;
+        }
+
         ParameterName annotation = parameter.getAnnotation(ParameterName.class);
         String parameterName;
         if (annotation != null) {
@@ -767,13 +781,17 @@ public final class ProcedureCallerFactory<T> {
 
       boolean hasOutParameter = outParameterIndex != NO_OUT_PARAMTER;
       byte[] inParameterIndices;
-      Class<?>[] methodParameterTypes = method.getParameterTypes();
-      if (!hasOutParameter || (hasOutParameter && outParameterIndex == parameterCount + 1)) {
-        // we have an no out parameter or
-        // we have an out parameter and it's the last parameter
-        inParameterIndices = buildInParameterIndices(parameterCount, methodParameterTypes);
+      if (this.isUseParameterIndices()) {
+        Class<?>[] methodParameterTypes = method.getParameterTypes();
+        if (!hasOutParameter || (hasOutParameter && outParameterIndex == parameterCount + 1)) {
+          // we have an no out parameter or
+          // we have an out parameter and it's the last parameter
+          inParameterIndices = buildInParameterIndices(parameterCount, methodParameterTypes);
+        } else {
+          inParameterIndices = buildInParameterIndices(parameterCount, outParameterIndex, methodParameterTypes);
+        }
       } else {
-        inParameterIndices = buildInParameterIndices(parameterCount, outParameterIndex, methodParameterTypes);
+        inParameterIndices = null;
       }
 
 
@@ -822,6 +840,10 @@ public final class ProcedureCallerFactory<T> {
     static byte[] buildInParameterIndices(int parameterCount, Class<?>[] methodParameterTypes) {
       byte[] indices = new byte[parameterCount];
       for (int i = 0; i < indices.length; i++) {
+        if (methodParameterTypes[i].isAssignableFrom(ValueExtractor.class)) {
+          indices[i] = VALUE_EXTRACTOR;
+          continue;
+        }
         indices[i] = (byte) (i + 1);
       }
       return indices;
@@ -830,6 +852,10 @@ public final class ProcedureCallerFactory<T> {
     static byte[] buildInParameterIndices(int parameterCount, int outParameterIndex, Class<?>[] methodParameterTypes) {
       byte[] indices = new byte[parameterCount];
       for (int i = 0; i < indices.length; i++) {
+        if (methodParameterTypes[i].isAssignableFrom(ValueExtractor.class)) {
+          indices[i] = VALUE_EXTRACTOR;
+          continue;
+        }
         if (outParameterIndex > i + 1) {
           indices[i] = (byte) (i + 1);
         } else {
@@ -1003,7 +1029,12 @@ public final class ProcedureCallerFactory<T> {
       }
       for (int i = 0; i < args.length; i++) {
         // REVIEW null check?
-        statement.setObject(callInfo.inParameterIndexAt(i), args[i]);
+        int parameterIndex = callInfo.inParameterIndexAt(i);
+        if (parameterIndex == VALUE_EXTRACTOR) {
+          // -> is a value extractor
+          continue;
+        }
+        statement.setObject(parameterIndex, args[i]);
       }
     }
 
@@ -1013,6 +1044,10 @@ public final class ProcedureCallerFactory<T> {
       }
       for (int i = 0; i < args.length; i++) {
         int parameterIndex = callInfo.inParameterIndexAt(i);
+        if (parameterIndex == VALUE_EXTRACTOR) {
+          // -> is a value extractor
+          continue;
+        }
         Object arg = args[i];
         int type = callInfo.inParameterTypeAt(i);
         if (arg != null) {
@@ -1028,8 +1063,13 @@ public final class ProcedureCallerFactory<T> {
         return;
       }
       for (int i = 0; i < args.length; i++) {
+        String parameterName = callInfo.inParameterNameAt(i);
+        if (parameterName == null) {
+          // -> is a value extractor
+          continue;
+        }
         // REVIEW null check?
-        statement.setObject(callInfo.inParameterNameAt(i), args[i]);
+        statement.setObject(parameterName, args[i]);
       }
     }
 
@@ -1038,13 +1078,17 @@ public final class ProcedureCallerFactory<T> {
         return;
       }
       for (int i = 0; i < args.length; i++) {
-        String name = callInfo.inParameterNameAt(i);
+        String parameterName = callInfo.inParameterNameAt(i);
+        if (parameterName == null) {
+          // -> is a value extractor
+          continue;
+        }
         Object arg = args[i];
         int type = callInfo.inParameterTypeAt(i);
         if (arg != null) {
-          statement.setObject(name, arg, type);
+          statement.setObject(parameterName, arg, type);
         } else {
-          statement.setNull(name, type);
+          statement.setNull(parameterName, type);
         }
       }
     }
