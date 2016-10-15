@@ -794,25 +794,28 @@ public final class ProcedureCallerFactory<T> {
         inParameterIndices = null;
       }
 
-
-
       InParameterRegistration inParameterRegistration;
-      switch (this.parameterRegistration) {
-        case INDEX_ONLY:
-          inParameterRegistration = new ByIndexInParameterRegistration(inParameterIndices);
-          break;
-        case INDEX_AND_TYPE:
-          inParameterRegistration = new ByIndexAndTypeInParameterRegistration(inParameterIndices, inParameterTypes);
-          break;
-        case NAME_ONLY:
-          inParameterRegistration = new ByNameInParameterRegistration(inParameterNames);
-          break;
-        case NAME_AND_TYPE:
-          inParameterRegistration = new ByNameAndTypeInParameterRegistration(inParameterNames, inParameterTypes);
-          break;
-        default:
-          throw new IllegalStateException("unknown parameter registration: " + this.parameterRegistration);
+      if (parameterCount > 0) {
+        switch (this.parameterRegistration) {
+          case INDEX_ONLY:
+            inParameterRegistration = new ByIndexInParameterRegistration(inParameterIndices);
+            break;
+          case INDEX_AND_TYPE:
+            inParameterRegistration = new ByIndexAndTypeInParameterRegistration(inParameterIndices, inParameterTypes);
+            break;
+          case NAME_ONLY:
+            inParameterRegistration = new ByNameInParameterRegistration(inParameterNames);
+            break;
+          case NAME_AND_TYPE:
+            inParameterRegistration = new ByNameAndTypeInParameterRegistration(inParameterNames, inParameterTypes);
+            break;
+          default:
+            throw new IllegalStateException("unknown parameter registration: " + this.parameterRegistration);
+        }
+      } else {
+        inParameterRegistration = NoInParameterRegistration.INSTANCE;
       }
+
       OutParameterRegistration outParameterRegistration;
       if (hasOutParameter) {
         switch (this.parameterRegistration) {
