@@ -1093,6 +1093,199 @@ public final class ProcedureCallerFactory<T> {
       }
     }
 
+    interface OutParameterRegistration {
+
+      void bindOutParamter(CallableStatement statement) throws SQLException;
+
+    }
+
+    static final class ByIndexOutParameterRegistration implements OutParameterRegistration {
+
+      // an interface method can not have more than 254 parameters
+      private final int outParameterIndex;
+      private final int outParameterType;
+
+      ByIndexOutParameterRegistration(int outParameterIndex, int outParameterType) {
+        this.outParameterIndex = outParameterIndex;
+        this.outParameterType = outParameterType;
+      }
+
+      @Override
+      public void bindOutParamter(CallableStatement statement) throws SQLException {
+        statement.registerOutParameter(outParameterIndex, outParameterType);
+      }
+
+    }
+
+    static final class ByNameIndexOutParameterRegistration implements OutParameterRegistration {
+
+      private final int outParameterType;
+      private final String outParameterName;
+
+      ByNameIndexOutParameterRegistration(String outParameterName, int outParameterType) {
+        this.outParameterType = outParameterType;
+        this.outParameterName = outParameterName;
+      }
+
+      @Override
+      public void bindOutParamter(CallableStatement statement) throws SQLException {
+        statement.registerOutParameter(outParameterName, outParameterType);
+      }
+
+    }
+
+    enum NoOutParameterRegistration implements OutParameterRegistration {
+
+      INSTANCE;
+
+      @Override
+      public void bindOutParamter(CallableStatement statement) {
+        // nothing
+      }
+
+    }
+
+    interface InParameterRegistration {
+
+      void bindInParamters(CallableStatement statement, Object[] args) throws SQLException;
+
+    }
+
+    enum NoInParameterRegistration implements InParameterRegistration {
+
+      INSTANCE;
+
+      @Override
+      public void bindInParamters(CallableStatement statement, Object[] args) {
+        // nothing
+      }
+
+    }
+
+    static final class ByIndexInParameterRegistration implements InParameterRegistration {
+
+      // an interface method can not have more than 254 parameters
+      private final byte[] inParameterIndices;
+
+      ByIndexInParameterRegistration(byte[] inParameterIndices) {
+        this.inParameterIndices = inParameterIndices;
+      }
+
+      private int inParameterIndexAt(int i) {
+        return Byte.toUnsignedInt(this.inParameterIndices[i]);
+      }
+
+      public void bindInParamters(CallableStatement statement, Object[] args) throws SQLException {
+        if (args == null) {
+          return;
+        }
+        for (int i = 0; i < args.length; i++) {
+          // REVIEW null check?
+          int parameterIndex = this.inParameterIndexAt(i);
+          if (parameterIndex == VALUE_EXTRACTOR) {
+            // -> is a value extractor
+            continue;
+          }
+          statement.setObject(parameterIndex, args[i]);
+        }
+      }
+
+    }
+
+    static final class ByNameInParameterRegistration implements InParameterRegistration {
+
+      private final String[] inParameterNames;
+
+      ByNameInParameterRegistration(String[] inParameterNames) {
+        this.inParameterNames = inParameterNames;
+      }
+
+      public void bindInParamters(CallableStatement statement, Object[] args) throws SQLException {
+        if (args == null) {
+          return;
+        }
+        for (int i = 0; i < args.length; i++) {
+          String parameterName = this.inParameterNames[i];
+          if (parameterName == null) {
+            // -> is a value extractor
+            continue;
+          }
+          // REVIEW null check?
+          statement.setObject(parameterName, args[i]);
+        }
+      }
+
+    }
+
+    static final class ByIndexAndTypeInParameterRegistration implements InParameterRegistration {
+
+      // an interface method can not have more than 254 parameters
+      private final byte[] inParameterIndices;
+      private final int[] inParameterTypes;
+
+      ByIndexAndTypeInParameterRegistration(byte[] inParameterIndices, int[] inParameterTypes) {
+        this.inParameterIndices = inParameterIndices;
+        this.inParameterTypes = inParameterTypes;
+      }
+
+      private int inParameterIndexAt(int i) {
+        return Byte.toUnsignedInt(this.inParameterIndices[i]);
+      }
+
+      public void bindInParamters(CallableStatement statement, Object[] args) throws SQLException {
+        if (args == null) {
+          return;
+        }
+        for (int i = 0; i < args.length; i++) {
+          int parameterIndex = this.inParameterIndexAt(i);
+          if (parameterIndex == VALUE_EXTRACTOR) {
+            // -> is a value extractor
+            continue;
+          }
+          Object arg = args[i];
+          int type = this.inParameterTypes[i];
+          if (arg != null) {
+            statement.setObject(parameterIndex, arg, type);
+          } else {
+            statement.setNull(parameterIndex, type);
+          }
+        }
+      }
+
+    }
+
+    static final class ByNameAndTypeInParameterRegistration implements InParameterRegistration {
+
+      private final String[] inParameterNames;
+      private final int[] inParameterTypes;
+
+      ByNameAndTypeInParameterRegistration(String[] inParameterNames, int[] inParameterTypes) {
+        this.inParameterTypes = inParameterTypes;
+        this.inParameterNames = inParameterNames;
+      }
+
+      public void bindInParamters(CallableStatement statement, Object[] args) throws SQLException {
+        if (args == null) {
+          return;
+        }
+        for (int i = 0; i < args.length; i++) {
+          String parameterName = this.inParameterNames[i];
+          if (parameterName == null) {
+            // -> is a value extractor
+            continue;
+          }
+          Object arg = args[i];
+          int type = this.inParameterTypes[i];
+          if (arg != null) {
+            statement.setObject(parameterName, arg, type);
+          } else {
+            statement.setNull(parameterName, type);
+          }
+        }
+      }
+
+    }
+
   }
 
   static final class CallInfo {
