@@ -2,10 +2,13 @@ package com.github.marschall.storedprocedureproxy;
 
 import static com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration.INDEX_AND_TYPE;
 import static com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration.INDEX_ONLY;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import javax.sql.DataSource;
 
@@ -26,6 +29,7 @@ import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.Paramete
 import com.github.marschall.storedprocedureproxy.configuration.H2Configuration;
 import com.github.marschall.storedprocedureproxy.configuration.TestConfiguration;
 import com.github.marschall.storedprocedureproxy.procedures.H2Procedures;
+import com.github.marschall.storedprocedureproxy.procedures.H2Procedures.IdName;
 import com.github.marschall.storedprocedureproxy.spi.NamingStrategy;
 
 @RunWith(Parameterized.class)
@@ -80,6 +84,25 @@ public class H2Test {
   @Test
   public void noArgProcedure() {
     assertEquals("output", procedures.noArgProcedure());
+  }
+
+  @Test
+  public void simpleResultSet() {
+    List<IdName> names = procedures.simpleResultSet((rs, i) -> {
+      long id = rs.getLong("ID");
+      String name = rs.getString("NAME");
+      return new IdName(id, name);
+    });
+
+    assertThat(names, hasSize(2));
+
+    IdName name = names.get(0);
+    assertEquals(0L, name.getId());
+    assertEquals("Hello", name.getName());
+
+    name = names.get(1);
+    assertEquals(1L, name.getId());
+    assertEquals("World", name.getName());
   }
 
 }

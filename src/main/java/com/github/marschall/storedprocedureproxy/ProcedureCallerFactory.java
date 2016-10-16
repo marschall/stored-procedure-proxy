@@ -558,7 +558,11 @@ public final class ProcedureCallerFactory<T> {
         if (annotation != null) {
           type = annotation.value();
         } else {
-          type = this.typeMapper.mapToSqlType(parameter.getType());
+          Class<?> parameterType = parameter.getType();
+          if (parameterType.isAssignableFrom(ValueExtractor.class)) {
+            continue;
+          }
+          type = this.typeMapper.mapToSqlType(parameterType);
         }
         types[i] = type;
       }
@@ -590,10 +594,6 @@ public final class ProcedureCallerFactory<T> {
       boolean isFunction = procedureHasReturnValue(method);
       Class<?> methodReturnType = method.getReturnType();
       boolean methodHasReturnValue = methodReturnType != void.class;
-      int[] inParameterTypes = this.isUseParameterTypes() ? this.extractParameterTypes(method) : null;
-      String[] inParameterNames = this.isUseParameterNames() ? extractParameterNames(method) : null;
-
-
       boolean isList = methodHasReturnValue && methodReturnType == List.class;
 
       int outParameterIndex = getOutParameterIndex(method);
@@ -618,15 +618,22 @@ public final class ProcedureCallerFactory<T> {
           case INDEX_ONLY:
             inParameterRegistration = new ByIndexInParameterRegistration(inParameterIndices);
             break;
-          case INDEX_AND_TYPE:
+          case INDEX_AND_TYPE: {
+            int[] inParameterTypes = this.isUseParameterTypes() ? this.extractParameterTypes(method) : null;
             inParameterRegistration = new ByIndexAndTypeInParameterRegistration(inParameterIndices, inParameterTypes);
             break;
-          case NAME_ONLY:
+          }
+          case NAME_ONLY: {
+            String[] inParameterNames = this.isUseParameterNames() ? extractParameterNames(method) : null;
             inParameterRegistration = new ByNameInParameterRegistration(inParameterNames);
             break;
-          case NAME_AND_TYPE:
+          }
+          case NAME_AND_TYPE: {
+            String[] inParameterNames = this.isUseParameterNames() ? extractParameterNames(method) : null;
+            int[] inParameterTypes = this.isUseParameterTypes() ? this.extractParameterTypes(method) : null;
             inParameterRegistration = new ByNameAndTypeInParameterRegistration(inParameterNames, inParameterTypes);
             break;
+          }
           default:
             throw new IllegalStateException("unknown parameter registration: " + this.parameterRegistration);
         }
