@@ -1,5 +1,7 @@
 package com.github.marschall.storedprocedureproxy;
 
+import static com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration.INDEX_AND_TYPE;
+import static com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration.INDEX_ONLY;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -11,6 +13,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import javax.sql.DataSource;
@@ -19,6 +22,9 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 import org.postgresql.util.PSQLException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -31,10 +37,12 @@ import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration;
 import com.github.marschall.storedprocedureproxy.configuration.PostgresConfiguration;
 import com.github.marschall.storedprocedureproxy.configuration.TestConfiguration;
 import com.github.marschall.storedprocedureproxy.procedures.PostgresProcedures;
 
+@RunWith(Parameterized.class)
 @Transactional
 @ContextConfiguration(classes = {PostgresConfiguration.class, TestConfiguration.class})
 public class PostgresTest {
@@ -50,14 +58,29 @@ public class PostgresTest {
 
   private PostgresProcedures procedures;
 
+  private ParameterRegistration parameterRegistration;
+
+  public PostgresTest(ParameterRegistration parameterRegistration) {
+    this.parameterRegistration = parameterRegistration;
+  }
+
   @Before
   public void setUp() {
     this.procedures = ProcedureCallerFactory.of(PostgresProcedures.class, this.dataSource)
+            .withParameterRegistration(this.parameterRegistration)
             .build();
 
     EncodedResource resource = new EncodedResource(new ClassPathResource("postgres_procedures.sql"), UTF_8);
     DatabasePopulator populator = new PostgresDatabasePopulator("LANGUAGE plpgsql;", resource);
     DatabasePopulatorUtils.execute(populator, this.dataSource);
+  }
+
+  @Parameters
+  public static Collection<Object[]> parameters() {
+    return Arrays.asList(
+            new Object[] {INDEX_ONLY},
+            new Object[] {INDEX_AND_TYPE}
+    );
   }
 
   @Test

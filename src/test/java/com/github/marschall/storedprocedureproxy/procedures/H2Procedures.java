@@ -1,6 +1,5 @@
 package com.github.marschall.storedprocedureproxy.procedures;
 
-import com.github.marschall.storedprocedureproxy.annotations.ParameterName;
 import com.github.marschall.storedprocedureproxy.annotations.ReturnValue;
 
 public interface H2Procedures {
