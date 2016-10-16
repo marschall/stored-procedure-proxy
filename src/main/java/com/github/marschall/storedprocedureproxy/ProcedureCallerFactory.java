@@ -501,24 +501,6 @@ public final class ProcedureCallerFactory<T> {
       return callInfo.resultExtractor.extractResult(statement, callInfo.outParameterRegistration, args);
     }
 
-    private boolean isUseParameterIndices() {
-      ParameterRegistration registration = this.parameterRegistration;
-      return registration == ParameterRegistration.INDEX_ONLY
-              || registration == ParameterRegistration.INDEX_AND_TYPE;
-    }
-
-    private boolean isUseParameterNames() {
-      ParameterRegistration registration = this.parameterRegistration;
-      return registration == ParameterRegistration.NAME_ONLY
-              || registration == ParameterRegistration.NAME_AND_TYPE;
-    }
-
-    private boolean isUseParameterTypes() {
-      ParameterRegistration registration = this.parameterRegistration;
-      return registration == ParameterRegistration.INDEX_AND_TYPE
-              || registration == ParameterRegistration.NAME_AND_TYPE;
-    }
-
     private String[] extractParameterNames(Method method) {
       Parameter[] parameters = method.getParameters();
       String[] names = new String[parameters.length];
@@ -615,8 +597,8 @@ public final class ProcedureCallerFactory<T> {
 
     }
 
-    private InParameterRegistration buildInParameterRegistration(
-            Method method, int parameterCount, int outParameterIndex) {
+    private InParameterRegistration buildInParameterRegistration(Method method, int parameterCount, int outParameterIndex) {
+
       if (parameterCount > 0) {
         switch (this.parameterRegistration) {
           case INDEX_ONLY: {
@@ -625,16 +607,16 @@ public final class ProcedureCallerFactory<T> {
           }
           case INDEX_AND_TYPE: {
             byte[] inParameterIndices = buildInParameterIndices(method, parameterCount, outParameterIndex);
-            int[] inParameterTypes = this.isUseParameterTypes() ? this.extractParameterTypes(method) : null;
+            int[] inParameterTypes = this.extractParameterTypes(method);
             return new ByIndexAndTypeInParameterRegistration(inParameterIndices, inParameterTypes);
           }
           case NAME_ONLY: {
-            String[] inParameterNames = this.isUseParameterNames() ? extractParameterNames(method) : null;
+            String[] inParameterNames = extractParameterNames(method);
             return new ByNameInParameterRegistration(inParameterNames);
           }
           case NAME_AND_TYPE: {
-            String[] inParameterNames = this.isUseParameterNames() ? extractParameterNames(method) : null;
-            int[] inParameterTypes = this.isUseParameterTypes() ? this.extractParameterTypes(method) : null;
+            String[] inParameterNames = extractParameterNames(method);
+            int[] inParameterTypes = this.extractParameterTypes(method);
             return new ByNameAndTypeInParameterRegistration(inParameterNames, inParameterTypes);
           }
           default:
