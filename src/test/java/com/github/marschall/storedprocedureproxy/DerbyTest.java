@@ -1,6 +1,8 @@
 package com.github.marschall.storedprocedureproxy;
 
+import static org.hamcrest.Matchers.comparesEqualTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import java.math.BigDecimal;
 
@@ -44,7 +46,7 @@ public class DerbyTest {
 
   @Test
   public void outParameter() {
-    assertEquals(0, new BigDecimal(201609).compareTo(functions.calculateRevenueByMonth(9, 2016)));
+    assertThat(functions.calculateRevenueByMonth(9, 2016), comparesEqualTo(new BigDecimal(201609)));
   }
 
   @Test

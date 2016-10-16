@@ -14,4 +14,8 @@ public class H2ProcedureSources {
     LOG.fine(input);
   }
 
+  public static String noArgProcedure() {
+    return "output";
+  }
+
 }

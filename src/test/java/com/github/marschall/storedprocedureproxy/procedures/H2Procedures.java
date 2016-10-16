@@ -9,4 +9,7 @@ public interface H2Procedures {
 
   void voidProcedure(String input);
 
+  @ReturnValue
+  String noArgProcedure();
+
 }
