@@ -535,7 +535,7 @@ public final class ProcedureCallerFactory<T> {
       int count = 0;
       try (ResultSet rs = statement.getResultSet()) {
         while (rs.next()) {
-          //              last = rs.getObject(1, returnType);
+          // last = rs.getObject(1, returnType);
           // H2 supports #getObject(int, Class) but always returns null
           last = rs.getObject(1);
         }
@@ -1203,6 +1203,163 @@ public final class ProcedureCallerFactory<T> {
             statement.setNull(parameterName, type);
           }
         }
+      }
+
+    }
+
+    interface ResultExtractor {
+
+      Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration) throws SQLException;
+
+    }
+
+    enum VoidResultExtractor implements ResultExtractor {
+
+      INSTANCE;
+
+      @Override
+      public Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration) throws SQLException {
+        boolean hasResultSet = statement.execute();
+        if (hasResultSet) {
+          int count = 0;
+          try (ResultSet rs = statement.executeQuery()) {
+            while (rs.next()) {
+              count += 1;
+            }
+          }
+          // don't check count H2 just returns NULL
+        }
+        return null;
+      }
+
+    }
+
+    static final class ScalarResultExtractor implements ResultExtractor {
+
+      private final Class<?> returnType;
+
+      ScalarResultExtractor(Class<?> returnType) {
+        this.returnType = returnType;
+      }
+
+      @Override
+      public Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration) throws SQLException {
+        // REVIEW for functions does retrieving the value by name make sense?
+        boolean hasResultSet = statement.execute();
+        if (hasResultSet) {
+          return readFromResultSet(statement, outParameterRegistration);
+        } else {
+          return readFromStatement(statement, outParameterRegistration);
+        }
+      }
+
+      private Object readFromStatement(CallableStatement statement, OutParameterRegistration outParameterRegistration) throws SQLException {
+        return outParameterRegistration.getOutParamter(statement, this.returnType);
+      }
+
+      private Object readFromResultSet(CallableStatement statement, OutParameterRegistration outParameterRegistration) throws SQLException {
+        Object last = null;
+        int count = 0;
+        try (ResultSet rs = statement.getResultSet()) {
+          while (rs.next()) {
+            // last = rs.getObject(1, returnType);
+            // H2 supports #getObject(int, Class) but always returns null
+            last = rs.getObject(1);
+          }
+          count += 1;
+        }
+        if (count != 1) {
+          ProcedureCallerFactory.newIncorrectResultSizeException(1, count);
+        }
+        return last;
+      }
+
+    }
+
+    static final class ListResultExtractor implements ResultExtractor {
+
+      private final Class<?> listElementType;
+
+      private final int fetchSize;
+
+      ListResultExtractor(Class<?> listElementType, int fetchSize) {
+        this.listElementType = listElementType;
+        this.fetchSize = fetchSize;
+      }
+
+      @Override
+      public Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration) throws SQLException {
+        if (fetchSize != DEFAULT_FETCH_SIZE) {
+          statement.setFetchSize(fetchSize);
+        }
+        boolean hasResultSet = statement.execute();
+        if (hasResultSet) {
+          try (ResultSet rs = statement.getResultSet()) {
+            return read(rs, this.listElementType);
+          }
+        } else {
+          try (ResultSet rs = getOutResultSet(statement, outParameterRegistration)) {
+            return read(rs, this.listElementType);
+          }
+        }
+      }
+
+      private static List<Object> read(ResultSet resultSet, Class<?> type) throws SQLException {
+        List<Object> result = new ArrayList<>();
+        while (resultSet.next()) {
+          Object element = resultSet.getObject(1, type);
+          result.add(element);
+        }
+        return result;
+      }
+
+      private static ResultSet getOutResultSet(CallableStatement statement, OutParameterRegistration outParameterRegistration) throws SQLException {
+        return outParameterRegistration.getOutParamter(statement, ResultSet.class);
+      }
+
+    }
+
+    static final class ValueExtractorResultExtractor implements ResultExtractor {
+
+      private final ValueExtractor<?> valueExtractor;
+
+      private final int fetchSize;
+
+      ValueExtractorResultExtractor(ValueExtractor<?> valueExtractor, int fetchSize) {
+        this.valueExtractor = valueExtractor;
+        this.fetchSize = fetchSize;
+      }
+
+      @Override
+      public Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration) throws SQLException {
+        if (fetchSize != DEFAULT_FETCH_SIZE) {
+          statement.setFetchSize(fetchSize);
+        }
+        boolean hasResultSet = statement.execute();
+        if (hasResultSet) {
+          try (ResultSet rs = statement.getResultSet()) {
+            return read(rs);
+          }
+        } else {
+          try (ResultSet rs = getOutResultSet(statement, outParameterRegistration)) {
+            return read(rs);
+          }
+        }
+      }
+
+      private List<Object> read(ResultSet resultSet) throws SQLException {
+        List<Object> result = new ArrayList<>();
+        int rowNumber = 0;
+        while (resultSet.next()) {
+          Object element = this.valueExtractor.extractValue(resultSet, rowNumber);
+          result.add(element);
+          rowNumber += 1;
+        }
+        return result;
+      }
+
+      private static ResultSet getOutResultSet(CallableStatement statement, OutParameterRegistration outParameterRegistration) throws SQLException {
+        return outParameterRegistration.getOutParamter(statement, ResultSet.class);
       }
 
     }
