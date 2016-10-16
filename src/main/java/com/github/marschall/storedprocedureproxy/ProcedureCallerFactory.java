@@ -602,35 +602,7 @@ public final class ProcedureCallerFactory<T> {
       String[] inParameterNames = this.isUseParameterNames() ? extractParameterNames(method) : null;
 
 
-      String outParameterName;
       boolean isList = methodHasReturnValue && methodReturnType == List.class;
-      Class<?> listElementType;
-      if (methodHasReturnValue) {
-        OutParameter outParameter = method.getAnnotation(OutParameter.class);
-        ReturnValue returnValue = method.getAnnotation(ReturnValue.class);
-        if (outParameter != null) {
-          if (returnValue != null) {
-            throw new IllegalArgumentException("method " + method + " needs to be annotated with only one of" + OutParameter.class + " or " + ReturnValue.class);
-          }
-          outParameterName = outParameter.name();
-        } else if (returnValue != null) {
-          outParameterName = returnValue.name();
-        } else {
-          outParameterName = null;
-        }
-        // correct annotation default values
-        if (outParameterName != null && outParameterName.isEmpty()) {
-          outParameterName = null;
-        }
-        if (isList) {
-          listElementType = getListReturnTypeParamter(method);
-        } else {
-          listElementType = null;
-        }
-      } else {
-        outParameterName = null;
-        listElementType = null;
-      }
 
       int outParameterIndex = getOutParameterIndex(method);
       boolean hasOutParameter = outParameterIndex != NO_OUT_PARAMTER;
@@ -680,6 +652,7 @@ public final class ProcedureCallerFactory<T> {
             break;
           case NAME_ONLY:
           case NAME_AND_TYPE:
+            String outParameterName = getOutParameterName(method);
             outParameterRegistration = new ByNameOutParameterRegistration(outParameterName, outParameterType);
             break;
           default:
@@ -697,6 +670,7 @@ public final class ProcedureCallerFactory<T> {
       if (boxedReturnType == void.class) {
         resultExtractor = VoidResultExtractor.INSTANCE;
       } else if (isList) {
+        Class<?> listElementType = getListReturnTypeParamter(method);
         resultExtractor = new ListResultExtractor(listElementType, getFetchSize(method));
       } else {
         resultExtractor = new ScalarResultExtractor(boxedReturnType);
@@ -708,6 +682,28 @@ public final class ProcedureCallerFactory<T> {
               outParameterRegistration, inParameterRegistration);
 
     }
+
+    private static String getOutParameterName(Method method) {
+      OutParameter outParameter = method.getAnnotation(OutParameter.class);
+      ReturnValue returnValue = method.getAnnotation(ReturnValue.class);
+      String outParameterName;
+      if (outParameter != null) {
+        if (returnValue != null) {
+          throw new IllegalArgumentException("method " + method + " needs to be annotated with only one of" + OutParameter.class + " or " + ReturnValue.class);
+        }
+        outParameterName = outParameter.name();
+      } else if (returnValue != null) {
+        outParameterName = returnValue.name();
+      } else {
+        outParameterName = null;
+      }
+      // correct annotation default values
+      if (outParameterName != null && outParameterName.isEmpty()) {
+        return null;
+      }
+      return outParameterName;
+    }
+
 
     private static int getOutParameterIndex(Method method) {
       OutParameter outParameter = method.getAnnotation(OutParameter.class);
