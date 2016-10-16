@@ -1209,7 +1209,7 @@ public final class ProcedureCallerFactory<T> {
 
     interface ResultExtractor {
 
-      Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration) throws SQLException;
+      Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration, Object[] args) throws SQLException;
 
     }
 
@@ -1218,7 +1218,7 @@ public final class ProcedureCallerFactory<T> {
       INSTANCE;
 
       @Override
-      public Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration) throws SQLException {
+      public Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration, Object[] args) throws SQLException {
         boolean hasResultSet = statement.execute();
         if (hasResultSet) {
           int count = 0;
@@ -1243,7 +1243,7 @@ public final class ProcedureCallerFactory<T> {
       }
 
       @Override
-      public Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration) throws SQLException {
+      public Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration, Object[] args) throws SQLException {
         // REVIEW for functions does retrieving the value by name make sense?
         boolean hasResultSet = statement.execute();
         if (hasResultSet) {
@@ -1288,7 +1288,7 @@ public final class ProcedureCallerFactory<T> {
       }
 
       @Override
-      public Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration) throws SQLException {
+      public Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration, Object[] args) throws SQLException {
         if (fetchSize != DEFAULT_FETCH_SIZE) {
           statement.setFetchSize(fetchSize);
         }
@@ -1321,37 +1321,38 @@ public final class ProcedureCallerFactory<T> {
 
     static final class ValueExtractorResultExtractor implements ResultExtractor {
 
-      private final ValueExtractor<?> valueExtractor;
+      private final int extractorIndex;
 
       private final int fetchSize;
 
-      ValueExtractorResultExtractor(ValueExtractor<?> valueExtractor, int fetchSize) {
-        this.valueExtractor = valueExtractor;
+      ValueExtractorResultExtractor(int extractorIndex, int fetchSize) {
+        this.extractorIndex = extractorIndex;
         this.fetchSize = fetchSize;
       }
 
       @Override
-      public Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration) throws SQLException {
+      public Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration, Object[] args) throws SQLException {
         if (fetchSize != DEFAULT_FETCH_SIZE) {
           statement.setFetchSize(fetchSize);
         }
+        ValueExtractor<?> valueExtractor = (ValueExtractor<?>) args[this.extractorIndex];
         boolean hasResultSet = statement.execute();
         if (hasResultSet) {
           try (ResultSet rs = statement.getResultSet()) {
-            return read(rs);
+            return read(rs, valueExtractor);
           }
         } else {
           try (ResultSet rs = getOutResultSet(statement, outParameterRegistration)) {
-            return read(rs);
+            return read(rs, valueExtractor);
           }
         }
       }
 
-      private List<Object> read(ResultSet resultSet) throws SQLException {
+      private static List<Object> read(ResultSet resultSet, ValueExtractor<?> valueExtractor) throws SQLException {
         List<Object> result = new ArrayList<>();
         int rowNumber = 0;
         while (resultSet.next()) {
-          Object element = this.valueExtractor.extractValue(resultSet, rowNumber);
+          Object element = valueExtractor.extractValue(resultSet, rowNumber);
           result.add(element);
           rowNumber += 1;
         }
