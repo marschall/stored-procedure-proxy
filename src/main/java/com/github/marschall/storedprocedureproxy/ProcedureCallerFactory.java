@@ -728,8 +728,8 @@ public final class ProcedureCallerFactory<T> {
 
       return new CallInfo(procedureName, callString,
               wantsExceptionTranslation, boxedReturnType, isList,
-              listElementType, getFetchSize(method),
-              resultExtractor, outParameterRegistration, inParameterRegistration);
+              getFetchSize(method), resultExtractor,
+              outParameterRegistration, inParameterRegistration);
 
     }
 
@@ -1298,8 +1298,6 @@ public final class ProcedureCallerFactory<T> {
     final String procedureName;
     final String callString;
     final boolean wantsExceptionTranslation;
-    final int fetchSize;
-    final int extractorIndex;
     final ResultExtractor resultExtractor;
     final OutParameterRegistration outParameterRegistration;
     final InParameterRegistration inParameterRegistration;
@@ -1308,29 +1306,19 @@ public final class ProcedureCallerFactory<T> {
      * Instead of {@code int.class} contains {@code Integer.class}.
      */
     final Class<?> boxedReturnType;
-    final boolean isList;
-    final Class<?> listElementType;
 
     CallInfo(String procedureName, String callString, boolean wantsExceptionTranslation,
             Class<?> boxedReturnType, boolean isList,
-            Class<?> listElementType, int fetchSize,
-            ResultExtractor resultExtractor,
-            OutParameterRegistration outParameterRegistration, InParameterRegistration inParameterRegistration) {
+            int fetchSize, ResultExtractor resultExtractor,
+            OutParameterRegistration outParameterRegistration,
+            InParameterRegistration inParameterRegistration) {
       this.procedureName = procedureName;
       this.callString = callString;
       this.wantsExceptionTranslation = wantsExceptionTranslation;
       this.boxedReturnType = boxedReturnType;
-      this.isList = isList;
-      this.listElementType = listElementType;
-      this.fetchSize = fetchSize;
       this.resultExtractor = resultExtractor;
       this.outParameterRegistration = outParameterRegistration;
       this.inParameterRegistration = inParameterRegistration;
-      this.extractorIndex = ProcedureCaller.NO_VALUE_EXTRACTOR;
-    }
-
-    boolean hasValueExtractor() {
-      return this.extractorIndex != ProcedureCaller.NO_VALUE_EXTRACTOR;
     }
 
   }
