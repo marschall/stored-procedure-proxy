@@ -593,76 +593,21 @@ public final class ProcedureCallerFactory<T> {
       String namespace = this.hasNamespace(method) ? this.extractsNamespace(method) : null;
       boolean isFunction = procedureHasReturnValue(method);
       Class<?> methodReturnType = method.getReturnType();
-      boolean methodHasReturnValue = methodReturnType != void.class;
-      boolean isList = methodHasReturnValue && methodReturnType == List.class;
 
       int outParameterIndex = getOutParameterIndex(method);
       boolean hasOutParameter = outParameterIndex != NO_OUT_PARAMTER;
-      byte[] inParameterIndices;
-      if (this.isUseParameterIndices()) {
-        Class<?>[] methodParameterTypes = method.getParameterTypes();
-        if (!hasOutParameter || (hasOutParameter && outParameterIndex == parameterCount + 1)) {
-          // we have an no out parameter or
-          // we have an out parameter and it's the last parameter
-          inParameterIndices = buildInParameterIndices(parameterCount, methodParameterTypes);
-        } else {
-          inParameterIndices = buildInParameterIndices(parameterCount, outParameterIndex, methodParameterTypes);
-        }
-      } else {
-        inParameterIndices = null;
-      }
 
-      InParameterRegistration inParameterRegistration;
-      if (parameterCount > 0) {
-        switch (this.parameterRegistration) {
-          case INDEX_ONLY:
-            inParameterRegistration = new ByIndexInParameterRegistration(inParameterIndices);
-            break;
-          case INDEX_AND_TYPE: {
-            int[] inParameterTypes = this.isUseParameterTypes() ? this.extractParameterTypes(method) : null;
-            inParameterRegistration = new ByIndexAndTypeInParameterRegistration(inParameterIndices, inParameterTypes);
-            break;
-          }
-          case NAME_ONLY: {
-            String[] inParameterNames = this.isUseParameterNames() ? extractParameterNames(method) : null;
-            inParameterRegistration = new ByNameInParameterRegistration(inParameterNames);
-            break;
-          }
-          case NAME_AND_TYPE: {
-            String[] inParameterNames = this.isUseParameterNames() ? extractParameterNames(method) : null;
-            int[] inParameterTypes = this.isUseParameterTypes() ? this.extractParameterTypes(method) : null;
-            inParameterRegistration = new ByNameAndTypeInParameterRegistration(inParameterNames, inParameterTypes);
-            break;
-          }
-          default:
-            throw new IllegalStateException("unknown parameter registration: " + this.parameterRegistration);
-        }
-      } else {
-        inParameterRegistration = NoInParameterRegistration.INSTANCE;
-      }
+      InParameterRegistration inParameterRegistration = buildInParameterRegistration(
+              method, parameterCount, outParameterIndex);
 
       OutParameterRegistration outParameterRegistration = buildOutParameterRegistration(
               method, outParameterIndex, hasOutParameter);
 
 
-      String callString = buildCallString(namespace, schema, procedureName, parameterCount, isFunction, hasOutParameter);
+      String callString = buildCallString(
+              namespace, schema, procedureName, parameterCount, isFunction, hasOutParameter);
       boolean wantsExceptionTranslation = wantsExceptionTranslation(method);
-      ResultExtractor resultExtractor;
-      if (!methodHasReturnValue) {
-        resultExtractor = VoidResultExtractor.INSTANCE;
-      } else if (isList) {
-        int valueExtractorIndex = getValueExtractorIndex(method);
-        int fetchSize = getFetchSize(method);
-        if (valueExtractorIndex == NO_VALUE_EXTRACTOR) {
-          Class<?> listElementType = getListReturnTypeParamter(method);
-          resultExtractor = new ListResultExtractor(listElementType, fetchSize);
-        } else {
-          resultExtractor = new ValueExtractorResultExtractor(valueExtractorIndex, fetchSize);
-        }
-      } else {
-        Class<?> boxedReturnType = getBoxedClass(method.getReturnType());
-        resultExtractor = new ScalarResultExtractor(boxedReturnType);
-      }
+      ResultExtractor resultExtractor = buildResultExtractor(method, methodReturnType);
 
       return new CallInfo(procedureName, callString,
               wantsExceptionTranslation, resultExtractor, outParameterRegistration,
@@ -670,28 +615,86 @@ public final class ProcedureCallerFactory<T> {
 
     }
 
+    private InParameterRegistration buildInParameterRegistration(
+            Method method, int parameterCount, int outParameterIndex) {
+      if (parameterCount > 0) {
+        switch (this.parameterRegistration) {
+          case INDEX_ONLY: {
+            byte[] inParameterIndices = buildInParameterIndices(method, parameterCount, outParameterIndex);
+            return new ByIndexInParameterRegistration(inParameterIndices);
+          }
+          case INDEX_AND_TYPE: {
+            byte[] inParameterIndices = buildInParameterIndices(method, parameterCount, outParameterIndex);
+            int[] inParameterTypes = this.isUseParameterTypes() ? this.extractParameterTypes(method) : null;
+            return new ByIndexAndTypeInParameterRegistration(inParameterIndices, inParameterTypes);
+          }
+          case NAME_ONLY: {
+            String[] inParameterNames = this.isUseParameterNames() ? extractParameterNames(method) : null;
+            return new ByNameInParameterRegistration(inParameterNames);
+          }
+          case NAME_AND_TYPE: {
+            String[] inParameterNames = this.isUseParameterNames() ? extractParameterNames(method) : null;
+            int[] inParameterTypes = this.isUseParameterTypes() ? this.extractParameterTypes(method) : null;
+            return new ByNameAndTypeInParameterRegistration(inParameterNames, inParameterTypes);
+          }
+          default:
+            throw new IllegalStateException("unknown parameter registration: " + this.parameterRegistration);
+        }
+      } else {
+        return NoInParameterRegistration.INSTANCE;
+      }
+    }
+
+    private static ResultExtractor buildResultExtractor(Method method, Class<?> methodReturnType) {
+      boolean methodHasReturnValue = methodReturnType != void.class;
+      boolean isList = methodHasReturnValue && methodReturnType == List.class;
+      if (!methodHasReturnValue) {
+        return VoidResultExtractor.INSTANCE;
+      } else if (isList) {
+        int valueExtractorIndex = getValueExtractorIndex(method);
+        int fetchSize = getFetchSize(method);
+        if (valueExtractorIndex == NO_VALUE_EXTRACTOR) {
+          Class<?> listElementType = getListReturnTypeParamter(method);
+          return new ListResultExtractor(listElementType, fetchSize);
+        } else {
+          return new ValueExtractorResultExtractor(valueExtractorIndex, fetchSize);
+        }
+      } else {
+        Class<?> boxedReturnType = getBoxedClass(method.getReturnType());
+        return new ScalarResultExtractor(boxedReturnType);
+      }
+    }
+
+    private static byte[] buildInParameterIndices(Method method, int parameterCount, int outParameterIndex) {
+      Class<?>[] methodParameterTypes = method.getParameterTypes();
+      boolean hasOutParameter = outParameterIndex != NO_OUT_PARAMTER;
+      if (!hasOutParameter || (hasOutParameter && outParameterIndex == parameterCount + 1)) {
+        // we have an no out parameter or
+        // we have an out parameter and it's the last parameter
+        return buildInParameterIndices(parameterCount, methodParameterTypes);
+      } else {
+        return buildInParameterIndices(parameterCount, outParameterIndex, methodParameterTypes);
+      }
+    }
+
     private OutParameterRegistration buildOutParameterRegistration(
             Method method, int outParameterIndex, boolean hasOutParameter) {
-      OutParameterRegistration outParameterRegistration;
       if (hasOutParameter) {
         int outParameterType = this.getOutParameterType(method);
         switch (this.parameterRegistration) {
           case INDEX_ONLY:
           case INDEX_AND_TYPE:
-            outParameterRegistration = new ByIndexOutParameterRegistration(outParameterIndex, outParameterType);
-            break;
+            return new ByIndexOutParameterRegistration(outParameterIndex, outParameterType);
           case NAME_ONLY:
           case NAME_AND_TYPE:
             String outParameterName = getOutParameterName(method);
-            outParameterRegistration = new ByNameOutParameterRegistration(outParameterName, outParameterType);
-            break;
+            return new ByNameOutParameterRegistration(outParameterName, outParameterType);
           default:
             throw new IllegalStateException("unknown parameter registration: " + this.parameterRegistration);
         }
       } else {
-        outParameterRegistration = NoOutParameterRegistration.INSTANCE;
+        return NoOutParameterRegistration.INSTANCE;
       }
-      return outParameterRegistration;
     }
 
     private static String getOutParameterName(Method method) {
