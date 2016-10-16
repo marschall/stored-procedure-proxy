@@ -26,6 +26,7 @@ import org.springframework.jdbc.support.SQLErrorCodeSQLExceptionTranslator;
 
 import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ProcedureCaller.InParameterRegistration;
 import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ProcedureCaller.OutParameterRegistration;
+import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ProcedureCaller.ResultExtractor;
 import com.github.marschall.storedprocedureproxy.annotations.FetchSize;
 import com.github.marschall.storedprocedureproxy.annotations.Namespace;
 import com.github.marschall.storedprocedureproxy.annotations.OutParameter;
@@ -441,7 +442,7 @@ public final class ProcedureCallerFactory<T> {
       try (Connection connection = this.dataSource.getConnection()) {
         try (CallableStatement statement = this.prepareCall(connection, callInfo)) {
           bindParameters(args, callInfo, statement);
-          returnValue = this.execute(statement, callInfo);
+          returnValue = this.execute(statement, callInfo, args);
         }
       } catch (SQLException e) {
         throw translate(e, callInfo);
@@ -504,91 +505,8 @@ public final class ProcedureCallerFactory<T> {
       }
     }
 
-    private Object execute(CallableStatement statement, CallInfo callInfo) throws SQLException {
-      Class<?> boxedReturnType = callInfo.boxedReturnType;
-      if (boxedReturnType == void.class) {
-        return executeVoidMethod(statement);
-      } else {
-        if (callInfo.isList) {
-          return readListFromResultSet(statement, callInfo);
-        }
-        return executeScalarMethod(statement, callInfo, boxedReturnType);
-      }
-    }
-
-    private Object executeScalarMethod(CallableStatement statement, CallInfo callInfo, Class<?> returnType) throws SQLException {
-      // REVIEW for functions does retrieving the value by name make sense?
-      boolean hasResultSet = statement.execute();
-      if (hasResultSet) {
-        return readFromResultSet(statement, callInfo);
-      } else {
-        return readFromStatement(statement, callInfo, returnType);
-      }
-    }
-
-    private Object readFromStatement(CallableStatement statement, CallInfo callInfo, Class<?> returnType) throws SQLException {
-      return callInfo.outParameterRegistration.getOutParamter(statement, returnType);
-    }
-
-    private Object readFromResultSet(CallableStatement statement, CallInfo callInfo) throws SQLException {
-      Object last = null;
-      int count = 0;
-      try (ResultSet rs = statement.getResultSet()) {
-        while (rs.next()) {
-          // last = rs.getObject(1, returnType);
-          // H2 supports #getObject(int, Class) but always returns null
-          last = rs.getObject(1);
-        }
-        count += 1;
-      }
-      if (count != 1) {
-        ProcedureCallerFactory.newIncorrectResultSizeException(1, count);
-      }
-      return last;
-    }
-
-    private Object readListFromResultSet(CallableStatement statement, CallInfo callInfo) throws SQLException {
-      int fetchSize = callInfo.fetchSize;
-      if (fetchSize != DEFAULT_FETCH_SIZE) {
-        statement.setFetchSize(fetchSize);
-      }
-      boolean hasResultSet = statement.execute();
-      if (hasResultSet) {
-        try (ResultSet rs = statement.getResultSet()) {
-          return read(rs, callInfo.listElementType);
-        }
-      } else {
-        try (ResultSet rs = this.getOutResultSet(statement, callInfo)) {
-          return read(rs, callInfo.listElementType);
-        }
-      }
-    }
-
-    private static List<Object> read(ResultSet resultSet, Class<?> type) throws SQLException {
-      List<Object> result = new ArrayList<>();
-      while (resultSet.next()) {
-        Object element = resultSet.getObject(1, type);
-        result.add(element);
-      }
-      return result;
-    }
-
-    private ResultSet getOutResultSet(CallableStatement statement, CallInfo callInfo) throws SQLException {
-      return callInfo.outParameterRegistration.getOutParamter(statement, ResultSet.class);
-    }
-
-    private Object executeVoidMethod(CallableStatement statement) throws SQLException {
-      boolean hasResultSet = statement.execute();
-      if (hasResultSet) {
-        int count = 0;
-        try (ResultSet rs = statement.executeQuery()) {
-          while (rs.next()) {
-            count += 1;
-          }
-        }
-        // don't check count H2 just returns NULL
-      }
-      return null;
+    private Object execute(CallableStatement statement, CallInfo callInfo, Object[] args) throws SQLException {
+      return callInfo.resultExtractor.extractResult(statement, callInfo.outParameterRegistration, args);
     }
 
     private boolean isUseParameterIndices() {
@@ -799,11 +717,19 @@ public final class ProcedureCallerFactory<T> {
       String callString = buildCallString(namespace, schema, procedureName, parameterCount, isFunction, hasOutParameter);
       boolean wantsExceptionTranslation = wantsExceptionTranslation(method);
       Class<?> boxedReturnType = getBoxedClass(method.getReturnType());
+      ResultExtractor resultExtractor;
+      if (boxedReturnType == void.class) {
+        resultExtractor = VoidResultExtractor.INSTANCE;
+      } else if (isList) {
+        resultExtractor = new ListResultExtractor(listElementType, getFetchSize(method));
+      } else {
+        resultExtractor = new ScalarResultExtractor(boxedReturnType);
+      }
 
       return new CallInfo(procedureName, callString,
               wantsExceptionTranslation, boxedReturnType, isList,
-              listElementType, getFetchSize(method), outParameterRegistration,
-              inParameterRegistration);
+              listElementType, getFetchSize(method),
+              resultExtractor, outParameterRegistration, inParameterRegistration);
 
     }
 
@@ -1374,6 +1300,7 @@ public final class ProcedureCallerFactory<T> {
     final boolean wantsExceptionTranslation;
     final int fetchSize;
     final int extractorIndex;
+    final ResultExtractor resultExtractor;
     final OutParameterRegistration outParameterRegistration;
     final InParameterRegistration inParameterRegistration;
 
@@ -1387,6 +1314,7 @@ public final class ProcedureCallerFactory<T> {
     CallInfo(String procedureName, String callString, boolean wantsExceptionTranslation,
             Class<?> boxedReturnType, boolean isList,
             Class<?> listElementType, int fetchSize,
+            ResultExtractor resultExtractor,
             OutParameterRegistration outParameterRegistration, InParameterRegistration inParameterRegistration) {
       this.procedureName = procedureName;
       this.callString = callString;
@@ -1395,6 +1323,7 @@ public final class ProcedureCallerFactory<T> {
       this.isList = isList;
       this.listElementType = listElementType;
       this.fetchSize = fetchSize;
+      this.resultExtractor = resultExtractor;
       this.outParameterRegistration = outParameterRegistration;
       this.inParameterRegistration = inParameterRegistration;
       this.extractorIndex = ProcedureCaller.NO_VALUE_EXTRACTOR;
