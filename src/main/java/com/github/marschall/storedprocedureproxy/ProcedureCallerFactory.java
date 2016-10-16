@@ -438,19 +438,17 @@ public final class ProcedureCallerFactory<T> {
 
       // handle actual interface methods
       CallInfo callInfo = this.getCallInfo(method, args);
-      Object returnValue;
       try (Connection connection = this.dataSource.getConnection()) {
-        try (CallableStatement statement = this.prepareCall(connection, callInfo)) {
+        try (CallableStatement statement = prepareCall(connection, callInfo)) {
           bindParameters(args, callInfo, statement);
-          returnValue = this.execute(statement, callInfo, args);
+          return this.execute(statement, callInfo, args);
         }
       } catch (SQLException e) {
         throw translate(e, callInfo);
       }
-      return returnValue;
     }
 
-    private void bindParameters(Object[] args, CallInfo callInfo, CallableStatement statement) throws SQLException {
+    private static void bindParameters(Object[] args, CallInfo callInfo, CallableStatement statement) throws SQLException {
       callInfo.outParameterRegistration.bindOutParamter(statement);
       callInfo.inParameterRegistration.bindInParamters(statement, args);
     }
@@ -497,7 +495,7 @@ public final class ProcedureCallerFactory<T> {
       }
     }
 
-    private Object execute(CallableStatement statement, CallInfo callInfo, Object[] args) throws SQLException {
+    private static Object execute(CallableStatement statement, CallInfo callInfo, Object[] args) throws SQLException {
       return callInfo.resultExtractor.extractResult(statement, callInfo.outParameterRegistration, args);
     }
 
@@ -551,7 +549,7 @@ public final class ProcedureCallerFactory<T> {
       return types;
     }
 
-    private CallableStatement prepareCall(Connection connection, CallInfo callInfo) throws SQLException {
+    private static CallableStatement prepareCall(Connection connection, CallInfo callInfo) throws SQLException {
       return connection.prepareCall(callInfo.callString);
     }
 
