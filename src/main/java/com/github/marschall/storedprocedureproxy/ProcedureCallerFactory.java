@@ -447,20 +447,12 @@ public final class ProcedureCallerFactory<T> {
       } catch (SQLException e) {
         throw translate(e, callInfo);
       }
-      return checkReturnType(callInfo, returnValue);
+      return returnValue;
     }
 
     private void bindParameters(Object[] args, CallInfo callInfo, CallableStatement statement) throws SQLException {
       callInfo.outParameterRegistration.bindOutParamter(statement);
       callInfo.inParameterRegistration.bindInParamters(statement, args);
-    }
-
-    private static Object checkReturnType(CallInfo callInfo, Object returnValue) {
-      Class<?> boxedReturnType = callInfo.boxedReturnType;
-      if (boxedReturnType == void.class) {
-        return null;
-      }
-      return boxedReturnType.cast(returnValue);
     }
 
     private static Class<?> getBoxedClass(Class<?> clazz) {
@@ -642,6 +634,37 @@ public final class ProcedureCallerFactory<T> {
         inParameterRegistration = NoInParameterRegistration.INSTANCE;
       }
 
+      OutParameterRegistration outParameterRegistration = buildOutParameterRegistration(
+              method, outParameterIndex, hasOutParameter);
+
+
+      String callString = buildCallString(namespace, schema, procedureName, parameterCount, isFunction, hasOutParameter);
+      boolean wantsExceptionTranslation = wantsExceptionTranslation(method);
+      ResultExtractor resultExtractor;
+      if (!methodHasReturnValue) {
+        resultExtractor = VoidResultExtractor.INSTANCE;
+      } else if (isList) {
+        int valueExtractorIndex = getValueExtractorIndex(method);
+        int fetchSize = getFetchSize(method);
+        if (valueExtractorIndex == NO_VALUE_EXTRACTOR) {
+          Class<?> listElementType = getListReturnTypeParamter(method);
+          resultExtractor = new ListResultExtractor(listElementType, fetchSize);
+        } else {
+          resultExtractor = new ValueExtractorResultExtractor(valueExtractorIndex, fetchSize);
+        }
+      } else {
+        Class<?> boxedReturnType = getBoxedClass(method.getReturnType());
+        resultExtractor = new ScalarResultExtractor(boxedReturnType);
+      }
+
+      return new CallInfo(procedureName, callString,
+              wantsExceptionTranslation, resultExtractor, outParameterRegistration,
+              inParameterRegistration);
+
+    }
+
+    private OutParameterRegistration buildOutParameterRegistration(
+            Method method, int outParameterIndex, boolean hasOutParameter) {
       OutParameterRegistration outParameterRegistration;
       if (hasOutParameter) {
         int outParameterType = this.getOutParameterType(method);
@@ -661,26 +684,7 @@ public final class ProcedureCallerFactory<T> {
       } else {
         outParameterRegistration = NoOutParameterRegistration.INSTANCE;
       }
-
-
-      String callString = buildCallString(namespace, schema, procedureName, parameterCount, isFunction, hasOutParameter);
-      boolean wantsExceptionTranslation = wantsExceptionTranslation(method);
-      Class<?> boxedReturnType = getBoxedClass(method.getReturnType());
-      ResultExtractor resultExtractor;
-      if (boxedReturnType == void.class) {
-        resultExtractor = VoidResultExtractor.INSTANCE;
-      } else if (isList) {
-        Class<?> listElementType = getListReturnTypeParamter(method);
-        resultExtractor = new ListResultExtractor(listElementType, getFetchSize(method));
-      } else {
-        resultExtractor = new ScalarResultExtractor(boxedReturnType);
-      }
-
-      return new CallInfo(procedureName, callString,
-              wantsExceptionTranslation, boxedReturnType, isList,
-              getFetchSize(method), resultExtractor,
-              outParameterRegistration, inParameterRegistration);
-
+      return outParameterRegistration;
     }
 
     private static String getOutParameterName(Method method) {
@@ -814,6 +818,17 @@ public final class ProcedureCallerFactory<T> {
         }
       }
       return indices;
+    }
+
+    private static int getValueExtractorIndex(Method method) {
+      Class<?>[] methodParameterTypes = method.getParameterTypes();
+      for (int i = 0; i < methodParameterTypes.length; i++) {
+        Class<?> methodParameterType = methodParameterTypes[i];
+        if (methodParameterType.isAssignableFrom(ValueExtractor.class)) {
+          return i;
+        }
+      }
+      return NO_VALUE_EXTRACTOR;
     }
 
     private static int getParameterCount(Method method) {
@@ -1194,6 +1209,9 @@ public final class ProcedureCallerFactory<T> {
 
     static final class ScalarResultExtractor implements ResultExtractor {
 
+      /**
+       * Instead of {@code int.class} contains {@code Integer.class}.
+       */
       private final Class<?> returnType;
 
       ScalarResultExtractor(Class<?> returnType) {
@@ -1229,7 +1247,7 @@ public final class ProcedureCallerFactory<T> {
         if (count != 1) {
           ProcedureCallerFactory.newIncorrectResultSizeException(1, count);
         }
-        return last;
+        return this.returnType.cast(last);
       }
 
     }
@@ -1334,20 +1352,12 @@ public final class ProcedureCallerFactory<T> {
     final OutParameterRegistration outParameterRegistration;
     final InParameterRegistration inParameterRegistration;
 
-    /**
-     * Instead of {@code int.class} contains {@code Integer.class}.
-     */
-    final Class<?> boxedReturnType;
-
     CallInfo(String procedureName, String callString, boolean wantsExceptionTranslation,
-            Class<?> boxedReturnType, boolean isList,
-            int fetchSize, ResultExtractor resultExtractor,
-            OutParameterRegistration outParameterRegistration,
+            ResultExtractor resultExtractor, OutParameterRegistration outParameterRegistration,
             InParameterRegistration inParameterRegistration) {
       this.procedureName = procedureName;
       this.callString = callString;
       this.wantsExceptionTranslation = wantsExceptionTranslation;
-      this.boxedReturnType = boxedReturnType;
       this.resultExtractor = resultExtractor;
       this.outParameterRegistration = outParameterRegistration;
       this.inParameterRegistration = inParameterRegistration;
