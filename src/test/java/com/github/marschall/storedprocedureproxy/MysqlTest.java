@@ -2,6 +2,8 @@ package com.github.marschall.storedprocedureproxy;
 
 import static com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration.INDEX_AND_TYPE;
 import static com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration.INDEX_ONLY;
+import static com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration.NAME_ONLY;
+import static com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration.NAME_AND_TYPE;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
@@ -10,6 +12,7 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import static org.junit.Assume.assumeFalse;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -61,11 +64,19 @@ public class MysqlTest {
 
   @Parameters
   public static Collection<Object[]> parameters() {
-    return Arrays.asList(new Object[] {INDEX_ONLY}, new Object[] {INDEX_AND_TYPE});
+    return Arrays.asList(
+            new Object[] {INDEX_ONLY},
+            new Object[] {INDEX_AND_TYPE},
+            new Object[] {NAME_ONLY},
+            new Object[] {NAME_AND_TYPE}
+    );
   }
 
   @Test
   public void helloFunction() {
+    // names for out parameters of functions don't work
+    assumeFalse(this.parameterRegistration == NAME_ONLY);
+    assumeFalse(this.parameterRegistration == NAME_AND_TYPE);
     assertEquals("Hello, Monty!", this.procedures.helloFunction("Monty"));
   }
 

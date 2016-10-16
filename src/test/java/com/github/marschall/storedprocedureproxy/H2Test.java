@@ -60,7 +60,10 @@ public class H2Test {
 
   @Parameters
   public static Collection<Object[]> parameters() {
-    return Arrays.asList(new Object[] {INDEX_ONLY}, new Object[] {INDEX_AND_TYPE});
+    return Arrays.asList(
+            new Object[] {INDEX_ONLY},
+            new Object[] {INDEX_AND_TYPE}
+    );
   }
 
   @Test
