@@ -38,7 +38,7 @@ Check out the [wiki](https://github.com/marschall/stored-procedure-proxy/wiki) f
 <dependency>
   <groupId>com.github.marschall</groupId>
   <artifactId>stored-procedure-proxy</artifactId>
-  <version>0.1.1</version>
+  <version>0.2.0</version>
 </dependency>
 ```
 
