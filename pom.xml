@@ -26,7 +26,7 @@
       <id>marschall</id>
       <name>Philippe Marschall</name>
       <email>philippe.marschall@gmail.com</email>
-      <timezone>+1</timezone>
+      <timezone>Europe/Paris</timezone>
       <roles>
         <role>developer</role>
       </roles>
@@ -81,6 +81,7 @@
     <dependency>
       <groupId>org.hsqldb</groupId>
       <artifactId>hsqldb</artifactId>
+      <!-- 2.3.4 is buggy -->
       <version>2.3.3</version>
       <scope>test</scope>
     </dependency>
@@ -93,19 +94,19 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>2.1.0-beta.124</version>
+      <version>2.1.0-beta.126</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
-      <version>9.4.1210</version>
+      <version>9.4.1211</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
-      <version>6.0.3</version>
+      <version>6.0.4</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -219,7 +220,7 @@
         <plugin>
           <groupId>org.jboss.jandex</groupId>
           <artifactId>jandex-maven-plugin</artifactId>
-          <version>1.0.3</version>
+          <version>1.0.5</version>
         </plugin>
         <plugin>
           <artifactId>maven-source-plugin</artifactId>
