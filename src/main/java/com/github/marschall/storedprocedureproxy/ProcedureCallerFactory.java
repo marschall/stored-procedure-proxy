@@ -601,10 +601,9 @@ public final class ProcedureCallerFactory<T> {
       int[] inParameterTypes = this.isUseParameterTypes() ? this.extractParameterTypes(method) : null;
       String[] inParameterNames = this.isUseParameterNames() ? extractParameterNames(method) : null;
 
-      int outParameterIndex;
-      int outParameterType;
+
       String outParameterName;
-      boolean isList;
+      boolean isList = methodHasReturnValue && methodReturnType == List.class;
       Class<?> listElementType;
       if (methodHasReturnValue) {
         OutParameter outParameter = method.getAnnotation(OutParameter.class);
@@ -614,36 +613,14 @@ public final class ProcedureCallerFactory<T> {
             throw new IllegalArgumentException("method " + method + " needs to be annotated with only one of" + OutParameter.class + " or " + ReturnValue.class);
           }
           outParameterName = outParameter.name();
-          outParameterIndex = outParameter.index();
-          outParameterType = outParameter.type();
         } else if (returnValue != null) {
           outParameterName = returnValue.name();
-          outParameterIndex = 1;
-          outParameterType = returnValue.type();
         } else {
-          // we will use a ResultSet instead of an out parameter or function return value
-          // eg for Mysql or H2
-          outParameterIndex = NO_OUT_PARAMTER;
           outParameterName = null;
-          outParameterType = Integer.MIN_VALUE;
         }
         // correct annotation default values
         if (outParameterName != null && outParameterName.isEmpty()) {
           outParameterName = null;
-        }
-        if (outParameterIndex == NO_OUT_PARAMTER && (outParameter != null || returnValue != null)) {
-          // default for the out parameter index is the last index
-          // but only if we use an out parameter for function return value
-          // if we use a result set then we have no out parameter
-          outParameterIndex = parameterCount + 1;
-        }
-        isList = methodReturnType == List.class;
-        if (outParameterType == Integer.MIN_VALUE) {
-          if (isList) {
-            outParameterType = Types.REF_CURSOR;
-          } else {
-            outParameterType = this.typeMapper.mapToSqlType(methodReturnType);
-          }
         }
         if (isList) {
           listElementType = getListReturnTypeParamter(method);
@@ -651,13 +628,11 @@ public final class ProcedureCallerFactory<T> {
           listElementType = null;
         }
       } else {
-        outParameterIndex = NO_OUT_PARAMTER;
-        outParameterType = 0;
         outParameterName = null;
-        isList = false;
         listElementType = null;
       }
 
+      int outParameterIndex = getOutParameterIndex(method);
       boolean hasOutParameter = outParameterIndex != NO_OUT_PARAMTER;
       byte[] inParameterIndices;
       if (this.isUseParameterIndices()) {
@@ -697,6 +672,7 @@ public final class ProcedureCallerFactory<T> {
 
       OutParameterRegistration outParameterRegistration;
       if (hasOutParameter) {
+        int outParameterType = this.getOutParameterType(method);
         switch (this.parameterRegistration) {
           case INDEX_ONLY:
           case INDEX_AND_TYPE:
@@ -731,6 +707,60 @@ public final class ProcedureCallerFactory<T> {
               getFetchSize(method), resultExtractor,
               outParameterRegistration, inParameterRegistration);
 
+    }
+
+    private static int getOutParameterIndex(Method method) {
+      OutParameter outParameter = method.getAnnotation(OutParameter.class);
+      ReturnValue returnValue = method.getAnnotation(ReturnValue.class);
+      int outParameterIndex;
+      if (outParameter != null) {
+        if (returnValue != null) {
+          throw new IllegalArgumentException("method " + method + " needs to be annotated with only one of" + OutParameter.class + " or " + ReturnValue.class);
+        }
+        outParameterIndex = outParameter.index();
+      } else if (returnValue != null) {
+        // always the first parameter
+        outParameterIndex = 1;
+      } else {
+        // we will use a ResultSet instead of an out parameter or function return value
+        // eg for Mysql or H2
+        outParameterIndex = NO_OUT_PARAMTER;
+      }
+      if (outParameterIndex == NO_OUT_PARAMTER && (outParameter != null || returnValue != null)) {
+        // default for the out parameter index is the last index
+        // but only if we use an out parameter for function return value
+        // if we use a result set then we have no out parameter
+        return getParameterCount(method) + 1;
+      }
+      return outParameterIndex;
+    }
+
+    private int getOutParameterType(Method method) {
+      Class<?> methodReturnType = method.getReturnType();
+      if (methodReturnType == void.class) {
+        return NO_OUT_PARAMTER;
+      }
+      OutParameter outParameter = method.getAnnotation(OutParameter.class);
+      ReturnValue returnValue = method.getAnnotation(ReturnValue.class);
+      int outParameterType;
+      if (outParameter != null) {
+        if (returnValue != null) {
+          throw new IllegalArgumentException("method " + method + " needs to be annotated with only one of" + OutParameter.class + " or " + ReturnValue.class);
+        }
+        outParameterType = outParameter.type();
+      } else if (returnValue != null) {
+        outParameterType = returnValue.type();
+      } else {
+        outParameterType = Integer.MIN_VALUE;
+      }
+      if (outParameterType == Integer.MIN_VALUE) {
+        if (methodReturnType == List.class) {
+          return Types.REF_CURSOR;
+        } else {
+          return this.typeMapper.mapToSqlType(methodReturnType);
+        }
+      }
+      return outParameterType;
     }
 
     private static int getFetchSize(Method method) {
@@ -791,7 +821,13 @@ public final class ProcedureCallerFactory<T> {
     }
 
     private static int getParameterCount(Method method) {
-      return method.getParameterCount();
+      int count = 0;
+      for (Class<?> parameterType : method.getParameterTypes()) {
+        if (!parameterType.isAssignableFrom(ValueExtractor.class)) {
+          count += 1;
+        }
+      }
+      return count;
     }
 
     private static String buildCallString(String namespace, String schemaName, String procedureName,
