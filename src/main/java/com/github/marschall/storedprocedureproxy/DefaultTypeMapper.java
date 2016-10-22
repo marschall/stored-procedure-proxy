@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.sql.NClob;
 import java.sql.SQLXML;
 import java.sql.Types;
 import java.time.LocalDate;
@@ -51,6 +52,7 @@ final class DefaultTypeMapper implements TypeMapper {
     // LOBs
     this.typeMap.put(Blob.class, Types.BLOB);
     this.typeMap.put(Clob.class, Types.CLOB);
+    this.typeMap.put(NClob.class, Types.NCLOB);
 
     // java 8 date time
     this.typeMap.put(LocalDate.class, Types.DATE);

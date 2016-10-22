@@ -46,6 +46,7 @@ import com.github.marschall.storedprocedureproxy.annotations.ReturnValue;
  * <tr><td colspan="2">LOBs</td></tr>
  * <tr><td>Blob</td><td>{@link Types#BLOB}</td></tr>
  * <tr><td>Clob</td><td>{@link Types#CLOB}</td></tr>
+ * <tr><td>NClob</td><td>{@link Types#NCLOB}</td></tr>
 
  * <tr><td colspan="2">java 8 date time</td></tr>
  * <tr><td>LocalDate</td><td>{@link Types#DATE}</td></tr>
