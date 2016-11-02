@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.github.marschall</groupId>
   <artifactId>stored-procedure-proxy</artifactId>
-  <version>0.2.1-SNAPSHOT</version>
+  <version>0.3.0-SNAPSHOT</version>
   <inceptionYear>2013</inceptionYear>
   <name>Spring JDBC Call</name>
   <description>Proxies through which to call stored procedures.</description>
@@ -75,7 +75,7 @@
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
-      <version>1.4.192</version>
+      <version>1.4.193</version>
       <scope>test</scope>
     </dependency>
     <dependency>

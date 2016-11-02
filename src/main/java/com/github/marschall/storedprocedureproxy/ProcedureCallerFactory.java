@@ -1228,9 +1228,9 @@ public final class ProcedureCallerFactory<T> {
         int count = 0;
         try (ResultSet rs = statement.getResultSet()) {
           while (rs.next()) {
-            // last = rs.getObject(1, returnType);
+             last = rs.getObject(1, returnType);
             // H2 supports #getObject(int, Class) but always returns null
-            last = rs.getObject(1);
+//            last = rs.getObject(1);
           }
           count += 1;
         }
