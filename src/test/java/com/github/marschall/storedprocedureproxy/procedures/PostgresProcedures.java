@@ -40,5 +40,13 @@ public interface PostgresProcedures {
   @ProcedureName("simple_ref_cursor")
   List<String> mappedRefCursor(ValueExtractor<String> extractor);
 
+  @ReturnValue
+  @ProcedureName("sample_array_argument")
+  String sampleArrayArgumentList(List<Integer> ids);
+
+  @ReturnValue
+  @ProcedureName("sample_array_argument")
+  String sampleArrayArgumentArray(Integer[] ids);
+
 
 }

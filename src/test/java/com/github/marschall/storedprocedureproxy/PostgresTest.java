@@ -8,6 +8,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.sql.Array;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -20,6 +21,7 @@ import javax.sql.DataSource;
 
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -165,6 +167,37 @@ public class PostgresTest {
   public void mappedRefCursor() {
     List<String> refCursor = this.procedures.mappedRefCursor((rs, i) -> "1-" + rs.getString(1));
     assertEquals(Arrays.asList("1-hello", "1-postgres"), refCursor);
+  }
+
+  @Test
+  @Ignore("not yet implemented")
+  public void sampleArrayArgumentList() {
+    String result = this.procedures.sampleArrayArgumentList(Arrays.asList(1, 2, 3));
+    assertEquals("1, 2, 3", result);
+  }
+
+  @Test
+  @Ignore("not yet implemented")
+  public void sampleArrayArgumentArray() {
+    String result = this.procedures.sampleArrayArgumentArray(new Integer[] {1, 2, 3});
+    assertEquals("1, 2, 3", result);
+  }
+
+  @Test
+  public void nativeArrayCall() throws SQLException {
+    try (Connection connection = this.dataSource.getConnection();
+         CallableStatement call = connection.prepareCall("{? = call sample_array_argument(?)}")) {
+      call.registerOutParameter(1, Types.VARCHAR);
+      Array array = connection.createArrayOf("int", new Object[] {1, 2, 3});
+      call.setObject(2, array);
+
+      try {
+        assertFalse(call.execute());
+        assertEquals("1, 2, 3", call.getString(1));
+      } finally {
+        array.free();
+      }
+    }
   }
 
 }

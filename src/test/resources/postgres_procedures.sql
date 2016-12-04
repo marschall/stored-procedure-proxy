@@ -36,7 +36,6 @@ $$ LANGUAGE plpgsql;
 
 -- https://www.postgresql.org/docs/9.5/static/plpgsql-cursors.html
 
--- CREATE OR REPLACE FUNCTION simple_ref_cursor(refcursor) RETURNS refcursor AS $$
 CREATE OR REPLACE FUNCTION simple_ref_cursor() RETURNS refcursor AS $$
 DECLARE
     ref refcursor;
@@ -49,6 +48,13 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION simple_ref_cursor_out(OUT o_strings refcursor) AS $$
 BEGIN
     OPEN o_strings FOR SELECT 'hello' UNION ALL SELECT 'postgres';
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION sample_array_argument(input_values int[])
+RETURNS varchar AS $$
+BEGIN
+    return array_to_string(input_values, ', ');
 END;
 $$ LANGUAGE plpgsql;
 
