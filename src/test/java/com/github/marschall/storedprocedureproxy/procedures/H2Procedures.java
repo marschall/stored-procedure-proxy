@@ -17,6 +17,14 @@ public interface H2Procedures {
 
   List<IdName> simpleResultSet(ValueExtractor<IdName> extractor);
 
+  default List<IdName> simpleResultSet() {
+    return simpleResultSet((rs, i) -> {
+      long id = rs.getLong("ID");
+      String name = rs.getString("NAME");
+      return new IdName(id, name);
+    });
+  }
+
   public static final class IdName {
 
     private final long id;

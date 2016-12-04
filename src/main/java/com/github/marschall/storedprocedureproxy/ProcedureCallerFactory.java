@@ -1,5 +1,6 @@
 package com.github.marschall.storedprocedureproxy;
 
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -425,6 +426,10 @@ public final class ProcedureCallerFactory<T> {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+      if (method.isDefault()) {
+        return invokeDefaultMethod(proxy, method, args);
+      }
+
       // handle methods defined in Object: toString, hashCode, equals
       String methodName = method.getName();
       int argCount = args == null ? 0 : args.length;
@@ -441,11 +446,20 @@ public final class ProcedureCallerFactory<T> {
       try (Connection connection = this.dataSource.getConnection()) {
         try (CallableStatement statement = prepareCall(connection, callInfo)) {
           bindParameters(args, callInfo, statement);
-          return this.execute(statement, callInfo, args);
+          return execute(statement, callInfo, args);
         }
       } catch (SQLException e) {
         throw translate(e, callInfo);
       }
+    }
+
+    private static Object invokeDefaultMethod(Object proxy, Method method, Object[] args) throws Throwable {
+      Class<?> declaringClass = method.getDeclaringClass();
+      return MethodHandles.lookup()
+              .in(declaringClass)
+              .unreflectSpecial(method, declaringClass)
+              .bindTo(proxy)
+              .invokeWithArguments(args);
     }
 
     private static void bindParameters(Object[] args, CallInfo callInfo, CallableStatement statement) throws SQLException {

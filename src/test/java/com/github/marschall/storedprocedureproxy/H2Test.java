@@ -14,6 +14,7 @@ import javax.sql.DataSource;
 
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -93,6 +94,22 @@ public class H2Test {
       String name = rs.getString("NAME");
       return new IdName(id, name);
     });
+
+    assertThat(names, hasSize(2));
+
+    IdName name = names.get(0);
+    assertEquals(0L, name.getId());
+    assertEquals("Hello", name.getName());
+
+    name = names.get(1);
+    assertEquals(1L, name.getId());
+    assertEquals("World", name.getName());
+  }
+
+  @Test
+  @Ignore("#23")
+  public void simpleResultSetWithDefaultMethod() {
+    List<IdName> names = procedures.simpleResultSet();
 
     assertThat(names, hasSize(2));
 

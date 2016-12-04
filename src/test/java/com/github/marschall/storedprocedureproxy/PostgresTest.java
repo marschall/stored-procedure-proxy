@@ -161,4 +161,10 @@ public class PostgresTest {
     assertEquals(Arrays.asList("hello", "postgres"), refCursor);
   }
 
+  @Test
+  public void mappedRefCursor() {
+    List<String> refCursor = this.procedures.mappedRefCursor((rs, i) -> "1-" + rs.getString(1));
+    assertEquals(Arrays.asList("1-hello", "1-postgres"), refCursor);
+  }
+
 }

@@ -37,6 +37,8 @@ public interface PostgresProcedures {
   List<String> simpleRefCursorOut();
 
   @OutParameter
+  @ProcedureName("simple_ref_cursor")
   List<String> mappedRefCursor(ValueExtractor<String> extractor);
+
 
 }
