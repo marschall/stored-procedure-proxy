@@ -92,10 +92,10 @@ public final class ProcedureCallerFactory<T> {
     try {
       Class.forName("org.springframework.jdbc.support.SQLExceptionTranslator", false, ProcedureCallerFactory.class.getClassLoader());
       hasSpring = true;
-      incorrectResultSizeExceptionGenerator = new DefaultIncorrectResultSizeExceptionGenerator();
+      incorrectResultSizeExceptionGenerator = new SpringIncorrectResultSizeExceptionGenerator();
     } catch (ClassNotFoundException e) {
       hasSpring = false;
-      incorrectResultSizeExceptionGenerator = new SpringIncorrectResultSizeExceptionGenerator();
+      incorrectResultSizeExceptionGenerator = new DefaultIncorrectResultSizeExceptionGenerator();
     }
     HAS_SPRING = hasSpring;
     INCORRECT_RESULT_SIZE_EXCEPTION_GENERATOR = incorrectResultSizeExceptionGenerator;
