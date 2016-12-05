@@ -6,6 +6,7 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
+import java.sql.Array;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -947,6 +948,9 @@ public final class ProcedureCallerFactory<T> {
       return this.namespaceNamingStrategy.translateToDatabase(declaringClass.getSimpleName());
     }
 
+    /**
+     * Strategy on how to register out parameters.
+     */
     interface OutParameterRegistration {
 
       void bindOutParamter(CallableStatement statement) throws SQLException;
@@ -955,6 +959,9 @@ public final class ProcedureCallerFactory<T> {
 
     }
 
+    /**
+     * Register out parameters by index and type.
+     */
     static final class ByIndexOutParameterRegistration implements OutParameterRegistration {
 
       // an interface method can not have more than 254 parameters
@@ -983,6 +990,9 @@ public final class ProcedureCallerFactory<T> {
 
     }
 
+    /**
+     * Register out parameters by name and type only.
+     */
     static final class ByNameOutParameterRegistration implements OutParameterRegistration {
 
       private final int outParameterType;
@@ -1010,6 +1020,11 @@ public final class ProcedureCallerFactory<T> {
 
     }
 
+    /**
+     * No out parameters are registered. Either because the procedure
+     * doesn't return any results or returns the result by means of a
+     * {@link ResultSet}.
+     */
     enum NoOutParameterRegistration implements OutParameterRegistration {
 
       INSTANCE;
@@ -1337,6 +1352,14 @@ public final class ProcedureCallerFactory<T> {
 
   }
 
+  /**
+   * Information about how to call a stored procedure.
+   *
+   * <p>For every method in an interface there is a lazily creates instance of
+   * this class.</p>
+   *
+   * <p>This class is immutable.</p>
+   */
   static final class CallInfo {
 
     final String procedureName;
@@ -1355,6 +1378,56 @@ public final class ProcedureCallerFactory<T> {
       this.resultExtractor = resultExtractor;
       this.outParameterRegistration = outParameterRegistration;
       this.inParameterRegistration = inParameterRegistration;
+    }
+
+  }
+
+  interface CallResource extends AutoCloseable {
+
+    void initialize(Connection connection) throws SQLException;
+
+    void close() throws SQLException;
+
+  }
+
+  enum NoResource implements CallResource {
+
+    INSTANCE;
+
+    @Override
+    public void initialize(Connection connection) {
+      // empty
+    }
+
+    @Override
+    public void close() {
+      // empty
+    }
+
+  }
+
+
+
+  static final class ArrayResource implements CallResource {
+
+    private Object[] elements;
+    private String typeName;
+    private Array array;
+
+    ArrayResource(Object[] elements, String typeName) {
+      this.elements = elements;
+      this.typeName = typeName;
+    }
+
+    @Override
+    public void initialize(Connection connection) throws SQLException {
+      this.array = connection.createArrayOf(this.typeName, this.elements);
+
+    }
+
+    @Override
+    public void close() throws SQLException {
+      this.array.free();
     }
 
   }
