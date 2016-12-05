@@ -11,7 +11,6 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,8 +24,6 @@ import javax.sql.DataSource;
 
 import org.springframework.jdbc.support.SQLErrorCodeSQLExceptionTranslator;
 
-import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ProcedureCaller.InParameterRegistration;
-import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ProcedureCaller.OutParameterRegistration;
 import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ProcedureCaller.ResultExtractor;
 import com.github.marschall.storedprocedureproxy.annotations.FetchSize;
 import com.github.marschall.storedprocedureproxy.annotations.Namespace;
@@ -371,7 +368,7 @@ public final class ProcedureCallerFactory<T> {
     private static final int NO_VALUE_EXTRACTOR = -1;
 
     // 0 is not a valid parameter index
-    private static final int VALUE_EXTRACTOR = 0;
+    static final int VALUE_EXTRACTOR = 0;
 
     private final DataSource dataSource;
 
@@ -948,246 +945,7 @@ public final class ProcedureCallerFactory<T> {
       return this.namespaceNamingStrategy.translateToDatabase(declaringClass.getSimpleName());
     }
 
-    /**
-     * Strategy on how to register out parameters.
-     */
-    interface OutParameterRegistration {
 
-      void bindOutParamter(CallableStatement statement) throws SQLException;
-
-      <T> T getOutParamter(CallableStatement statement, Class<T> type) throws SQLException;
-
-    }
-
-    /**
-     * Register out parameters by index and type.
-     */
-    static final class ByIndexOutParameterRegistration implements OutParameterRegistration {
-
-      // an interface method can not have more than 254 parameters
-      private final int outParameterIndex;
-      private final int outParameterType;
-
-      ByIndexOutParameterRegistration(int outParameterIndex, int outParameterType) {
-        this.outParameterIndex = outParameterIndex;
-        this.outParameterType = outParameterType;
-      }
-
-      @Override
-      public void bindOutParamter(CallableStatement statement) throws SQLException {
-        statement.registerOutParameter(outParameterIndex, outParameterType);
-      }
-
-      @Override
-      public <T> T getOutParamter(CallableStatement statement, Class<T> type) throws SQLException {
-        try {
-          return statement.getObject(this.outParameterIndex, type);
-        } catch (SQLFeatureNotSupportedException e) {
-          // Postgres hack
-          return type.cast(statement.getObject(this.outParameterIndex));
-        }
-      }
-
-    }
-
-    /**
-     * Register out parameters by name and type only.
-     */
-    static final class ByNameOutParameterRegistration implements OutParameterRegistration {
-
-      private final int outParameterType;
-      private final String outParameterName;
-
-      ByNameOutParameterRegistration(String outParameterName, int outParameterType) {
-        this.outParameterType = outParameterType;
-        this.outParameterName = outParameterName;
-      }
-
-      @Override
-      public void bindOutParamter(CallableStatement statement) throws SQLException {
-        statement.registerOutParameter(outParameterName, outParameterType);
-      }
-
-      @Override
-      public <T> T getOutParamter(CallableStatement statement, Class<T> type) throws SQLException {
-        try {
-          return statement.getObject(this.outParameterName, type);
-        } catch (SQLFeatureNotSupportedException e) {
-          // Postgres hack
-          return type.cast(statement.getObject(this.outParameterName));
-        }
-      }
-
-    }
-
-    /**
-     * No out parameters are registered. Either because the procedure
-     * doesn't return any results or returns the result by means of a
-     * {@link ResultSet}.
-     */
-    enum NoOutParameterRegistration implements OutParameterRegistration {
-
-      INSTANCE;
-
-      @Override
-      public void bindOutParamter(CallableStatement statement) {
-        // nothing
-      }
-
-      @Override
-      public <T> T getOutParamter(CallableStatement statement, Class<T> type) throws SQLException {
-        if (type != void.class) {
-          throw new IllegalArgumentException("no out parameter registered");
-        }
-        return null;
-      }
-
-    }
-
-    interface InParameterRegistration {
-
-      void bindInParamters(CallableStatement statement, Object[] args) throws SQLException;
-
-    }
-
-    enum NoInParameterRegistration implements InParameterRegistration {
-
-      INSTANCE;
-
-      @Override
-      public void bindInParamters(CallableStatement statement, Object[] args) {
-        // nothing
-      }
-
-    }
-
-    static final class ByIndexInParameterRegistration implements InParameterRegistration {
-
-      // an interface method can not have more than 254 parameters
-      private final byte[] inParameterIndices;
-
-      ByIndexInParameterRegistration(byte[] inParameterIndices) {
-        this.inParameterIndices = inParameterIndices;
-      }
-
-      private int inParameterIndexAt(int i) {
-        return Byte.toUnsignedInt(this.inParameterIndices[i]);
-      }
-
-      @Override
-      public void bindInParamters(CallableStatement statement, Object[] args) throws SQLException {
-        if (args == null) {
-          return;
-        }
-        for (int i = 0; i < args.length; i++) {
-          // REVIEW null check?
-          int parameterIndex = this.inParameterIndexAt(i);
-          if (parameterIndex == VALUE_EXTRACTOR) {
-            // -> is a value extractor
-            continue;
-          }
-          statement.setObject(parameterIndex, args[i]);
-        }
-      }
-
-    }
-
-    static final class ByNameInParameterRegistration implements InParameterRegistration {
-
-      private final String[] inParameterNames;
-
-      ByNameInParameterRegistration(String[] inParameterNames) {
-        this.inParameterNames = inParameterNames;
-      }
-
-      @Override
-      public void bindInParamters(CallableStatement statement, Object[] args) throws SQLException {
-        if (args == null) {
-          return;
-        }
-        for (int i = 0; i < args.length; i++) {
-          String parameterName = this.inParameterNames[i];
-          if (parameterName == null) {
-            // -> is a value extractor
-            continue;
-          }
-          // REVIEW null check?
-          statement.setObject(parameterName, args[i]);
-        }
-      }
-
-    }
-
-    static final class ByIndexAndTypeInParameterRegistration implements InParameterRegistration {
-
-      // an interface method can not have more than 254 parameters
-      private final byte[] inParameterIndices;
-      private final int[] inParameterTypes;
-
-      ByIndexAndTypeInParameterRegistration(byte[] inParameterIndices, int[] inParameterTypes) {
-        this.inParameterIndices = inParameterIndices;
-        this.inParameterTypes = inParameterTypes;
-      }
-
-      private int inParameterIndexAt(int i) {
-        return Byte.toUnsignedInt(this.inParameterIndices[i]);
-      }
-
-      @Override
-      public void bindInParamters(CallableStatement statement, Object[] args) throws SQLException {
-        if (args == null) {
-          return;
-        }
-        for (int i = 0; i < args.length; i++) {
-          int parameterIndex = this.inParameterIndexAt(i);
-          if (parameterIndex == VALUE_EXTRACTOR) {
-            // -> is a value extractor
-            continue;
-          }
-          Object arg = args[i];
-          int type = this.inParameterTypes[i];
-          if (arg != null) {
-            statement.setObject(parameterIndex, arg, type);
-          } else {
-            statement.setNull(parameterIndex, type);
-          }
-        }
-      }
-
-    }
-
-    static final class ByNameAndTypeInParameterRegistration implements InParameterRegistration {
-
-      private final String[] inParameterNames;
-      private final int[] inParameterTypes;
-
-      ByNameAndTypeInParameterRegistration(String[] inParameterNames, int[] inParameterTypes) {
-        this.inParameterTypes = inParameterTypes;
-        this.inParameterNames = inParameterNames;
-      }
-
-      @Override
-      public void bindInParamters(CallableStatement statement, Object[] args) throws SQLException {
-        if (args == null) {
-          return;
-        }
-        for (int i = 0; i < args.length; i++) {
-          String parameterName = this.inParameterNames[i];
-          if (parameterName == null) {
-            // -> is a value extractor
-            continue;
-          }
-          Object arg = args[i];
-          int type = this.inParameterTypes[i];
-          if (arg != null) {
-            statement.setObject(parameterName, arg, type);
-          } else {
-            statement.setNull(parameterName, type);
-          }
-        }
-      }
-
-    }
 
     interface ResultExtractor {
 
@@ -1358,6 +1116,9 @@ public final class ProcedureCallerFactory<T> {
    * <p>For every method in an interface there is a lazily creates instance of
    * this class.</p>
    *
+   * <p>Makes heavy use of polymorphism to only store the absolute
+   * minimum information (at the cost of additional objects).</p>
+   *
    * <p>This class is immutable.</p>
    */
   static final class CallInfo {
@@ -1405,8 +1166,6 @@ public final class ProcedureCallerFactory<T> {
     }
 
   }
-
-
 
   static final class ArrayResource implements CallResource {
 
