@@ -1167,10 +1167,34 @@ public final class ProcedureCallerFactory<T> {
 
   }
 
+  static final class CompositeResource implements CallResource {
+
+    private final CallResource[] resources;
+
+    CompositeResource(CallResource[] resources) {
+      this.resources = resources;
+    }
+
+    @Override
+    public void initialize(Connection connection) throws SQLException {
+      for (CallResource resource : this.resources) {
+        resource.initialize(connection);
+      }
+    }
+
+    @Override
+    public void close() throws SQLException {
+      for (CallResource resource : this.resources) {
+        resource.close();
+      }
+    }
+
+  }
+
   static final class ArrayResource implements CallResource {
 
-    private Object[] elements;
-    private String typeName;
+    private final Object[] elements;
+    private final String typeName;
     private Array array;
 
     ArrayResource(Object[] elements, String typeName) {
