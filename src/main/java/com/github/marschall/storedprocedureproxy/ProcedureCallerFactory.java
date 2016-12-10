@@ -24,7 +24,6 @@ import javax.sql.DataSource;
 
 import org.springframework.jdbc.support.SQLErrorCodeSQLExceptionTranslator;
 
-import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ProcedureCaller.ResultExtractor;
 import com.github.marschall.storedprocedureproxy.annotations.FetchSize;
 import com.github.marschall.storedprocedureproxy.annotations.Namespace;
 import com.github.marschall.storedprocedureproxy.annotations.OutParameter;
@@ -360,7 +359,7 @@ public final class ProcedureCallerFactory<T> {
 
   static final class ProcedureCaller implements InvocationHandler {
 
-    private static final int DEFAULT_FETCH_SIZE = 0;
+    static final int DEFAULT_FETCH_SIZE = 0;
 
     // an interface method can not have more than 254 parameters
     private static final int NO_OUT_PARAMTER = -1;
@@ -943,169 +942,6 @@ public final class ProcedureCallerFactory<T> {
         }
       }
       return this.namespaceNamingStrategy.translateToDatabase(declaringClass.getSimpleName());
-    }
-
-
-
-    interface ResultExtractor {
-
-      Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration, Object[] args) throws SQLException;
-
-    }
-
-    enum VoidResultExtractor implements ResultExtractor {
-
-      INSTANCE;
-
-      @Override
-      public Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration, Object[] args) throws SQLException {
-        boolean hasResultSet = statement.execute();
-        if (hasResultSet) {
-          int count = 0;
-          try (ResultSet rs = statement.executeQuery()) {
-            while (rs.next()) {
-              count += 1;
-            }
-          }
-          // don't check count H2 just returns NULL
-        }
-        return null;
-      }
-
-    }
-
-    static final class ScalarResultExtractor implements ResultExtractor {
-
-      /**
-       * Instead of {@code int.class} contains {@code Integer.class}.
-       */
-      private final Class<?> returnType;
-
-      ScalarResultExtractor(Class<?> returnType) {
-        this.returnType = returnType;
-      }
-
-      @Override
-      public Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration, Object[] args) throws SQLException {
-        // REVIEW for functions does retrieving the value by name make sense?
-        boolean hasResultSet = statement.execute();
-        if (hasResultSet) {
-          return readFromResultSet(statement, outParameterRegistration);
-        } else {
-          return readFromStatement(statement, outParameterRegistration);
-        }
-      }
-
-      private Object readFromStatement(CallableStatement statement, OutParameterRegistration outParameterRegistration) throws SQLException {
-        return outParameterRegistration.getOutParamter(statement, this.returnType);
-      }
-
-      private Object readFromResultSet(CallableStatement statement, OutParameterRegistration outParameterRegistration) throws SQLException {
-        Object last = null;
-        int count = 0;
-        try (ResultSet rs = statement.getResultSet()) {
-          while (rs.next()) {
-             last = rs.getObject(1, returnType);
-            // H2 supports #getObject(int, Class) but always returns null
-//            last = rs.getObject(1);
-          }
-          count += 1;
-        }
-        if (count != 1) {
-          ProcedureCallerFactory.newIncorrectResultSizeException(1, count);
-        }
-        return this.returnType.cast(last);
-      }
-
-    }
-
-    static final class ListResultExtractor implements ResultExtractor {
-
-      private final Class<?> listElementType;
-
-      private final int fetchSize;
-
-      ListResultExtractor(Class<?> listElementType, int fetchSize) {
-        this.listElementType = listElementType;
-        this.fetchSize = fetchSize;
-      }
-
-      @Override
-      public Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration, Object[] args) throws SQLException {
-        if (fetchSize != DEFAULT_FETCH_SIZE) {
-          statement.setFetchSize(fetchSize);
-        }
-        boolean hasResultSet = statement.execute();
-        if (hasResultSet) {
-          try (ResultSet rs = statement.getResultSet()) {
-            return read(rs, this.listElementType);
-          }
-        } else {
-          try (ResultSet rs = getOutResultSet(statement, outParameterRegistration)) {
-            return read(rs, this.listElementType);
-          }
-        }
-      }
-
-      private static List<Object> read(ResultSet resultSet, Class<?> type) throws SQLException {
-        List<Object> result = new ArrayList<>();
-        while (resultSet.next()) {
-          Object element = resultSet.getObject(1, type);
-          result.add(element);
-        }
-        return result;
-      }
-
-      private static ResultSet getOutResultSet(CallableStatement statement, OutParameterRegistration outParameterRegistration) throws SQLException {
-        return outParameterRegistration.getOutParamter(statement, ResultSet.class);
-      }
-
-    }
-
-    static final class ValueExtractorResultExtractor implements ResultExtractor {
-
-      private final int extractorIndex;
-
-      private final int fetchSize;
-
-      ValueExtractorResultExtractor(int extractorIndex, int fetchSize) {
-        this.extractorIndex = extractorIndex;
-        this.fetchSize = fetchSize;
-      }
-
-      @Override
-      public Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration, Object[] args) throws SQLException {
-        if (fetchSize != DEFAULT_FETCH_SIZE) {
-          statement.setFetchSize(fetchSize);
-        }
-        ValueExtractor<?> valueExtractor = (ValueExtractor<?>) args[this.extractorIndex];
-        boolean hasResultSet = statement.execute();
-        if (hasResultSet) {
-          try (ResultSet rs = statement.getResultSet()) {
-            return read(rs, valueExtractor);
-          }
-        } else {
-          try (ResultSet rs = getOutResultSet(statement, outParameterRegistration)) {
-            return read(rs, valueExtractor);
-          }
-        }
-      }
-
-      private static List<Object> read(ResultSet resultSet, ValueExtractor<?> valueExtractor) throws SQLException {
-        List<Object> result = new ArrayList<>();
-        int rowNumber = 0;
-        while (resultSet.next()) {
-          Object element = valueExtractor.extractValue(resultSet, rowNumber);
-          result.add(element);
-          rowNumber += 1;
-        }
-        return result;
-      }
-
-      private static ResultSet getOutResultSet(CallableStatement statement, OutParameterRegistration outParameterRegistration) throws SQLException {
-        return outParameterRegistration.getOutParamter(statement, ResultSet.class);
-      }
-
     }
 
   }
