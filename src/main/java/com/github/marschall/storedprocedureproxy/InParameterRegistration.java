@@ -41,9 +41,6 @@ final class ByIndexInParameterRegistration implements InParameterRegistration {
 
   @Override
   public void bindInParamters(CallableStatement statement, CallResource callResource, Object[] args) throws SQLException {
-    if (args == null) {
-      return;
-    }
     for (int i = 0; i < args.length; i++) {
       int parameterIndex = this.inParameterIndexAt(i);
       if (parameterIndex == ProcedureCaller.NO_IN_PARAMTER) {
@@ -72,9 +69,6 @@ final class ByNameInParameterRegistration implements InParameterRegistration {
 
   @Override
   public void bindInParamters(CallableStatement statement, CallResource callResource, Object[] args) throws SQLException {
-    if (args == null) {
-      return;
-    }
     for (int i = 0; i < args.length; i++) {
       String parameterName = this.inParameterNames[i];
       if (parameterName == null) {
@@ -111,9 +105,6 @@ final class ByIndexAndTypeInParameterRegistration implements InParameterRegistra
 
   @Override
   public void bindInParamters(CallableStatement statement, CallResource callResource, Object[] args) throws SQLException {
-    if (args == null) {
-      return;
-    }
     for (int i = 0; i < args.length; i++) {
       int parameterIndex = this.inParameterIndexAt(i);
       if (parameterIndex == ProcedureCaller.NO_IN_PARAMTER) {
@@ -149,9 +140,6 @@ final class ByNameAndTypeInParameterRegistration implements InParameterRegistrat
 
   @Override
   public void bindInParamters(CallableStatement statement, CallResource callResource, Object[] args) throws SQLException {
-    if (args == null) {
-      return;
-    }
     for (int i = 0; i < args.length; i++) {
       String parameterName = this.inParameterNames[i];
       if (parameterName == null) {
