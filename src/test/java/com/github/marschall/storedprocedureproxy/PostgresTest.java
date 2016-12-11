@@ -21,7 +21,6 @@ import javax.sql.DataSource;
 
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -170,14 +169,12 @@ public class PostgresTest {
   }
 
   @Test
-  @Ignore("not yet implemented")
   public void sampleArrayArgumentList() {
     String result = this.procedures.sampleArrayArgumentList(Arrays.asList(1, 2, 3));
     assertEquals("1, 2, 3", result);
   }
 
   @Test
-  @Ignore("not yet implemented")
   public void sampleArrayArgumentArray() {
     String result = this.procedures.sampleArrayArgumentArray(new Integer[] {1, 2, 3});
     assertEquals("1, 2, 3", result);

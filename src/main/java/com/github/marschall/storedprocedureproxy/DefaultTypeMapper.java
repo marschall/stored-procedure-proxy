@@ -12,8 +12,11 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.github.marschall.storedprocedureproxy.spi.TypeMapper;
 
@@ -70,6 +73,11 @@ final class DefaultTypeMapper implements TypeMapper {
     // boolean
     this.typeMap.put(Boolean.class, Types.BOOLEAN);
     this.typeMap.put(boolean.class, Types.BOOLEAN);
+
+    // array
+    this.typeMap.put(Collection.class, Types.ARRAY);
+    this.typeMap.put(Set.class, Types.ARRAY);
+    this.typeMap.put(List.class, Types.ARRAY);
   }
 
   @Override

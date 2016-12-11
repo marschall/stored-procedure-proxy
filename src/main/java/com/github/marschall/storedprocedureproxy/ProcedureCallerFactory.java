@@ -6,13 +6,10 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
-import java.sql.Array;
 import java.sql.CallableStatement;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -32,8 +29,11 @@ import com.github.marschall.storedprocedureproxy.annotations.ParameterType;
 import com.github.marschall.storedprocedureproxy.annotations.ProcedureName;
 import com.github.marschall.storedprocedureproxy.annotations.ReturnValue;
 import com.github.marschall.storedprocedureproxy.annotations.Schema;
+import com.github.marschall.storedprocedureproxy.annotations.TypeName;
 import com.github.marschall.storedprocedureproxy.spi.NamingStrategy;
 import com.github.marschall.storedprocedureproxy.spi.TypeMapper;
+import com.github.marschall.storedprocedureproxy.spi.TypeNameResolver;
+import java.util.Collection;
 
 /**
  * Creates instances of an interface containing stored procedure declarations.
@@ -119,6 +119,8 @@ public final class ProcedureCallerFactory<T> {
 
   private TypeMapper typeMapper;
 
+  private TypeNameResolver typeNameResolver;
+
   private ProcedureCallerFactory(Class<T> interfaceDeclaration, DataSource dataSource) {
     this.interfaceDeclaration = interfaceDeclaration;
     this.dataSource = dataSource;
@@ -131,6 +133,7 @@ public final class ProcedureCallerFactory<T> {
     this.parameterRegistration = ParameterRegistration.INDEX_ONLY;
     this.exceptionAdapter = getDefaultExceptionAdapter(dataSource);
     this.typeMapper = DefaultTypeMapper.INSTANCE;
+    this.typeNameResolver = DefaultTypeNameResolver.INSTANCE;
   }
 
   private static SQLExceptionAdapter getDefaultExceptionAdapter(DataSource dataSource) {
@@ -303,6 +306,20 @@ public final class ProcedureCallerFactory<T> {
   }
 
   /**
+   * Allows you to change the way SQL type names for array elements are resolved.
+   *
+   * <p>Only applied if {@link TypeName} is not present.</p>
+   *
+   * @param typeNameResolver the type name resolver
+   * @return this builder for chaining
+   */
+  public ProcedureCallerFactory<T> withTypeNameResolver(TypeNameResolver typeNameResolver) {
+    Objects.requireNonNull(typeMapper);
+    this.typeNameResolver = typeNameResolver;
+    return this;
+  }
+
+  /**
    * Creates a caller for the interface of stored procedures using the configured options.
    *
    * @return the interface instance
@@ -312,7 +329,8 @@ public final class ProcedureCallerFactory<T> {
             this.parameterNamingStrategy, this.procedureNamingStrategy, this.schemaNamingStrategy,
             this.hasSchema,
             this.namespaceNamingStrategy, this.hasNamespace,
-            this.parameterRegistration, this.exceptionAdapter, this.typeMapper);
+            this.parameterRegistration, this.exceptionAdapter,
+            this.typeMapper, this.typeNameResolver);
     // REVIEW correct class loader
     Object proxy = Proxy.newProxyInstance(this.interfaceDeclaration.getClassLoader(),
             new Class<?>[]{this.interfaceDeclaration}, caller);
@@ -396,6 +414,8 @@ public final class ProcedureCallerFactory<T> {
 
     private final TypeMapper typeMapper;
 
+    private final TypeNameResolver typeNameResolver;
+
     /**
      * We assume this is uncontended since we only do a few lookups and gets.
      * Save the memory overhead of a {@link ConcurrentHashMap}.
@@ -410,7 +430,8 @@ public final class ProcedureCallerFactory<T> {
             NamingStrategy namespaceNamingStrategy, boolean hasNamespace,
             ParameterRegistration parameterRegistration,
             SQLExceptionAdapter exceptionAdapter,
-            TypeMapper typeMapper) {
+            TypeMapper typeMapper,
+            TypeNameResolver typeNameResolver) {
       this.dataSource = dataSource;
       this.interfaceDeclaration = interfaceDeclaration;
       this.parameterNamingStrategy = parameterNamingStrategy;
@@ -422,6 +443,7 @@ public final class ProcedureCallerFactory<T> {
       this.parameterRegistration = parameterRegistration;
       this.exceptionAdapter = exceptionAdapter;
       this.typeMapper = typeMapper;
+      this.typeNameResolver = typeNameResolver;
       this.callInfoCache = Collections.synchronizedMap(new HashMap<>());
     }
 
@@ -590,6 +612,8 @@ public final class ProcedureCallerFactory<T> {
       OutParameterRegistration outParameterRegistration = buildOutParameterRegistration(
               method, outParameterIndex, hasOutParameter);
 
+      CallResourceFactory callResourceFactory = buildCallResourceFactory(method);
+
 
       String callString = buildCallString(
               namespace, schema, procedureName, parameterCount, isFunction, hasOutParameter);
@@ -598,8 +622,54 @@ public final class ProcedureCallerFactory<T> {
 
       return new CallInfo(procedureName, callString,
               wantsExceptionTranslation, resultExtractor, outParameterRegistration,
-              inParameterRegistration, NoResourceFactory.INSTANCE);
+              inParameterRegistration, callResourceFactory);
 
+    }
+
+    private CallResourceFactory buildCallResourceFactory(Method method) {
+      int arrayCount = 0;
+      for (Class<?> parameterType : method.getParameterTypes()) {
+        if (isCollection(parameterType)) {
+          arrayCount += 1;
+        }
+      }
+      if (arrayCount == 0) {
+        return NoResourceFactory.INSTANCE;
+      } else if (arrayCount == 1) {
+        Parameter[] parameters = method.getParameters();
+        for (int i = 0; i < parameters.length; i++) {
+          Parameter parameter = parameters[i];
+          if (isCollection(parameter.getType())) {
+            return createArrayResourceFactory(parameter, i);
+          }
+        }
+        throw new AssertionError("inconsistent state we checked for an array but found none");
+      } else {
+        CallResourceFactory[] factories = new CallResourceFactory[arrayCount];
+        int factoryIndex = 0;
+        Parameter[] parameters = method.getParameters();
+        for (int i = 0; i < parameters.length; i++) {
+          Parameter parameter = parameters[i];
+          if (isCollection(parameter.getType())) {
+            factories[factoryIndex++] = createArrayResourceFactory(parameter, i);
+          }
+        }
+        return new CompositeFactory(factories);
+      }
+    }
+
+    private static boolean isCollection(Class<?> parameterType) {
+      return parameterType.isArray() || Collection.class.isAssignableFrom(parameterType);
+    }
+
+    private CallResourceFactory createArrayResourceFactory(Parameter parameter, int parameterIndex) {
+      String typeName;
+      if (parameter.isAnnotationPresent(TypeName.class)) {
+        typeName = parameter.getAnnotation(TypeName.class).value();
+      } else {
+        typeName = this.typeNameResolver.getTypeName(parameter);
+      }
+      return new ArrayFactory(parameterIndex, typeName);
     }
 
     private InParameterRegistration buildInParameterRegistration(Method method, int parameterCount, int outParameterIndex) {
@@ -774,8 +844,8 @@ public final class ProcedureCallerFactory<T> {
     private static Class<?> getListReturnTypeParamter(Method method) {
       Type genericReturnType = method.getGenericReturnType();
       if (genericReturnType instanceof ParameterizedType) {
-        ParameterizedType pt = (ParameterizedType) genericReturnType;
-        Type[] actualTypeArguments = pt.getActualTypeArguments();
+        ParameterizedType parameterizedType = (ParameterizedType) genericReturnType;
+        Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
         if (actualTypeArguments.length != 1) {
           throw new IllegalArgumentException("type arguments return type of " + method + " are missing");
         }

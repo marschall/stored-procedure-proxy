@@ -7,6 +7,7 @@ import com.github.marschall.storedprocedureproxy.ValueExtractor;
 import com.github.marschall.storedprocedureproxy.annotations.OutParameter;
 import com.github.marschall.storedprocedureproxy.annotations.ProcedureName;
 import com.github.marschall.storedprocedureproxy.annotations.ReturnValue;
+import com.github.marschall.storedprocedureproxy.annotations.TypeName;
 
 public interface PostgresProcedures {
 
@@ -42,11 +43,11 @@ public interface PostgresProcedures {
 
   @ReturnValue
   @ProcedureName("sample_array_argument")
-  String sampleArrayArgumentList(List<Integer> ids);
+  String sampleArrayArgumentList(@TypeName("int") List<Integer> ids);
 
   @ReturnValue
   @ProcedureName("sample_array_argument")
-  String sampleArrayArgumentArray(Integer[] ids);
+  String sampleArrayArgumentArray(@TypeName("int") Integer[] ids);
 
 
 }
