@@ -45,7 +45,6 @@ final class ByIndexInParameterRegistration implements InParameterRegistration {
       return;
     }
     for (int i = 0; i < args.length; i++) {
-      // REVIEW null check?
       int parameterIndex = this.inParameterIndexAt(i);
       if (parameterIndex == ProcedureCaller.VALUE_EXTRACTOR) {
         // -> is a value extractor
@@ -153,3 +152,35 @@ final class ByNameAndTypeInParameterRegistration implements InParameterRegistrat
   }
 
 }
+
+final class ArrayInParameterRegistration implements InParameterRegistration {
+
+  // an interface method can not have more than 254 parameters
+  private byte[] arrayIndices;
+  private String[] arrayNames;
+
+  private InParameterRegistration delegate;
+
+  private int arrayIndexAt(int i) {
+    return Byte.toUnsignedInt(this.arrayIndices[i]);
+  }
+
+  @Override
+  public void bindInParamters(CallableStatement statement, Object[] args) throws SQLException {
+    if (args == null) {
+      return;
+    }
+    for (int i = 0; i < this.arrayIndices.length; i++) {
+      int arrayIndex = this.arrayIndexAt(i);
+      // todo access call state
+    }
+    this.delegate.bindInParamters(statement, args);
+  }
+
+
+}
+
+
+
+
+
