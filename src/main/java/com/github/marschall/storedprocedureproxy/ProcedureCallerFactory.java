@@ -366,8 +366,13 @@ public final class ProcedureCallerFactory<T> {
 
     private static final int NO_VALUE_EXTRACTOR = -1;
 
-    // 0 is not a valid parameter index
-    static final int VALUE_EXTRACTOR = 0;
+    /**
+     * The method argument at this index is not an in parameter. It may
+     * be a {@link ValueExtractor}.
+     *
+     * 0 is not a valid parameter index.
+     */
+    static final int NO_IN_PARAMTER = 0;
 
     private final DataSource dataSource;
 
@@ -787,7 +792,7 @@ public final class ProcedureCallerFactory<T> {
       byte[] indices = new byte[parameterCount];
       for (int i = 0; i < indices.length; i++) {
         if (methodParameterTypes[i].isAssignableFrom(ValueExtractor.class)) {
-          indices[i] = VALUE_EXTRACTOR;
+          indices[i] = NO_IN_PARAMTER;
           continue;
         }
         indices[i] = (byte) (i + 1);
@@ -799,7 +804,7 @@ public final class ProcedureCallerFactory<T> {
       byte[] indices = new byte[parameterCount];
       for (int i = 0; i < indices.length; i++) {
         if (methodParameterTypes[i].isAssignableFrom(ValueExtractor.class)) {
-          indices[i] = VALUE_EXTRACTOR;
+          indices[i] = NO_IN_PARAMTER;
           continue;
         }
         if (outParameterIndex > i + 1) {

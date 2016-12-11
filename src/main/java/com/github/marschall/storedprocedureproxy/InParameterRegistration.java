@@ -46,7 +46,7 @@ final class ByIndexInParameterRegistration implements InParameterRegistration {
     }
     for (int i = 0; i < args.length; i++) {
       int parameterIndex = this.inParameterIndexAt(i);
-      if (parameterIndex == ProcedureCaller.VALUE_EXTRACTOR) {
+      if (parameterIndex == ProcedureCaller.NO_IN_PARAMTER) {
         // -> is a value extractor
         continue;
       }
@@ -104,7 +104,7 @@ final class ByIndexAndTypeInParameterRegistration implements InParameterRegistra
     }
     for (int i = 0; i < args.length; i++) {
       int parameterIndex = this.inParameterIndexAt(i);
-      if (parameterIndex == ProcedureCaller.VALUE_EXTRACTOR) {
+      if (parameterIndex == ProcedureCaller.NO_IN_PARAMTER) {
         // -> is a value extractor
         continue;
       }
@@ -153,16 +153,19 @@ final class ByNameAndTypeInParameterRegistration implements InParameterRegistrat
 
 }
 
-final class ArrayInParameterRegistration implements InParameterRegistration {
+/**
+ * Takes the value of an in parameter from a {@link CallResource}
+ * rather than from the actual method argument.
+ */
+final class ResourceInParameterRegistration implements InParameterRegistration {
 
   // an interface method can not have more than 254 parameters
-  private byte[] arrayIndices;
-  private String[] arrayNames;
+  private byte[] resourceIndices;
 
   private InParameterRegistration delegate;
 
-  private int arrayIndexAt(int i) {
-    return Byte.toUnsignedInt(this.arrayIndices[i]);
+  private int resourceIndexAt(int i) {
+    return Byte.toUnsignedInt(this.resourceIndices[i]);
   }
 
   @Override
@@ -170,8 +173,13 @@ final class ArrayInParameterRegistration implements InParameterRegistration {
     if (args == null) {
       return;
     }
-    for (int i = 0; i < this.arrayIndices.length; i++) {
-      int arrayIndex = this.arrayIndexAt(i);
+    for (int i = 0; i < this.resourceIndices.length; i++) {
+      int resourceIndex = this.resourceIndexAt(i);
+      if (resourceIndex == ProcedureCaller.NO_IN_PARAMTER) {
+        // either a normal in parameter or a value extractor
+        continue;
+      }
+      CallResource callResource = null;
       // todo access call state
     }
     this.delegate.bindInParamters(statement, args);
