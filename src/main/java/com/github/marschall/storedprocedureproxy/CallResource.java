@@ -164,10 +164,13 @@ final class ArrayFactory implements CallResourceFactory {
 
   private Object[] extractElements(Object[] args) {
     Object argument = args[this.argumentIndex];
-    if (!(argument instanceof Collection)) {
-      throw new IllegalArgumentException("argument at index: " + this.argumentIndex + " expected to be a collection but was not");
+    if (argument instanceof Collection) {
+      return ((Collection<?>) argument).toArray();
     }
-    return ((Collection<?>) argument).toArray();
+    if (argument instanceof Object[]) {
+      return (Object[]) argument;
+    }
+    throw new IllegalArgumentException("argument at index: " + this.argumentIndex + " expected to be a collection or array but was not");
   }
 
 }

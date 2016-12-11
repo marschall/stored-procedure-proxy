@@ -70,6 +70,7 @@ import com.github.marschall.storedprocedureproxy.annotations.ReturnValue;
  * <tr><td>Collection</td><td>{@link Types#Array}</td></tr>
  * <tr><td>List</td><td>{@link Types#Array}</td></tr>
  * <tr><td>Set</td><td>{@link Types#Array}</td></tr>
+ * <tr><td>array</td><td>{@link Types#Array}</td></tr>
  * </table>
  */
 @FunctionalInterface

@@ -84,6 +84,9 @@ final class DefaultTypeMapper implements TypeMapper {
   public int mapToSqlType(Class<?> javaType) {
     Integer sqlType = this.typeMap.get(javaType);
     if (sqlType == null) {
+      if (javaType.isArray()) {
+        return Types.ARRAY;
+      }
       throw new IllegalArgumentException("unknown type: " + javaType);
     }
     return sqlType;
