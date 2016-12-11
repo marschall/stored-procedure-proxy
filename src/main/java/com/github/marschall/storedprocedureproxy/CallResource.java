@@ -170,6 +170,15 @@ final class ArrayFactory implements CallResourceFactory {
     if (argument instanceof Object[]) {
       return (Object[]) argument;
     }
+    if (argument.getClass().isArray()) {
+      // primitive array
+      int length = java.lang.reflect.Array.getLength(argument);
+      Object[] array = new Object[length];
+      for (int i = 0; i < length; ++i) {
+        array[i] = java.lang.reflect.Array.get(argument, i);
+      }
+      return array;
+    }
     throw new IllegalArgumentException("argument at index: " + this.argumentIndex + " expected to be a collection or array but was not");
   }
 
