@@ -17,4 +17,7 @@ public interface HsqlProcedures {
   @ProcedureName("one_two")
   List<Integer> refCursor();
 
+  @ProcedureName("array_cardinality")
+  int arrayCardinality(Integer[] integer);
+
 }

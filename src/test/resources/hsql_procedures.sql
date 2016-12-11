@@ -9,6 +9,11 @@ CREATE FUNCTION an_hour_before (t TIMESTAMP)
    RETURN t - 1 HOUR;
 /;
 
+CREATE FUNCTION array_cardinality (a INT ARRAY)
+   RETURNS INT
+   RETURN CARDINALITY(a);
+/;
+
 CREATE FUNCTION one_two() 
 RETURNS TABLE(id integer) 
 READS SQL DATA BEGIN ATOMIC 

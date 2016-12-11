@@ -85,4 +85,11 @@ public class HsqlTest {
     assertEquals(Arrays.asList(1, 2), list);
   }
 
+  @Test
+  public void arrayCardinality() {
+    Integer[] array = new Integer[] {1, 2, 3};
+    int arrayCardinality = this.procedures.arrayCardinality(array);
+    assertEquals(array.length, arrayCardinality);
+  }
+
 }

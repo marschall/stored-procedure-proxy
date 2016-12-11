@@ -181,6 +181,12 @@ public class PostgresTest {
   }
 
   @Test
+  public void sampleArrayArgumentPrimitiveArray() {
+    String result = this.procedures.sampleArrayArgumentPrimitiveArray(new int[] {1, 2, 3});
+    assertEquals("1, 2, 3", result);
+  }
+
+  @Test
   public void nativeArrayCall() throws SQLException {
     try (Connection connection = this.dataSource.getConnection();
          CallableStatement call = connection.prepareCall("{? = call sample_array_argument(?)}")) {
