@@ -10,7 +10,7 @@ import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.Procedur
  */
 interface InParameterRegistration {
 
-  void bindInParamters(CallableStatement statement, Object[] args) throws SQLException;
+  void bindInParamters(CallableStatement statement, CallResource callResource, Object[] args) throws SQLException;
 
 }
 
@@ -20,7 +20,7 @@ enum NoInParameterRegistration implements InParameterRegistration {
   INSTANCE;
 
   @Override
-  public void bindInParamters(CallableStatement statement, Object[] args) {
+  public void bindInParamters(CallableStatement statement, CallResource callResource, Object[] args) {
     // nothing
   }
 
@@ -40,7 +40,7 @@ final class ByIndexInParameterRegistration implements InParameterRegistration {
   }
 
   @Override
-  public void bindInParamters(CallableStatement statement, Object[] args) throws SQLException {
+  public void bindInParamters(CallableStatement statement, CallResource callResource, Object[] args) throws SQLException {
     if (args == null) {
       return;
     }
@@ -50,7 +50,13 @@ final class ByIndexInParameterRegistration implements InParameterRegistration {
         // -> is a value extractor
         continue;
       }
-      statement.setObject(parameterIndex, args[i]);
+      Object arg;
+      if (callResource.hasResourceAt(i)) {
+        arg = callResource.resourceAt(i);
+      } else {
+        arg = args[i];
+      }
+      statement.setObject(parameterIndex, arg);
     }
   }
 
@@ -65,7 +71,7 @@ final class ByNameInParameterRegistration implements InParameterRegistration {
   }
 
   @Override
-  public void bindInParamters(CallableStatement statement, Object[] args) throws SQLException {
+  public void bindInParamters(CallableStatement statement, CallResource callResource, Object[] args) throws SQLException {
     if (args == null) {
       return;
     }
@@ -76,7 +82,13 @@ final class ByNameInParameterRegistration implements InParameterRegistration {
         continue;
       }
       // REVIEW null check?
-      statement.setObject(parameterName, args[i]);
+      Object arg;
+      if (callResource.hasResourceAt(i)) {
+        arg = callResource.resourceAt(i);
+      } else {
+        arg = args[i];
+      }
+      statement.setObject(parameterName, arg);
     }
   }
 
@@ -98,7 +110,7 @@ final class ByIndexAndTypeInParameterRegistration implements InParameterRegistra
   }
 
   @Override
-  public void bindInParamters(CallableStatement statement, Object[] args) throws SQLException {
+  public void bindInParamters(CallableStatement statement, CallResource callResource, Object[] args) throws SQLException {
     if (args == null) {
       return;
     }
@@ -108,7 +120,12 @@ final class ByIndexAndTypeInParameterRegistration implements InParameterRegistra
         // -> is a value extractor
         continue;
       }
-      Object arg = args[i];
+      Object arg;
+      if (callResource.hasResourceAt(i)) {
+        arg = callResource.resourceAt(i);
+      } else {
+        arg = args[i];
+      }
       int type = this.inParameterTypes[i];
       if (arg != null) {
         statement.setObject(parameterIndex, arg, type);
@@ -131,7 +148,7 @@ final class ByNameAndTypeInParameterRegistration implements InParameterRegistrat
   }
 
   @Override
-  public void bindInParamters(CallableStatement statement, Object[] args) throws SQLException {
+  public void bindInParamters(CallableStatement statement, CallResource callResource, Object[] args) throws SQLException {
     if (args == null) {
       return;
     }
@@ -141,7 +158,12 @@ final class ByNameAndTypeInParameterRegistration implements InParameterRegistrat
         // -> is a value extractor
         continue;
       }
-      Object arg = args[i];
+      Object arg;
+      if (callResource.hasResourceAt(i)) {
+        arg = callResource.resourceAt(i);
+      } else {
+        arg = args[i];
+      }
       int type = this.inParameterTypes[i];
       if (arg != null) {
         statement.setObject(parameterName, arg, type);
@@ -152,43 +174,4 @@ final class ByNameAndTypeInParameterRegistration implements InParameterRegistrat
   }
 
 }
-
-/**
- * Takes the value of an in parameter from a {@link CallResource}
- * rather than from the actual method argument.
- */
-final class ResourceInParameterRegistration implements InParameterRegistration {
-
-  // an interface method can not have more than 254 parameters
-  private byte[] resourceIndices;
-
-  private InParameterRegistration delegate;
-
-  private int resourceIndexAt(int i) {
-    return Byte.toUnsignedInt(this.resourceIndices[i]);
-  }
-
-  @Override
-  public void bindInParamters(CallableStatement statement, Object[] args) throws SQLException {
-    if (args == null) {
-      return;
-    }
-    for (int i = 0; i < this.resourceIndices.length; i++) {
-      int resourceIndex = this.resourceIndexAt(i);
-      if (resourceIndex == ProcedureCaller.NO_IN_PARAMTER) {
-        // either a normal in parameter or a value extractor
-        continue;
-      }
-      CallResource callResource = null;
-      // todo access call state
-    }
-    this.delegate.bindInParamters(statement, args);
-  }
-
-
-}
-
-
-
-
 

@@ -445,8 +445,9 @@ public final class ProcedureCallerFactory<T> {
       // handle actual interface methods
       CallInfo callInfo = this.getCallInfo(method, args);
       try (Connection connection = this.dataSource.getConnection()) {
-        try (CallableStatement statement = prepareCall(connection, callInfo)) {
-          bindParameters(args, callInfo, statement);
+        try (CallResource callResource = callInfo.callResourceFactory.createResource(connection, args);
+             CallableStatement statement = prepareCall(connection, callInfo)) {
+          bindParameters(args, callInfo, statement, callResource);
           return execute(statement, callInfo, args);
         }
       } catch (SQLException e) {
@@ -454,9 +455,9 @@ public final class ProcedureCallerFactory<T> {
       }
     }
 
-    private static void bindParameters(Object[] args, CallInfo callInfo, CallableStatement statement) throws SQLException {
+    private static void bindParameters(Object[] args, CallInfo callInfo, CallableStatement statement, CallResource callResource) throws SQLException {
       callInfo.outParameterRegistration.bindOutParamter(statement);
-      callInfo.inParameterRegistration.bindInParamters(statement, args);
+      callInfo.inParameterRegistration.bindInParamters(statement, callResource, args);
     }
 
     private static Class<?> getBoxedClass(Class<?> clazz) {
@@ -597,7 +598,7 @@ public final class ProcedureCallerFactory<T> {
 
       return new CallInfo(procedureName, callString,
               wantsExceptionTranslation, resultExtractor, outParameterRegistration,
-              inParameterRegistration);
+              inParameterRegistration, NoResourceFactory.INSTANCE);
 
     }
 
@@ -970,16 +971,18 @@ public final class ProcedureCallerFactory<T> {
     final ResultExtractor resultExtractor;
     final OutParameterRegistration outParameterRegistration;
     final InParameterRegistration inParameterRegistration;
+    final CallResourceFactory callResourceFactory;
 
     CallInfo(String procedureName, String callString, boolean wantsExceptionTranslation,
             ResultExtractor resultExtractor, OutParameterRegistration outParameterRegistration,
-            InParameterRegistration inParameterRegistration) {
+            InParameterRegistration inParameterRegistration, CallResourceFactory callResourceFactory) {
       this.procedureName = procedureName;
       this.callString = callString;
       this.wantsExceptionTranslation = wantsExceptionTranslation;
       this.resultExtractor = resultExtractor;
       this.outParameterRegistration = outParameterRegistration;
       this.inParameterRegistration = inParameterRegistration;
+      this.callResourceFactory = callResourceFactory;
     }
 
   }
