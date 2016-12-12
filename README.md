@@ -34,11 +34,13 @@ will actually call the stored procedure.
 
 Check out the [wiki](https://github.com/marschall/stored-procedure-proxy/wiki) for more information.
 
+The project has no runtime dependencies and is a single JAR below 100 kB.
+
 ```xml
 <dependency>
   <groupId>com.github.marschall</groupId>
   <artifactId>stored-procedure-proxy</artifactId>
-  <version>0.2.0</version>
+  <version>0.3.0</version>
 </dependency>
 ```
 
