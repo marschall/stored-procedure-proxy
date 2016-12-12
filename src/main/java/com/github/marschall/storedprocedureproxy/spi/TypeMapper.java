@@ -67,10 +67,10 @@ import com.github.marschall.storedprocedureproxy.annotations.ReturnValue;
  * <tr><td>boolean</td><td>{@link Types#BOOLEAN}</td></tr>
 
  * <tr><td colspan="2">ARRAY</td></tr>
- * <tr><td>Collection</td><td>{@link Types#Array}</td></tr>
- * <tr><td>List</td><td>{@link Types#Array}</td></tr>
- * <tr><td>Set</td><td>{@link Types#Array}</td></tr>
- * <tr><td>array</td><td>{@link Types#Array}</td></tr>
+ * <tr><td>Collection</td><td>{@link Types#ARRAY}</td></tr>
+ * <tr><td>List</td><td>{@link Types#ARRAY}</td></tr>
+ * <tr><td>Set</td><td>{@link Types#ARRAY}</td></tr>
+ * <tr><td>array</td><td>{@link Types#ARRAY}</td></tr>
  * </table>
  */
 @FunctionalInterface
