@@ -47,11 +47,11 @@ public interface PostgresProcedures {
 
   @ReturnValue
   @ProcedureName("sample_array_argument")
-  String sampleArrayArgumentArray(@TypeName("int") Integer[] ids);
+  String sampleArrayArgumentArray(@TypeName("INTEGER") Integer[] ids);
 
   @ReturnValue
   @ProcedureName("sample_array_argument")
-  String sampleArrayArgumentPrimitiveArray(@TypeName("int") int[] ids);
+  String sampleArrayArgumentPrimitiveArray(int[] ids);
 
 
 }
