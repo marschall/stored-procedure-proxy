@@ -1,6 +1,7 @@
 package com.github.marschall.storedprocedureproxy.annotations;
 
 import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.ElementType.TYPE_USE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import java.lang.annotation.Documented;
@@ -15,7 +16,7 @@ import java.sql.Connection;
  */
 @Documented
 @Retention(RUNTIME)
-@Target(PARAMETER)
+@Target({PARAMETER, TYPE_USE})
 public @interface TypeName {
 
   /**

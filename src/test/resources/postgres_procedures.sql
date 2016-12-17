@@ -58,3 +58,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION array_return_value()
+RETURNS int[] AS $$
+BEGIN
+    return ARRAY [1,2,3,4];
+END;
+$$ LANGUAGE plpgsql;
+

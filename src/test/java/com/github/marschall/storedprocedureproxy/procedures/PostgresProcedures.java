@@ -47,11 +47,22 @@ public interface PostgresProcedures {
 
   @ReturnValue
   @ProcedureName("sample_array_argument")
+  String sampleArrayArgumentTypeParameter(List<@TypeName("INTEGER") Integer> ids);
+
+  @ReturnValue
+  @ProcedureName("sample_array_argument")
   String sampleArrayArgumentArray(@TypeName("INTEGER") Integer[] ids);
 
   @ReturnValue
   @ProcedureName("sample_array_argument")
   String sampleArrayArgumentPrimitiveArray(int[] ids);
 
+  @ReturnValue
+  @ProcedureName("array_return_value")
+  int[] arrayReturnValuePrimitive();
+
+  @ReturnValue
+  @ProcedureName("array_return_value")
+  Integer[] arrayReturnValueRefernce();
 
 }

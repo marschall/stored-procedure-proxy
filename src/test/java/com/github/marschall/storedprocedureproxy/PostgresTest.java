@@ -3,6 +3,7 @@ package com.github.marschall.storedprocedureproxy;
 import static com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration.INDEX_AND_TYPE;
 import static com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration.INDEX_ONLY;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -184,6 +185,34 @@ public class PostgresTest {
   public void sampleArrayArgumentPrimitiveArray() {
     String result = this.procedures.sampleArrayArgumentPrimitiveArray(new int[] {1, 2, 3});
     assertEquals("1, 2, 3", result);
+  }
+
+  @Test
+  public void arrayReturnValuePrimitive() {
+    int[] result = this.procedures.arrayReturnValuePrimitive();
+    assertArrayEquals(new int[] {1, 2, 3, 4}, result);
+  }
+
+  @Test
+  public void arrayReturnValueRefernce() {
+    Integer[] result = this.procedures.arrayReturnValueRefernce();
+    assertArrayEquals(new Integer[] {1, 2, 3, 4}, result);
+  }
+
+  @Test
+  public void nativeArrayReturnValue() throws SQLException {
+    try (Connection connection = this.dataSource.getConnection();
+            CallableStatement call = connection.prepareCall("{? = call array_return_value()}")) {
+      call.registerOutParameter(1, Types.ARRAY);
+      assertFalse(call.execute());
+
+      Array array = call.getArray(1);
+      try {
+        assertArrayEquals(new Integer[] {1, 2, 3, 4}, (Object[]) array.getArray());
+      } finally {
+        array.free();
+      }
+    }
   }
 
   @Test
