@@ -1,5 +1,6 @@
 package com.github.marschall.storedprocedureproxy;
 
+import java.sql.Array;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -189,3 +190,62 @@ final class ValueExtractorResultExtractor implements ResultExtractor {
   }
 
 }
+
+
+/**
+ * Extracts a {@link Array} of scalar values.
+ */
+final class ArrayResultExtractor implements ResultExtractor {
+
+  private final Class<?> arrayElementType;
+
+  ArrayResultExtractor(Class<?> arrayElementType) {
+    this.arrayElementType = arrayElementType;
+  }
+
+  @Override
+  public Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration, Object[] args) throws SQLException {
+    boolean hasResultSet = statement.execute();
+    if (hasResultSet) {
+      try (ResultSet rs = statement.getResultSet()) {
+        rs.next();
+        Array array = rs.getArray(1);
+        return extractValue(array);
+      }
+    } else {
+      Array array = outParameterRegistration.getOutParamter(statement, Array.class);
+      return extractValue(array);
+    }
+  }
+
+  private Object extractValue(Array array) throws SQLException {
+    try {
+      Object value = array.getArray();
+      Class<? extends Object> clazz = value.getClass();
+      if (!clazz.isArray()) {
+        throw new ClassCastException("expected array of " + this.arrayElementType + " but got " + clazz);
+      }
+      Class<?> actualComponentType = clazz.getComponentType();
+      if (actualComponentType == this.arrayElementType) {
+        return value;
+      }
+      return convertElementType(value, actualComponentType);
+    } finally {
+      array.free();
+    }
+  }
+
+  private Object convertElementType(Object array, Class<?> actualComponentType) {
+    if (actualComponentType.isPrimitive() == this.arrayElementType.isPrimitive()) {
+      throw new ClassCastException("expected array of " + this.arrayElementType + " but got array of " + actualComponentType);
+    }
+    int length = java.lang.reflect.Array.getLength(array);
+    Object value = java.lang.reflect.Array.newInstance(this.arrayElementType, length);
+    for (int i = 0; i < length; ++i) {
+      Object elementValue = java.lang.reflect.Array.get(array, i);
+      java.lang.reflect.Array.set(value, i, elementValue);
+    }
+    return value;
+  }
+}
+
