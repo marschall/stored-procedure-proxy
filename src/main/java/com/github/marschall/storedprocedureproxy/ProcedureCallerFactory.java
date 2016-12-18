@@ -121,6 +121,8 @@ public final class ProcedureCallerFactory<T> {
 
   private TypeNameResolver typeNameResolver;
 
+  private boolean useOracleArrays;
+
   private ProcedureCallerFactory(Class<T> interfaceDeclaration, DataSource dataSource) {
     this.interfaceDeclaration = interfaceDeclaration;
     this.dataSource = dataSource;
@@ -134,6 +136,7 @@ public final class ProcedureCallerFactory<T> {
     this.exceptionAdapter = getDefaultExceptionAdapter(dataSource);
     this.typeMapper = DefaultTypeMapper.INSTANCE;
     this.typeNameResolver = DefaultTypeNameResolver.INSTANCE;
+    this.useOracleArrays = false;
   }
 
   private static SQLExceptionAdapter getDefaultExceptionAdapter(DataSource dataSource) {
@@ -320,6 +323,16 @@ public final class ProcedureCallerFactory<T> {
   }
 
   /**
+   * Uses Oracle API to create arrays.
+   *
+   * @return this builder for chaining
+   */
+  public ProcedureCallerFactory<T> withOracleArrays() {
+    this.useOracleArrays = true;
+    return this;
+  }
+
+  /**
    * Creates a caller for the interface of stored procedures using the configured options.
    *
    * @return the interface instance
@@ -330,7 +343,8 @@ public final class ProcedureCallerFactory<T> {
             this.hasSchema,
             this.namespaceNamingStrategy, this.hasNamespace,
             this.parameterRegistration, this.exceptionAdapter,
-            this.typeMapper, this.typeNameResolver);
+            this.typeMapper, this.typeNameResolver,
+            this.useOracleArrays);
     // REVIEW correct class loader
     Object proxy = Proxy.newProxyInstance(this.interfaceDeclaration.getClassLoader(),
             new Class<?>[]{this.interfaceDeclaration}, caller);
@@ -422,6 +436,8 @@ public final class ProcedureCallerFactory<T> {
      */
     private final Map<Method, CallInfo> callInfoCache;
 
+    private final boolean useOracleArrays;
+
     ProcedureCaller(DataSource dataSource,
             Class<?> interfaceDeclaration,
             NamingStrategy parameterNamingStrategy,
@@ -431,7 +447,8 @@ public final class ProcedureCallerFactory<T> {
             ParameterRegistration parameterRegistration,
             SQLExceptionAdapter exceptionAdapter,
             TypeMapper typeMapper,
-            TypeNameResolver typeNameResolver) {
+            TypeNameResolver typeNameResolver,
+            boolean useOracleArrays) {
       this.dataSource = dataSource;
       this.interfaceDeclaration = interfaceDeclaration;
       this.parameterNamingStrategy = parameterNamingStrategy;
@@ -444,6 +461,7 @@ public final class ProcedureCallerFactory<T> {
       this.exceptionAdapter = exceptionAdapter;
       this.typeMapper = typeMapper;
       this.typeNameResolver = typeNameResolver;
+      this.useOracleArrays = useOracleArrays;
       this.callInfoCache = Collections.synchronizedMap(new HashMap<>());
     }
 
@@ -669,7 +687,11 @@ public final class ProcedureCallerFactory<T> {
       } else {
         typeName = this.typeNameResolver.getTypeName(parameter);
       }
-      return new ArrayFactory(parameterIndex, typeName);
+      if (this.useOracleArrays) {
+        return new OracleArrayFactory(parameterIndex, typeName);
+      } else {
+        return new ArrayFactory(parameterIndex, typeName);
+      }
     }
 
     private InParameterRegistration buildInParameterRegistration(Method method, int parameterCount, int outParameterIndex) {
