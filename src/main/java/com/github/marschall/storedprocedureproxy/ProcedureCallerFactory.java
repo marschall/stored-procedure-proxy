@@ -1,5 +1,7 @@
 package com.github.marschall.storedprocedureproxy;
 
+import java.lang.reflect.AnnotatedParameterizedType;
+import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -681,16 +683,34 @@ public final class ProcedureCallerFactory<T> {
     }
 
     private CallResourceFactory createArrayResourceFactory(Parameter parameter, int parameterIndex) {
-      String typeName;
-      if (parameter.isAnnotationPresent(TypeName.class)) {
-        typeName = parameter.getAnnotation(TypeName.class).value();
-      } else {
+      String typeName = getTypeNameFromAnnotation(parameter);
+      if (typeName == null) {
         typeName = this.typeNameResolver.getTypeName(parameter);
       }
       if (this.useOracleArrays) {
         return new OracleArrayFactory(parameterIndex, typeName);
       } else {
         return new ArrayFactory(parameterIndex, typeName);
+      }
+    }
+
+    static String getTypeNameFromAnnotation(Parameter parameter) {
+      // REVIEW maybe move to dedicated reflection class
+      if (parameter.isAnnotationPresent(TypeName.class)) {
+        return parameter.getAnnotation(TypeName.class).value();
+      } else {
+        AnnotatedType annotatedType = parameter.getAnnotatedType();
+        if (annotatedType instanceof AnnotatedParameterizedType) {
+          AnnotatedParameterizedType annotatedParameterizedType = (AnnotatedParameterizedType) annotatedType;
+          AnnotatedType[] annotatedActualTypeArguments = annotatedParameterizedType.getAnnotatedActualTypeArguments();
+          if (annotatedActualTypeArguments != null && annotatedActualTypeArguments.length > 0) {
+            AnnotatedType stringParameterType = annotatedActualTypeArguments[0];
+            if (stringParameterType.isAnnotationPresent(TypeName.class)) {
+              return stringParameterType.getAnnotation(TypeName.class).value();
+            }
+          }
+        }
+        return null;
       }
     }
 
