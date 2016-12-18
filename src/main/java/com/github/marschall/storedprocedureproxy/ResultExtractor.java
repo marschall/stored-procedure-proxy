@@ -1,5 +1,6 @@
 package com.github.marschall.storedprocedureproxy;
 
+import java.lang.reflect.Method;
 import java.sql.Array;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -247,5 +248,53 @@ final class ArrayResultExtractor implements ResultExtractor {
     }
     return value;
   }
+}
+
+final class OracleArrayResultExtractor implements ResultExtractor {
+
+  static {
+    // https://docs.oracle.com/database/121/JJDBC/oraarr.htm#JJDBC28574
+    Class<?> oracleResultSet;
+    Method getARRAY;
+    Method createARRAY;
+    Method getLongArray;
+    Method getIntArray;
+    Method getFloatArray;
+    Method getDoubleArray;
+    Method getShortArray;
+    try {
+      oracleResultSet = Class.forName("oracle.jdbc.OracleResultSet");
+      getARRAY = oracleResultSet.getDeclaredMethod("getARRAY", String.class);
+      getARRAY = oracleResultSet.getDeclaredMethod("getARRAY", int.class);
+
+      Class<?> array = Class.forName("oracle.sql.ARRAY");
+      getLongArray = array.getDeclaredMethod("getLongArray");
+      getIntArray = array.getDeclaredMethod("getIntArray");
+      getFloatArray = array.getDeclaredMethod("getFloatArray");
+      getDoubleArray = array.getDeclaredMethod("getDoubleArray");
+      getShortArray = array.getDeclaredMethod("getShortArray");
+    } catch (ReflectiveOperationException e) {
+      oracleResultSet = null;
+      createARRAY = null;
+
+      getLongArray = null;
+      getIntArray = null;
+      getFloatArray = null;
+      getDoubleArray = null;
+      getShortArray = null;
+    }
+  }
+
+  private final Class<?> arrayElementType;
+
+  OracleArrayResultExtractor(Class<?> arrayElementType) {
+    this.arrayElementType = arrayElementType;
+  }
+
+  @Override
+  public Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration, Object[] args) throws SQLException {
+    return null;
+  }
+
 }
 
