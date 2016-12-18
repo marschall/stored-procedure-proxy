@@ -34,13 +34,22 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- https://www.postgresql.org/docs/9.5/static/plpgsql-cursors.html
+-- https://www.postgresql.org/docs/9.6/static/plpgsql-cursors.html
 
 CREATE OR REPLACE FUNCTION simple_ref_cursor() RETURNS refcursor AS $$
 DECLARE
     ref refcursor;
 BEGIN
     OPEN ref FOR SELECT 'hello' UNION ALL SELECT 'postgres';
+    RETURN ref;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION ref_cursor_and_argument(v_prefix varchar) RETURNS refcursor AS $$
+DECLARE
+    ref refcursor;
+BEGIN
+    OPEN ref FOR SELECT v_prefix || 'hello' UNION ALL SELECT v_prefix || 'postgres';
     RETURN ref;
 END;
 $$ LANGUAGE plpgsql;

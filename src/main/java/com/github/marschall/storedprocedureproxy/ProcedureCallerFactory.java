@@ -614,7 +614,7 @@ public final class ProcedureCallerFactory<T> {
     }
 
     private CallInfo buildCallInfo(Method method, Object[] args) {
-      int parameterCount = getParameterCount(method);
+      int sqlParameterCount = getParameterCount(method);
       String procedureName = this.extractProcedureName(method);
       String schema = this.hasSchema(method) ? this.extractSchema(method) : null;
       String namespace = this.hasNamespace(method) ? this.extractsNamespace(method) : null;
@@ -625,7 +625,7 @@ public final class ProcedureCallerFactory<T> {
       boolean hasOutParameter = outParameterIndex != NO_OUT_PARAMTER;
 
       InParameterRegistration inParameterRegistration = buildInParameterRegistration(
-              method, parameterCount, outParameterIndex);
+              method, sqlParameterCount, outParameterIndex);
 
       OutParameterRegistration outParameterRegistration = buildOutParameterRegistration(
               method, outParameterIndex, hasOutParameter);
@@ -634,7 +634,7 @@ public final class ProcedureCallerFactory<T> {
 
 
       String callString = buildCallString(
-              namespace, schema, procedureName, parameterCount, isFunction, hasOutParameter);
+              namespace, schema, procedureName, sqlParameterCount, isFunction, hasOutParameter);
       boolean wantsExceptionTranslation = wantsExceptionTranslation(method);
       ResultExtractor resultExtractor = buildResultExtractor(method, methodReturnType);
 
@@ -694,16 +694,18 @@ public final class ProcedureCallerFactory<T> {
       }
     }
 
-    private InParameterRegistration buildInParameterRegistration(Method method, int parameterCount, int outParameterIndex) {
+    private InParameterRegistration buildInParameterRegistration(Method method, int sqlParameterCount, int outParameterIndex) {
 
-      if (parameterCount > 0) {
+      if (sqlParameterCount > 0) {
         switch (this.parameterRegistration) {
           case INDEX_ONLY: {
-            byte[] inParameterIndices = buildInParameterIndices(method, parameterCount, outParameterIndex);
+            int javaParameterCount = method.getParameterCount();
+            byte[] inParameterIndices = buildInParameterIndices(method, javaParameterCount, outParameterIndex);
             return new ByIndexInParameterRegistration(inParameterIndices);
           }
           case INDEX_AND_TYPE: {
-            byte[] inParameterIndices = buildInParameterIndices(method, parameterCount, outParameterIndex);
+            int javaParameterCount = method.getParameterCount();
+            byte[] inParameterIndices = buildInParameterIndices(method, javaParameterCount, outParameterIndex);
             int[] inParameterTypes = this.extractParameterTypes(method);
             return new ByIndexAndTypeInParameterRegistration(inParameterIndices, inParameterTypes);
           }
@@ -747,15 +749,15 @@ public final class ProcedureCallerFactory<T> {
       }
     }
 
-    private static byte[] buildInParameterIndices(Method method, int parameterCount, int outParameterIndex) {
+    private static byte[] buildInParameterIndices(Method method, int javaParameterCount, int outParameterIndex) {
       Class<?>[] methodParameterTypes = method.getParameterTypes();
       boolean hasOutParameter = outParameterIndex != NO_OUT_PARAMTER;
-      if (!hasOutParameter || (hasOutParameter && outParameterIndex == parameterCount + 1)) {
+      if (!hasOutParameter || (hasOutParameter && outParameterIndex == javaParameterCount + 1)) {
         // we have an no out parameter or
         // we have an out parameter and it's the last parameter
-        return buildInParameterIndices(parameterCount, methodParameterTypes);
+        return buildInParameterIndices(javaParameterCount, methodParameterTypes);
       } else {
-        return buildInParameterIndices(parameterCount, outParameterIndex, methodParameterTypes);
+        return buildInParameterIndices(javaParameterCount, outParameterIndex, methodParameterTypes);
       }
     }
 

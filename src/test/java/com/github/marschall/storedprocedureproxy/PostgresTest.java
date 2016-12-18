@@ -170,6 +170,12 @@ public class PostgresTest {
   }
 
   @Test
+  public void mappedRefCursorAndArgument() {
+    List<String> refCursor = this.procedures.mappedRefCursorAndArgument("prefix-", (rs, i) -> "1-" + rs.getString(1));
+    assertEquals(Arrays.asList("1-prefix-hello", "1-prefix-postgres"), refCursor);
+  }
+
+  @Test
   public void sampleArrayArgumentList() {
     String result = this.procedures.sampleArrayArgumentList(Arrays.asList(1, 2, 3));
     assertEquals("1, 2, 3", result);
