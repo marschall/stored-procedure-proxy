@@ -10,6 +10,7 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -33,7 +34,6 @@ import com.github.marschall.storedprocedureproxy.annotations.TypeName;
 import com.github.marschall.storedprocedureproxy.spi.NamingStrategy;
 import com.github.marschall.storedprocedureproxy.spi.TypeMapper;
 import com.github.marschall.storedprocedureproxy.spi.TypeNameResolver;
-import java.util.Collection;
 
 /**
  * Creates instances of an interface containing stored procedure declarations.
