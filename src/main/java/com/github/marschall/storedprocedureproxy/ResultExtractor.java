@@ -1,5 +1,6 @@
 package com.github.marschall.storedprocedureproxy;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Array;
 import java.sql.CallableStatement;
@@ -252,6 +253,13 @@ final class ArrayResultExtractor implements ResultExtractor {
 
 final class OracleArrayResultExtractor implements ResultExtractor {
 
+  private static Class<?> ARRAY;
+  private static Method GET_LONG_ARRAY;
+  private static Method GET_INT_ARRAY;
+  private static Method GET_DOUBLE_ARRAY;
+  private static Method GET_FLOAT_ARRAY;
+  private static Method GET_SHORT_ARRAY;
+
   static {
     // https://docs.oracle.com/database/121/JJDBC/oraarr.htm#JJDBC28574
     Class<?> oracleResultSet;
@@ -293,7 +301,58 @@ final class OracleArrayResultExtractor implements ResultExtractor {
 
   @Override
   public Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration, Object[] args) throws SQLException {
-    return null;
+    boolean hasResultSet = statement.execute();
+    if (hasResultSet) {
+      try (ResultSet rs = statement.getResultSet()) {
+        rs.next();
+        Array array = (Array) rs.getObject(1, ARRAY);
+        return extractValue(array);
+      }
+    } else {
+      Array array = (Array) outParameterRegistration.getOutParamter(statement, ARRAY);
+      return extractValue(array);
+    }
+  }
+
+  private Object extractValue(Array array) throws SQLException {
+    try {
+      if (this.arrayElementType.isPrimitive()) {
+        Method extractionMethod;
+        if (this.arrayElementType == int.class) {
+          extractionMethod = GET_INT_ARRAY;
+        } else if (this.arrayElementType == long.class) {
+          extractionMethod = GET_LONG_ARRAY;
+        } else if (this.arrayElementType == float.class) {
+          extractionMethod = GET_FLOAT_ARRAY;
+        } else if (this.arrayElementType == double.class) {
+          extractionMethod = GET_DOUBLE_ARRAY;
+        } else if (this.arrayElementType == short.class) {
+          extractionMethod = GET_SHORT_ARRAY;
+        } else if (this.arrayElementType == byte.class) {
+          throw new IllegalArgumentException("byte[] for oracle.sql.ARRAY not yet implemented");
+        } else {
+          throw new IllegalArgumentException("unknown element type: " + this.arrayElementType);
+        }
+        try {
+          return extractionMethod.invoke(extractionMethod);
+        } catch (IllegalAccessException e) {
+          throw new RuntimeException("not allowed to call " + extractionMethod, e);
+        } catch (InvocationTargetException e) {
+          Throwable cause = e.getCause();
+          if (cause instanceof SQLException) {
+            throw (SQLException) cause;
+          }
+          if (cause instanceof RuntimeException) {
+            throw (RuntimeException) cause;
+          }
+          throw new RuntimeException("exception occured when calling " + extractionMethod, cause);
+        }
+      } else {
+        throw new IllegalStateException("for reference arrays " + ArrayResultExtractor.class + " should be used");
+      }
+    } finally {
+      array.free();
+    }
   }
 
 }
