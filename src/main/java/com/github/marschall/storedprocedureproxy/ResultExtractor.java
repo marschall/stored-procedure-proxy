@@ -238,8 +238,10 @@ final class ArrayResultExtractor implements ResultExtractor {
   }
 
   private Object convertElementType(Object array, Class<?> actualComponentType) {
-    if (actualComponentType.isPrimitive() == this.arrayElementType.isPrimitive()) {
-      throw new ClassCastException("expected array of " + this.arrayElementType + " but got array of " + actualComponentType);
+    if (actualComponentType != Object.class) {
+      if (actualComponentType.isPrimitive() == this.arrayElementType.isPrimitive()) {
+        throw new ClassCastException("expected array of " + this.arrayElementType + " but got array of " + actualComponentType);
+      }
     }
     int length = java.lang.reflect.Array.getLength(array);
     Object value = java.lang.reflect.Array.newInstance(this.arrayElementType, length);

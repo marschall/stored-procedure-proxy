@@ -2,6 +2,7 @@ package com.github.marschall.storedprocedureproxy;
 
 import static com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration.INDEX_AND_TYPE;
 import static com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration.INDEX_ONLY;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.sql.Timestamp;
@@ -90,6 +91,13 @@ public class HsqlTest {
     Integer[] array = new Integer[] {1, 2, 3};
     int arrayCardinality = this.procedures.arrayCardinality(array);
     assertEquals(array.length, arrayCardinality);
+  }
+
+  @Test
+  public void returnArray() {
+    Integer[] actual = this.procedures.returnArray();
+    Integer[] expected = new Integer[] {0, 5, 10};
+    assertArrayEquals(expected, actual);
   }
 
 }

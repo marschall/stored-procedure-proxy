@@ -20,4 +20,7 @@ public interface HsqlProcedures {
   @ProcedureName("array_cardinality")
   int arrayCardinality(Integer[] integer);
 
+  @ProcedureName("return_array")
+  Integer[] returnArray();
+
 }
