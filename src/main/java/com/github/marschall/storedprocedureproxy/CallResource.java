@@ -253,7 +253,7 @@ final class OracleArrayFactory implements CallResourceFactory {
       return (Object[]) argument;
     }
     if (argument.getClass().isArray()) {
-      // primitive array
+      // primitive array, directly supported by Oracle
       return argument;
     }
     throw new IllegalArgumentException("argument at index: " + this.argumentIndex + " expected to be a collection or array but was not");
