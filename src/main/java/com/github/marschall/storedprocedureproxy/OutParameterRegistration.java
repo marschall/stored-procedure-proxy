@@ -162,7 +162,7 @@ enum NoOutParameterRegistration implements OutParameterRegistration {
   }
 
   @Override
-  public <T> T getOutParamter(CallableStatement statement, Class<T> type) throws SQLException {
+  public <T> T getOutParamter(CallableStatement statement, Class<T> type) {
     if (type != void.class) {
       throw new IllegalArgumentException("no out parameter registered");
     }
