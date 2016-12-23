@@ -3,6 +3,7 @@ package com.github.marschall.storedprocedureproxy;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 
 /**
  * Strategy on how to register out parameters.
@@ -37,7 +38,12 @@ final class ByIndexOutParameterRegistration implements OutParameterRegistration 
 
   @Override
   public <T> T getOutParamter(CallableStatement statement, Class<T> type) throws SQLException {
-    return statement.getObject(this.outParameterIndex, type);
+    try {
+      return statement.getObject(this.outParameterIndex, type);
+    } catch (SQLFeatureNotSupportedException e) {
+      // Postgres hack
+      return type.cast(statement.getObject(this.outParameterIndex));
+    }
   }
 
 }
