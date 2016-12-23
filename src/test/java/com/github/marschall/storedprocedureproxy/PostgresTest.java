@@ -194,6 +194,12 @@ public class PostgresTest {
   }
 
   @Test
+  public void concatenateTwoArrays() {
+    Integer[] result = this.procedures.concatenateTwoArrays(new Integer[] {1, 2, 3}, new Integer[] {4, 5, 6});
+    assertArrayEquals(new Integer[] {1, 2, 3, 4, 5, 6}, result);
+  }
+
+  @Test
   public void arrayReturnValuePrimitive() {
     int[] result = this.procedures.arrayReturnValuePrimitive();
     assertArrayEquals(new int[] {1, 2, 3, 4}, result);

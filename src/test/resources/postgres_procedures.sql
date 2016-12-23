@@ -74,3 +74,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION concatenate_two_arrays(first int[], second int[])
+RETURNS int[] AS $$
+BEGIN
+    return array_cat(first, second);
+END;
+$$ LANGUAGE plpgsql;
+

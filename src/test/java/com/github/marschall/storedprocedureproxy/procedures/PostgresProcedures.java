@@ -62,6 +62,10 @@ public interface PostgresProcedures {
   String sampleArrayArgumentPrimitiveArray(int[] ids);
 
   @ReturnValue
+  @ProcedureName("concatenate_two_arrays")
+  Integer[] concatenateTwoArrays(Integer[] first, Integer[] second);
+
+  @ReturnValue
   @ProcedureName("array_return_value")
   int[] arrayReturnValuePrimitive();
 
