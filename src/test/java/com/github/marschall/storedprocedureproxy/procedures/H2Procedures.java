@@ -15,6 +15,18 @@ public interface H2Procedures {
   @ReturnValue
   String noArgProcedure();
 
+  @ReturnValue
+  Object[] reverseObjectArray(Object[] input);
+
+  @ReturnValue
+  Integer[] reverseIntegerArray(Integer[] input);
+
+  @ReturnValue
+  Object[] returnObjectArray();
+
+  @ReturnValue
+  Integer[] returnIntegerArray();
+
   List<IdName> simpleResultSet(ValueExtractor<IdName> extractor);
 
   default List<IdName> simpleResultSet() {

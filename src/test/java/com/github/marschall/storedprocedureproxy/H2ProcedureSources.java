@@ -23,6 +23,30 @@ public class H2ProcedureSources {
     return "output";
   }
 
+  public static Object[] reverseObjectArray(Object[] src) {
+    Object[] target = new Object[src.length];
+    for (int i = 0; i < src.length; i++) {
+      target[target.length - i - 1] = src[i];
+    }
+    return target;
+  }
+
+  public static Integer[] reverseIntegerArray(Integer[] src) {
+    Integer[] target = new Integer[src.length];
+    for (int i = 0; i < src.length; i++) {
+      target[target.length - i - 1] = src[i];
+    }
+    return target;
+  }
+
+  public static Object[] returnObjectArray() {
+    return new Object[] {1, "string"};
+  }
+
+  public static Integer[] returnIntegerArray() {
+    return new Integer[] {4, 1, 7};
+  }
+
   public static ResultSet simpleResultSet() throws SQLException {
     SimpleResultSet resultSet = new SimpleResultSet();
     resultSet.addColumn("ID", Types.INTEGER, 10, 0);

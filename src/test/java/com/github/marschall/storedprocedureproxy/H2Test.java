@@ -3,6 +3,7 @@ package com.github.marschall.storedprocedureproxy;
 import static com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration.INDEX_AND_TYPE;
 import static com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration.INDEX_ONLY;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -85,6 +86,34 @@ public class H2Test {
   @Test
   public void noArgProcedure() {
     assertEquals("output", procedures.noArgProcedure());
+  }
+
+  @Test
+  @Ignore("unsupported")
+  public void reverseObjectArray() {
+    Object[] input = new Object[] {1, "null", 1.1d};
+    Object[] expected = new Object[] {1.1d, "null", 1};
+    assertArrayEquals(expected, procedures.reverseObjectArray(input));
+  }
+
+  @Test
+  @Ignore("unsupported")
+  public void reverseIntegerArray() {
+    Integer[] input = new Integer[] {11, 2, 15};
+    Integer[] expected = new Integer[] {15, 2, 11};
+    assertArrayEquals(expected, procedures.reverseIntegerArray(input));
+  }
+
+  @Test
+  public void returnObjectArray() {
+    Object[] expected = new Object[] {1, "string"};
+    assertArrayEquals(expected, procedures.returnObjectArray());
+  }
+
+  @Test
+  public void returnIntegerArray() {
+    Integer[] expected = new Integer[] {4, 1, 7};
+    assertArrayEquals(expected, procedures.returnIntegerArray());
   }
 
   @Test
