@@ -46,4 +46,13 @@ public @interface ReturnValue {
    */
   String name() default "";
 
+  /**
+   * If the out parameter is a a user defined type like a named array types
+   * then this method denotes the type name.
+   *
+   * @return the fully-qualified name of an SQL structured type
+   * @see java.sql.CallableStatement#registerOutParameter(int, int, String)
+   */
+  String typeName() default "";
+
 }

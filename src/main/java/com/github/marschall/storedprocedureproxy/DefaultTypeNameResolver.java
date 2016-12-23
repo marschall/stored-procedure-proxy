@@ -71,7 +71,7 @@ final class DefaultTypeNameResolver implements TypeNameResolver {
   }
 
   @Override
-  public String getTypeName(Parameter parameter) {
+  public String resolveTypeName(Parameter parameter) {
     Class<?> parameterType = parameter.getType();
     Class<?> elementType;
     if (Collection.class.isAssignableFrom(parameterType)) {

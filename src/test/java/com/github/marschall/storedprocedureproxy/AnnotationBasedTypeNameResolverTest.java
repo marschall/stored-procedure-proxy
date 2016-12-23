@@ -7,39 +7,47 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.List;
 
+import org.junit.Before;
 import org.junit.Test;
 
-import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ProcedureCaller;
 import com.github.marschall.storedprocedureproxy.annotations.TypeName;
+import com.github.marschall.storedprocedureproxy.spi.TypeNameResolver;
 
-public class ProcedureCallerFactoryTest {
+public class AnnotationBasedTypeNameResolverTest {
+
+  private TypeNameResolver resolver;
+
+  @Before
+  public void setUp() {
+    this.resolver = AnnotationBasedTypeNameResolver.INSTANCE;
+  }
 
   @Test
   public void typeNameOnType() throws ReflectiveOperationException {
     Method method = SampleInterface.class.getDeclaredMethod("typeNameOnType", List.class);
     Parameter parameter = method.getParameters()[0];
-    assertEquals("typeName1", ProcedureCaller.getTypeNameFromAnnotation(parameter));
+    assertEquals("typeName1", this.resolver.resolveTypeName(parameter));
   }
 
   @Test
   public void typeNameOnParameter() throws ReflectiveOperationException {
     Method method = SampleInterface.class.getDeclaredMethod("typeNameOnParameter", List.class);
     Parameter parameter = method.getParameters()[0];
-    assertEquals("typeName2", ProcedureCaller.getTypeNameFromAnnotation(parameter));
+    assertEquals("typeName2", this.resolver.resolveTypeName(parameter));
   }
 
   @Test
   public void typeNameOnArray() throws ReflectiveOperationException {
     Method method = SampleInterface.class.getDeclaredMethod("typeNameOnArray", Integer[].class);
     Parameter parameter = method.getParameters()[0];
-    assertEquals("typeName3", ProcedureCaller.getTypeNameFromAnnotation(parameter));
+    assertEquals("typeName3", this.resolver.resolveTypeName(parameter));
   }
 
   @Test
   public void noTypeName() throws ReflectiveOperationException {
     Method method = SampleInterface.class.getDeclaredMethod("noTypeName", Integer.class);
     Parameter parameter = method.getParameters()[0];
-    assertNull(ProcedureCaller.getTypeNameFromAnnotation(parameter));
+    assertNull(this.resolver.resolveTypeName(parameter));
   }
 
   interface SampleInterface {

@@ -26,10 +26,10 @@ public class DefaultTypeNameResolverTest {
     Method method = SampleInterface.class.getDeclaredMethod("sampleMethod", List.class, Collection.class, Integer[].class, int[].class);
     Parameter[] parameters = method.getParameters();
 
-    assertEquals("VARCHAR", this.typeNameResolver.getTypeName(parameters[0]));
-    assertEquals("BIGINT", this.typeNameResolver.getTypeName(parameters[1]));
-    assertEquals("INTEGER", this.typeNameResolver.getTypeName(parameters[2]));
-    assertEquals("INTEGER", this.typeNameResolver.getTypeName(parameters[3]));
+    assertEquals("VARCHAR", this.typeNameResolver.resolveTypeName(parameters[0]));
+    assertEquals("BIGINT", this.typeNameResolver.resolveTypeName(parameters[1]));
+    assertEquals("INTEGER", this.typeNameResolver.resolveTypeName(parameters[2]));
+    assertEquals("INTEGER", this.typeNameResolver.resolveTypeName(parameters[3]));
   }
 
   interface SampleInterface {

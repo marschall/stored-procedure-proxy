@@ -17,6 +17,6 @@ public interface TypeNameResolver {
    * @param parameter the method parameter who's type
    * @return the SQL name of the type
    */
-  String getTypeName(Parameter parameter);
+  String resolveTypeName(Parameter parameter);
 
 }

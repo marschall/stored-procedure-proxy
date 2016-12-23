@@ -29,6 +29,14 @@ import com.github.marschall.storedprocedureproxy.spi.TypeMapper;
 @Target(METHOD)
 public @interface OutParameter {
 
+  /**
+   * Defines the SQL type of the out parameter. If nothing is specified the default
+   * from {@link TypeMapper} is used.
+   *
+   * @return the out parameter SQL type, can be a vendor type
+   * @see java.sql.Types
+   */
+  int type() default Integer.MIN_VALUE;
 
   /**
    * Defines the index of the out parameter. If not specified the out parameter
@@ -51,12 +59,12 @@ public @interface OutParameter {
   String name() default "";
 
   /**
-   * Defines the SQL type of the out parameter. If nothing is specified the default
-   * from {@link TypeMapper} is used.
+   * If the out parameter is a a user defined type like a named array types
+   * then this method denotes the type name.
    *
-   * @return the out parameter SQL type, can be a vendor type
-   * @see java.sql.Types
+   * @return the fully-qualified name of an SQL structured type
+   * @see java.sql.CallableStatement#registerOutParameter(int, int, String)
    */
-  int type() default Integer.MIN_VALUE;
+  String typeName() default "";
 
 }
