@@ -4,6 +4,10 @@ final class SnakeCase implements NamingStrategy {
 
   static final NamingStrategy INSTANCE = new SnakeCase();
 
+  private SnakeCase() {
+    super();
+  }
+
   @Override
   public String translateToDatabase(String javaName) {
     StringBuilder builder = new StringBuilder();

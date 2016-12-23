@@ -15,9 +15,13 @@ interface InParameterRegistration {
 }
 
 
-enum NoInParameterRegistration implements InParameterRegistration {
+final class NoInParameterRegistration implements InParameterRegistration {
 
-  INSTANCE;
+  static final InParameterRegistration INSTANCE = new NoInParameterRegistration();
+
+  private NoInParameterRegistration() {
+    super();
+  }
 
   @Override
   public void bindInParamters(CallableStatement statement, CallResource callResource, Object[] args) {

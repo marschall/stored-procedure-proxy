@@ -152,9 +152,13 @@ final class ByNameAndTypeNameOutParameterRegistration implements OutParameterReg
  * doesn't return any results or returns the result by means of a
  * {@link ResultSet}.
  */
-enum NoOutParameterRegistration implements OutParameterRegistration {
+final class  NoOutParameterRegistration implements OutParameterRegistration {
 
-  INSTANCE;
+  static final OutParameterRegistration INSTANCE = new NoOutParameterRegistration();
+
+  private NoOutParameterRegistration() {
+    super();
+  }
 
   @Override
   public void bindOutParamter(CallableStatement statement) {

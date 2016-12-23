@@ -26,7 +26,7 @@ final class DefaultTypeMapper implements TypeMapper {
 
   private final Map<Class<?>, Integer> typeMap;
 
-  DefaultTypeMapper() {
+  private DefaultTypeMapper() {
     this.typeMap = new HashMap<>();
     this.typeMap.put(String.class, Types.VARCHAR);
 

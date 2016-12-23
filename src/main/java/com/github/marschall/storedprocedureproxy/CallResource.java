@@ -17,9 +17,13 @@ interface CallResource extends AutoCloseable {
 
 }
 
-enum NoResource implements CallResource {
+final class NoResource implements CallResource {
 
-  INSTANCE;
+  static final CallResource INSTANCE = new NoResource();
+
+  private NoResource() {
+    super();
+  }
 
   @Override
   public boolean hasResourceAt(int index) {
@@ -114,9 +118,13 @@ interface CallResourceFactory {
 
 }
 
-enum NoResourceFactory implements CallResourceFactory {
+final class NoResourceFactory implements CallResourceFactory {
 
-  INSTANCE;
+  static final CallResourceFactory INSTANCE = new NoResourceFactory();
+
+  private NoResourceFactory() {
+    super();
+  }
 
   @Override
   public CallResource createResource(Connection connection, Object[] args) {

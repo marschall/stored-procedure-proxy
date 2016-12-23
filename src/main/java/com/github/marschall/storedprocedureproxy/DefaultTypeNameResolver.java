@@ -29,7 +29,7 @@ final class DefaultTypeNameResolver implements TypeNameResolver {
 
   private final Map<Class<?>, String> typeMap;
 
-  DefaultTypeNameResolver() {
+  private DefaultTypeNameResolver() {
     this.typeMap = new HashMap<>();
     this.typeMap.put(String.class, "VARCHAR");
 

@@ -31,9 +31,13 @@ interface ResultExtractor {
 /**
  * Extracts nothing and returns {@code null}.
  */
-enum VoidResultExtractor implements ResultExtractor {
+final class VoidResultExtractor implements ResultExtractor {
 
-  INSTANCE;
+  static final ResultExtractor INSTANCE = new VoidResultExtractor();
+
+  private VoidResultExtractor() {
+    super();
+  }
 
   @Override
   public Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration, Object[] args) throws SQLException {

@@ -4,6 +4,10 @@ final class Capitalize implements NamingStrategy {
 
   static final NamingStrategy INSTANCE = new Capitalize();
 
+  private Capitalize() {
+    super();
+  }
+
   @Override
   public String translateToDatabase(String javaName) {
     int length = javaName.length();
