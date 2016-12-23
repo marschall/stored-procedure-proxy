@@ -746,7 +746,7 @@ public final class ProcedureCallerFactory<T> {
       }
     }
 
-    private static ResultExtractor buildResultExtractor(Method method, Class<?> methodReturnType) {
+    private ResultExtractor buildResultExtractor(Method method, Class<?> methodReturnType) {
       boolean methodHasReturnValue = methodReturnType != void.class;
       boolean isList = methodHasReturnValue && methodReturnType == List.class;
       boolean isArray = methodHasReturnValue && methodReturnType.isArray();
@@ -762,7 +762,11 @@ public final class ProcedureCallerFactory<T> {
           return new ValueExtractorResultExtractor(valueExtractorIndex, fetchSize);
         }
       } else if (isArray) {
-        return new ArrayResultExtractor(methodReturnType.getComponentType());
+        Class<?> componentType = methodReturnType.getComponentType();
+        if (this.useOracleArrays && componentType.isPrimitive()) {
+          return new OracleArrayResultExtractor(componentType);
+        }
+        return new ArrayResultExtractor(componentType);
       } else {
         Class<?> boxedReturnType = getBoxedClass(method.getReturnType());
         return new ScalarResultExtractor(boxedReturnType);

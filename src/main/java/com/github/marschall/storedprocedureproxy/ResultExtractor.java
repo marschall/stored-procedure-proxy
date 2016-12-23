@@ -255,37 +255,31 @@ final class ArrayResultExtractor implements ResultExtractor {
 
 final class OracleArrayResultExtractor implements ResultExtractor {
 
-  private static Class<?> ARRAY;
-  private static Method GET_LONG_ARRAY;
-  private static Method GET_INT_ARRAY;
-  private static Method GET_DOUBLE_ARRAY;
-  private static Method GET_FLOAT_ARRAY;
-  private static Method GET_SHORT_ARRAY;
+  private static final Class<?> ARRAY;
+  private static final Method GET_LONG_ARRAY;
+  private static final Method GET_INT_ARRAY;
+  private static final Method GET_DOUBLE_ARRAY;
+  private static final Method GET_FLOAT_ARRAY;
+  private static final Method GET_SHORT_ARRAY;
 
   static {
     // https://docs.oracle.com/database/121/JJDBC/oraarr.htm#JJDBC28574
-    Class<?> oracleResultSet;
-    Method getARRAY;
-    Method createARRAY;
+    Class<?> array;
     Method getLongArray;
     Method getIntArray;
     Method getFloatArray;
     Method getDoubleArray;
     Method getShortArray;
     try {
-      oracleResultSet = Class.forName("oracle.jdbc.OracleResultSet");
-      getARRAY = oracleResultSet.getDeclaredMethod("getARRAY", String.class);
-      getARRAY = oracleResultSet.getDeclaredMethod("getARRAY", int.class);
+      array = Class.forName("oracle.sql.ARRAY");
 
-      Class<?> array = Class.forName("oracle.sql.ARRAY");
       getLongArray = array.getDeclaredMethod("getLongArray");
       getIntArray = array.getDeclaredMethod("getIntArray");
       getFloatArray = array.getDeclaredMethod("getFloatArray");
       getDoubleArray = array.getDeclaredMethod("getDoubleArray");
       getShortArray = array.getDeclaredMethod("getShortArray");
     } catch (ReflectiveOperationException e) {
-      oracleResultSet = null;
-      createARRAY = null;
+      array = null;
 
       getLongArray = null;
       getIntArray = null;
@@ -293,6 +287,12 @@ final class OracleArrayResultExtractor implements ResultExtractor {
       getDoubleArray = null;
       getShortArray = null;
     }
+    ARRAY = array;
+    GET_LONG_ARRAY = getLongArray;
+    GET_INT_ARRAY = getIntArray;
+    GET_DOUBLE_ARRAY = getDoubleArray;
+    GET_FLOAT_ARRAY = getFloatArray;
+    GET_SHORT_ARRAY = getShortArray;
   }
 
   private final Class<?> arrayElementType;
@@ -303,6 +303,9 @@ final class OracleArrayResultExtractor implements ResultExtractor {
 
   @Override
   public Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration, Object[] args) throws SQLException {
+    if (ARRAY == null) {
+      throw new IllegalStateException("Oracle JDBC classes not available");
+    }
     boolean hasResultSet = statement.execute();
     if (hasResultSet) {
       try (ResultSet rs = statement.getResultSet()) {
