@@ -69,11 +69,6 @@ public class HsqlTest {
   }
 
   @Test
-  public void procedure() {
-    assertEquals(2, this.procedures.plus1inout(1));
-  }
-
-  @Test
   public void function() {
     LocalDateTime after = LocalDateTime.of(2016, 10, 12, 17, 19);
     LocalDateTime before = after.minusHours(1L);
