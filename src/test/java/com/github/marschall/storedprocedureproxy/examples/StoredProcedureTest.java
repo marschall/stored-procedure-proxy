@@ -3,7 +3,6 @@ package com.github.marschall.storedprocedureproxy.examples;
 import static org.junit.Assert.assertEquals;
 
 import java.sql.Types;
-import java.util.Collections;
 import java.util.Map;
 
 import javax.sql.DataSource;
@@ -63,7 +62,7 @@ public class StoredProcedureTest {
     }
 
     int plus1inout(int arg) {
-      Map<String, Object> results = execute(Collections.singletonMap("arg", arg));
+      Map<String, Object> results = execute(arg);
       return (Integer) results.get("res");
     }
 

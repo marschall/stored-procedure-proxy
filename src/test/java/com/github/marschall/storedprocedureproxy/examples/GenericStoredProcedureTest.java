@@ -1,11 +1,9 @@
 package com.github.marschall.storedprocedureproxy.examples;
 
+
 import static org.junit.Assert.assertEquals;
 
-import java.sql.CallableStatement;
 import java.sql.Types;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 import javax.sql.DataSource;
@@ -15,10 +13,10 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcOperations;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.SqlOutParameter;
 import org.springframework.jdbc.core.SqlParameter;
+import org.springframework.jdbc.object.GenericStoredProcedure;
+import org.springframework.jdbc.object.StoredProcedure;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
@@ -29,7 +27,7 @@ import com.github.marschall.storedprocedureproxy.configuration.TestConfiguration
 
 @Transactional
 @ContextConfiguration(classes = {HsqlConfiguration.class, TestConfiguration.class})
-public class JdbcTemplateTest {
+public class GenericStoredProcedureTest {
 
   @ClassRule
   public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
@@ -40,29 +38,28 @@ public class JdbcTemplateTest {
   @Autowired
   private DataSource dataSource;
 
-  private JdbcOperations jdbcOperations;
+  private StoredProcedure storedProcedure;
 
   @Before
   public void setUp() {
-    this.jdbcOperations = new JdbcTemplate(this.dataSource);
+    storedProcedure = new GenericStoredProcedure();
+    storedProcedure.setDataSource(dataSource);
+    storedProcedure.setSql("plus1inout");
+    storedProcedure.setFunction(false);
+
+    storedProcedure.declareParameter(new SqlParameter("arg", Types.INTEGER));
+    storedProcedure.declareParameter(new SqlOutParameter("res", Types.INTEGER));
+    storedProcedure.compile();
   }
 
   @Test
   public void call() {
-    assertEquals(2, plus1inout(1));
+    assertEquals(2, this.plus1inout(1));
   }
 
-  private int plus1inout(int argument) {
-    List<SqlParameter> parameters = Arrays.asList(
-            new SqlParameter("arg", Types.INTEGER),
-            new SqlOutParameter("res", Types.INTEGER));
 
-    Map<String, Object> results = this.jdbcOperations.call(con -> {
-        CallableStatement statement = con.prepareCall("{call plus1inout(?, ?)}");
-        statement.setInt(1, argument);
-        statement.registerOutParameter(2, Types.INTEGER);
-        return statement;
-        }, parameters);
+  private int plus1inout(int arg) {
+    Map<String, Object> results = this.storedProcedure.execute(arg);
     return (Integer) results.get("res");
   }
 
