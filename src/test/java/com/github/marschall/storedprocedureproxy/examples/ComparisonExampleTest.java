@@ -17,11 +17,11 @@ import org.springframework.transaction.annotation.Transactional;
 import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory;
 import com.github.marschall.storedprocedureproxy.configuration.HsqlConfiguration;
 import com.github.marschall.storedprocedureproxy.configuration.TestConfiguration;
-import com.github.marschall.storedprocedureproxy.procedures.SpringDataJpaExample;
+import com.github.marschall.storedprocedureproxy.procedures.ComparisonExample;
 
 @Transactional
 @ContextConfiguration(classes = {HsqlConfiguration.class, TestConfiguration.class})
-public class SpringDataJpaExampleTest {
+public class ComparisonExampleTest {
 
   @ClassRule
   public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
@@ -32,11 +32,11 @@ public class SpringDataJpaExampleTest {
   @Autowired
   private DataSource dataSource;
 
-  private SpringDataJpaExample procedures;
+  private ComparisonExample procedures;
 
   @Before
   public void setUp() {
-    this.procedures = ProcedureCallerFactory.build(SpringDataJpaExample.class, this.dataSource);
+    this.procedures = ProcedureCallerFactory.build(ComparisonExample.class, this.dataSource);
   }
 
   @Test
