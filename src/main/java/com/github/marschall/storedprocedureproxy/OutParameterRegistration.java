@@ -58,6 +58,12 @@ final class ByIndexOutParameterRegistration implements OutParameterRegistration 
     }
   }
 
+  @Override
+  public String toString() {
+    return this.getClass().getSimpleName() + "[index=" + this.getOutParameterIndex()
+      + ", type=" + this.outParameterType + ']';
+  }
+
 }
 
 /**
@@ -81,6 +87,12 @@ final class ByNameOutParameterRegistration implements OutParameterRegistration {
   @Override
   public <T> T getOutParamter(CallableStatement statement, Class<T> type) throws SQLException {
     return statement.getObject(this.outParameterName, type);
+  }
+
+  @Override
+  public String toString() {
+    return this.getClass().getSimpleName() + "[name=" + this.outParameterName
+      + ", type=" + this.outParameterType + ']';
   }
 
 }
@@ -110,18 +122,24 @@ final class ByIndexAndTypeNameOutParameterRegistration implements OutParameterRe
   }
 
   private int getOutParameterIndex() {
-    return ByIndexOutParameterRegistration.toInt(outParameterIndex);
+    return ByIndexOutParameterRegistration.toInt(this.outParameterIndex);
   }
 
   @Override
   public void bindOutParamter(CallableStatement statement) throws SQLException {
     statement.registerOutParameter(this.getOutParameterIndex(), this.outParameterType, this.typeName);
-
   }
 
   @Override
   public <T> T getOutParamter(CallableStatement statement, Class<T> type) throws SQLException {
     return statement.getObject(this.getOutParameterIndex(), type);
+  }
+
+  @Override
+  public String toString() {
+    return this.getClass().getSimpleName() + "[index=" + this.getOutParameterIndex()
+      + ", type=" + this.outParameterType
+      + ", typeName=" + this.typeName + ']';
   }
 
 }
@@ -160,6 +178,13 @@ final class ByNameAndTypeNameOutParameterRegistration implements OutParameterReg
     return statement.getObject(this.outParameterName, type);
   }
 
+  @Override
+  public String toString() {
+    return this.getClass().getSimpleName() + "[name=" + this.outParameterName
+      + ", type=" + this.outParameterType
+      + ", typeName=" + this.typeName + ']';
+  }
+
 }
 
 /**
@@ -186,6 +211,11 @@ final class  NoOutParameterRegistration implements OutParameterRegistration {
       throw new IllegalArgumentException("no out parameter registered");
     }
     return null;
+  }
+
+  @Override
+  public String toString() {
+    return this.getClass().getSimpleName();
   }
 
 }

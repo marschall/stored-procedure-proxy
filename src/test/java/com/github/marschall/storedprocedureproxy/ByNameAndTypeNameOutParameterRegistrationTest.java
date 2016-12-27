@@ -1,5 +1,6 @@
 package com.github.marschall.storedprocedureproxy;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -51,6 +52,12 @@ public class ByNameAndTypeNameOutParameterRegistrationTest {
   public void noReturnTypeNameOutParameter() throws SQLException {
     this.procedures.noReturnTypeNameOutParameter();
     verify(this.callableStatement).registerOutParameter("out", Types.VARCHAR);
+  }
+
+  @Test
+  public void testToString() {
+    OutParameterRegistration registration = new ByNameAndTypeNameOutParameterRegistration("dog", Types.INTEGER, "duck");
+    assertEquals("ByNameAndTypeNameOutParameterRegistration[name=dog, type=4, typeName=duck]", registration.toString());
   }
 
   interface ReturnTypeNameUser {
