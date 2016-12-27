@@ -54,6 +54,11 @@ final class VoidResultExtractor implements ResultExtractor {
     return null;
   }
 
+  @Override
+  public String toString() {
+    return "VoidResultExtractor";
+  }
+
 }
 
 /**
@@ -100,6 +105,11 @@ final class ScalarResultExtractor implements ResultExtractor {
     return this.returnType.cast(last);
   }
 
+  @Override
+  public String toString() {
+    return this.getClass().getSimpleName() +'[' + this.returnType.getName() + ']';
+  }
+
 }
 
 /**
@@ -118,8 +128,8 @@ final class ListResultExtractor implements ResultExtractor {
 
   @Override
   public Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration, Object[] args) throws SQLException {
-    if (fetchSize != ProcedureCaller.DEFAULT_FETCH_SIZE) {
-      statement.setFetchSize(fetchSize);
+    if (this.fetchSize != ProcedureCaller.DEFAULT_FETCH_SIZE) {
+      statement.setFetchSize(this.fetchSize);
     }
     boolean hasResultSet = statement.execute();
     if (hasResultSet) {
@@ -144,6 +154,17 @@ final class ListResultExtractor implements ResultExtractor {
 
   private static ResultSet getOutResultSet(CallableStatement statement, OutParameterRegistration outParameterRegistration) throws SQLException {
     return outParameterRegistration.getOutParamter(statement, ResultSet.class);
+  }
+
+  @Override
+  public String toString() {
+    String fetchSize;
+    if (this.fetchSize == ProcedureCaller.DEFAULT_FETCH_SIZE) {
+      fetchSize = "default";
+    } else {
+      fetchSize = Integer.toString(this.fetchSize);
+    }
+    return this.getClass().getSimpleName() +"[type=" + this.listElementType.getName() + ", fetchSize=" + fetchSize + ']';
   }
 
 }
@@ -193,6 +214,17 @@ final class ValueExtractorResultExtractor implements ResultExtractor {
 
   private static ResultSet getOutResultSet(CallableStatement statement, OutParameterRegistration outParameterRegistration) throws SQLException {
     return outParameterRegistration.getOutParamter(statement, ResultSet.class);
+  }
+
+  @Override
+  public String toString() {
+    String fetchSize;
+    if (this.fetchSize == ProcedureCaller.DEFAULT_FETCH_SIZE) {
+      fetchSize = "default";
+    } else {
+      fetchSize = Integer.toString(this.fetchSize);
+    }
+    return this.getClass().getSimpleName() +"[methodParameterIndex=" + this.extractorIndex + ", fetchSize=" + fetchSize + ']';
   }
 
 }
@@ -254,6 +286,11 @@ final class ArrayResultExtractor implements ResultExtractor {
       java.lang.reflect.Array.set(value, i, elementValue);
     }
     return value;
+  }
+
+  @Override
+  public String toString() {
+    return this.getClass().getSimpleName() +'[' + this.arrayElementType.getName() + ']';
   }
 }
 
@@ -362,6 +399,11 @@ final class OracleArrayResultExtractor implements ResultExtractor {
     } finally {
       array.free();
     }
+  }
+
+  @Override
+  public String toString() {
+    return this.getClass().getSimpleName() +'[' + this.arrayElementType.getName() + ']';
   }
 
 }
