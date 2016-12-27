@@ -74,8 +74,20 @@ final class CompositeResource implements CallResource {
 
   @Override
   public void close() throws SQLException {
+    SQLException firstException = null;
     for (CallResource resource : this.resources) {
-      resource.close();
+      try {
+        resource.close();
+      } catch (SQLException e) {
+        if (firstException == null) {
+          firstException = e;
+        } else {
+          firstException.addSuppressed(e);
+        }
+      }
+    }
+    if (firstException != null) {
+      throw firstException;
     }
   }
 
