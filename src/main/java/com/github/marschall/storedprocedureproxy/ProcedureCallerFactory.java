@@ -82,6 +82,8 @@ public final class ProcedureCallerFactory<T> {
 
   private static final IncorrectResultSizeExceptionGenerator INCORRECT_RESULT_SIZE_EXCEPTION_GENERATOR;
 
+  private static final TypeNameResolver DEFAULT_TYPE_NAME_RESOLVER = new DelegatingTypeNameResolver(DefaultTypeNameResolver.INSTANCE);
+
   static {
     boolean hasSpring;
     IncorrectResultSizeExceptionGenerator incorrectResultSizeExceptionGenerator;
@@ -135,7 +137,7 @@ public final class ProcedureCallerFactory<T> {
     this.parameterRegistration = ParameterRegistration.INDEX_ONLY;
     this.exceptionAdapter = getDefaultExceptionAdapter(dataSource);
     this.typeMapper = DefaultTypeMapper.INSTANCE;
-    this.typeNameResolver = DefaultTypeNameResolver.INSTANCE;
+    this.typeNameResolver = DEFAULT_TYPE_NAME_RESOLVER;
     this.useOracleArrays = false;
   }
 
@@ -317,8 +319,8 @@ public final class ProcedureCallerFactory<T> {
    * @return this builder for chaining
    */
   public ProcedureCallerFactory<T> withTypeNameResolver(TypeNameResolver typeNameResolver) {
-    Objects.requireNonNull(typeMapper);
-    this.typeNameResolver = typeNameResolver;
+    Objects.requireNonNull(typeNameResolver);
+    this.typeNameResolver = new DelegatingTypeNameResolver(typeNameResolver);
     return this;
   }
 
@@ -681,10 +683,7 @@ public final class ProcedureCallerFactory<T> {
     }
 
     private CallResourceFactory createArrayResourceFactory(Parameter parameter, int parameterIndex) {
-      String typeName = AnnotationBasedTypeNameResolver.INSTANCE.resolveTypeName(parameter);
-      if (typeName == null) {
-        typeName = this.typeNameResolver.resolveTypeName(parameter);
-      }
+      String typeName = this.typeNameResolver.resolveTypeName(parameter);
       if (this.useOracleArrays) {
         return new OracleArrayFactory(parameterIndex, typeName);
       } else {
