@@ -27,20 +27,12 @@ final class ByIndexOutParameterRegistration implements OutParameterRegistration 
   private final int outParameterType;
 
   ByIndexOutParameterRegistration(int outParameterIndex, int outParameterType) {
-    this.outParameterIndex = toByte(outParameterIndex);
+    this.outParameterIndex = ByteUtils.toByte(outParameterIndex);
     this.outParameterType = outParameterType;
   }
 
-  static byte toByte(int i) {
-    return (byte) i;
-  }
-
-  static int toInt(byte b) {
-    return Byte.toUnsignedInt(b);
-  }
-
   private int getOutParameterIndex() {
-    return toInt(outParameterIndex);
+    return ByteUtils.toInt(outParameterIndex);
   }
 
   @Override
@@ -116,13 +108,13 @@ final class ByIndexAndTypeNameOutParameterRegistration implements OutParameterRe
   private final String typeName;
 
   ByIndexAndTypeNameOutParameterRegistration(int outParameterIndex, int outParameterType, String typeName) {
-    this.outParameterIndex = ByIndexOutParameterRegistration.toByte(outParameterIndex);
+    this.outParameterIndex = ByteUtils.toByte(outParameterIndex);
     this.outParameterType = outParameterType;
     this.typeName = typeName;
   }
 
   private int getOutParameterIndex() {
-    return ByIndexOutParameterRegistration.toInt(this.outParameterIndex);
+    return ByteUtils.toInt(this.outParameterIndex);
   }
 
   @Override

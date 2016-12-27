@@ -14,7 +14,9 @@ interface InParameterRegistration {
 
 }
 
-
+/**
+ * No in parameters are registered.
+ */
 final class NoInParameterRegistration implements InParameterRegistration {
 
   static final InParameterRegistration INSTANCE = new NoInParameterRegistration();
@@ -28,8 +30,16 @@ final class NoInParameterRegistration implements InParameterRegistration {
     // nothing
   }
 
+  @Override
+  public String toString() {
+    return this.getClass().getSimpleName();
+  }
+
 }
 
+/**
+ * In parameters are registered by index.
+ */
 final class ByIndexInParameterRegistration implements InParameterRegistration {
 
   // an interface method can not have more than 254 parameters
@@ -40,7 +50,7 @@ final class ByIndexInParameterRegistration implements InParameterRegistration {
   }
 
   private int inParameterIndexAt(int i) {
-    return Byte.toUnsignedInt(this.inParameterIndices[i]);
+    return ByteUtils.toByte(this.inParameterIndices[i]);
   }
 
   @Override
@@ -61,8 +71,21 @@ final class ByIndexInParameterRegistration implements InParameterRegistration {
     }
   }
 
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append(this.getClass().getSimpleName());
+    builder.append('[');
+    ByteUtils.toStringOn(this.inParameterIndices, builder);
+    builder.append(']');
+    return builder.toString();
+  }
+
 }
 
+/**
+ * In parameters are registered by name.
+ */
 final class ByNameInParameterRegistration implements InParameterRegistration {
 
   private final String[] inParameterNames;
@@ -90,8 +113,21 @@ final class ByNameInParameterRegistration implements InParameterRegistration {
     }
   }
 
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append(this.getClass().getSimpleName());
+    builder.append('[');
+    ToStringUtils.toStringOn(this.inParameterNames, builder);
+    builder.append(']');
+    return builder.toString();
+  }
+
 }
 
+/**
+ * In parameters are registered by index and type.
+ */
 final class ByIndexAndTypeInParameterRegistration implements InParameterRegistration {
 
   // an interface method can not have more than 254 parameters
@@ -104,7 +140,7 @@ final class ByIndexAndTypeInParameterRegistration implements InParameterRegistra
   }
 
   private int inParameterIndexAt(int i) {
-    return Byte.toUnsignedInt(this.inParameterIndices[i]);
+    return ByteUtils.toByte(this.inParameterIndices[i]);
   }
 
   @Override
@@ -130,8 +166,23 @@ final class ByIndexAndTypeInParameterRegistration implements InParameterRegistra
     }
   }
 
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append(this.getClass().getSimpleName());
+    builder.append("[indexes={");
+    ByteUtils.toStringOn(this.inParameterIndices, builder);
+    builder.append("}, types={");
+    ToStringUtils.toStringOn(this.inParameterTypes, builder);
+    builder.append("}]");
+    return builder.toString();
+  }
+
 }
 
+/**
+ * In parameters are registered by name and type.
+ */
 final class ByNameAndTypeInParameterRegistration implements InParameterRegistration {
 
   private final String[] inParameterNames;
@@ -163,6 +214,18 @@ final class ByNameAndTypeInParameterRegistration implements InParameterRegistrat
         statement.setNull(parameterName, type);
       }
     }
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append(this.getClass().getSimpleName());
+    builder.append("[names={");
+    ToStringUtils.toStringOn(this.inParameterNames, builder);
+    builder.append("}, types={");
+    ToStringUtils.toStringOn(this.inParameterTypes, builder);
+    builder.append("}]");
+    return builder.toString();
   }
 
 }

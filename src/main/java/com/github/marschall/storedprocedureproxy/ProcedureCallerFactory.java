@@ -919,7 +919,7 @@ public final class ProcedureCallerFactory<T> {
           indices[i] = NO_IN_PARAMTER;
           continue;
         }
-        indices[i] = (byte) (i + 1);
+        indices[i] = ByteUtils.toByte(i + 1);
       }
       return indices;
     }
@@ -932,9 +932,9 @@ public final class ProcedureCallerFactory<T> {
           continue;
         }
         if (outParameterIndex > i + 1) {
-          indices[i] = (byte) (i + 1);
+          indices[i] = ByteUtils.toByte(i + 1);
         } else {
-          indices[i] = (byte) (i + 2);
+          indices[i] = ByteUtils.toByte(i + 2);
         }
       }
       return indices;
