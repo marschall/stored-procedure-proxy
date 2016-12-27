@@ -34,6 +34,16 @@ final class ToStringUtils {
     }
   }
 
+  static void toStringOn(Object[] array, StringBuilder builder) {
+    for (int i = 0; i < array.length; i++) {
+      if (i > 0) {
+        builder.append(", ");
+      }
+      Object element = array[i];
+      builder.append(element);
+    }
+  }
+
   static void toStringOn(int[] array, StringBuilder builder) {
     for (int i = 0; i < array.length; i++) {
       if (i > 0) {

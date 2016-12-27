@@ -123,7 +123,6 @@ final class ArrayResource implements CallResource {
 
 }
 
-
 interface CallResourceFactory {
 
   CallResource createResource(Connection connection, Object[] args) throws SQLException;
@@ -141,6 +140,11 @@ final class NoResourceFactory implements CallResourceFactory {
   @Override
   public CallResource createResource(Connection connection, Object[] args) {
     return NoResource.INSTANCE;
+  }
+
+  @Override
+  public String toString() {
+    return this.getClass().getSimpleName();
   }
 
 }
@@ -162,6 +166,16 @@ final class CompositeFactory implements CallResourceFactory {
       resources[i] = resource;
     }
     return new CompositeResource(resources);
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append(this.getClass().getSimpleName());
+    builder.append('[');
+    ToStringUtils.toStringOn(this.factories, builder);
+    builder.append(']');
+    return builder.toString();
   }
 
 }
@@ -202,6 +216,12 @@ final class ArrayFactory implements CallResourceFactory {
       return array;
     }
     throw new IllegalArgumentException("argument at index: " + this.argumentIndex + " expected to be a collection or array but was not");
+  }
+
+  @Override
+  public String toString() {
+    return this.getClass().getSimpleName() + "[argumentIndex=" + this.argumentIndex
+            + ", typeName=" + this.typeName + ']';
   }
 
 }
@@ -277,6 +297,12 @@ final class OracleArrayFactory implements CallResourceFactory {
       return argument;
     }
     throw new IllegalArgumentException("argument at index: " + this.argumentIndex + " expected to be a collection or array but was not");
+  }
+
+  @Override
+  public String toString() {
+    return this.getClass().getSimpleName() + "[argumentIndex=" + this.argumentIndex
+            + ", typeName=" + this.typeName + ']';
   }
 
 }
