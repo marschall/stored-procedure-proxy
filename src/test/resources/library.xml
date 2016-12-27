@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<configuration xmlns="http://www.jooq.org/xsd/jooq-codegen-3.9.0.xsd">
+  <!-- Configure the database connection here -->
+  <jdbc>
+    <driver>org.hsqldb.jdbc.JDBCDriver</driver>
+    <url>jdbc:hsqldb:file:/Users/marschall/git/spring-jdbc-call/src/test/resources/hsql_procedures.sql</url>
+    <!-- 
+    <user>root</user>
+    <password></password>
+     -->
+  </jdbc>
+
+  <generator>
+    <!-- The default code generator. You can override this one, to generate your own code style.
+         Supported generators:
+         - org.jooq.util.JavaGenerator
+         - org.jooq.util.ScalaGenerator
+         Defaults to org.jooq.util.JavaGenerator -->
+    <name>org.jooq.util.JavaGenerator</name>
+
+    <database>
+      <name>org.jooq.util.hsqldb.HSQLDBDatabase</name>
+
+      <!-- The database schema (or in the absence of schema support, in your RDBMS this
+           can be the owner, user, database name) to be generated -->
+      <inputSchema>library</inputSchema>
+
+      <!-- All elements that are generated from your schema
+           (A Java regular expression. Use the pipe to separate several expressions)
+           Watch out for case-sensitivity. Depending on your database, this might be important! -->
+      <includes>.*</includes>
+
+      <!-- All elements that are excluded from your schema
+           (A Java regular expression. Use the pipe to separate several expressions).
+           Excludes match before includes, i.e. excludes have a higher priority -->
+      <excludes></excludes>
+    </database>
+
+    <target>
+      <!-- The destination package of your generated classes (within the destination directory) -->
+      <packageName>test.generated</packageName>
+
+      <!-- The destination directory of your generated classes. Using Maven directory layout here -->
+      <directory>src/test/java</directory>
+    </target>
+  </generator>
+</configuration>

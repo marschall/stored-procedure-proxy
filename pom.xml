@@ -92,6 +92,32 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.jdbi</groupId>
+      <artifactId>jdbi</artifactId>
+      <version>2.77</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- 
+    <dependency>
+      <groupId>org.jooq</groupId>
+      <artifactId>jooq</artifactId>
+      <version>${jooq.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jooq</groupId>
+      <artifactId>jooq-meta</artifactId>
+      <version>${jooq.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jooq</groupId>
+      <artifactId>jooq-codegen</artifactId>
+      <version>${jooq.version}</version>
+      <scope>test</scope>
+    </dependency>
+     -->
+    <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <version>2.3.6</version>
@@ -226,6 +252,62 @@
           <profile>true</profile>
         </configuration>
       </plugin>
+      <!-- 
+        http://stanislas.github.io/2014/08/23/liquibase-and-jooq.html
+       -->
+       <!-- 
+      <plugin>
+          <groupId>org.jooq</groupId>
+          <artifactId>jooq-codegen-maven</artifactId>
+          <executions>
+            <execution>
+              <goals>
+                <goal>generate</goal>
+              </goals>
+            </execution>
+          </executions>
+          <dependencies>
+            <dependency>
+              <groupId>org.hsqldb</groupId>
+              <artifactId>hsqldb</artifactId>
+              <version>2.3.3</version>
+            </dependency>
+          </dependencies>
+          <configuration>
+            <jdbc>
+              <driver>org.hsqldb.jdbc.JDBCDriver</driver>
+              <url>${hsqlJdbcUrl}</url>
+              <url>jdbc:hsqldb:file:/Users/marschall/git/spring-jdbc-call/src/test/resources/hsql_procedures.sql</url>
+              <user>sa</user>
+              <password></password>
+            </jdbc>
+            <generator>
+              <name>org.jooq.util.DefaultGenerator</name>
+              <database>
+                <name>org.jooq.util.hsqldb.HSQLDBDatabase</name>
+                <includes>.*</includes>
+                <excludes></excludes>
+                <schemata>
+                  <schema><inputSchema>SCHEMA1</inputSchema></schema>
+                  <schema><inputSchema>SCHEMA2</inputSchema></schema>
+                </schemata>
+              </database>
+              <generate>
+                <deprecated>false</deprecated>
+                <sequences>false</sequences>
+                <records>false</records>
+                <tables>false</tables>
+                <relations>false</relations>
+                <globalObjectReferences>false</globalObjectReferences>
+              </generate>
+              <target>
+                <packageName>ch.hood.jooq</packageName>
+                <directory>target/generated-sources/jooq</directory>
+              </target>
+            </generator>
+          </configuration>
+      </plugin>
+                 -->
     </plugins>
     <pluginManagement>
       <plugins>
@@ -291,6 +373,11 @@
           <artifactId>jdeps-maven-plugin</artifactId>
           <version>0.4.0</version>
         </plugin>
+        <plugin>
+          <groupId>org.jooq</groupId>
+          <artifactId>jooq-codegen-maven</artifactId>
+          <version>${jooq.version}</version>
+        </plugin>
         <!--This plugin's configuration is used to store Eclipse m2e settings 
           only. It has no influence on the Maven build itself. -->
         <plugin>
@@ -350,6 +437,9 @@
     <java.version>1.8</java.version>
     <spring.version>4.3.3.RELEASE</spring.version>
     <log4j.version>2.7</log4j.version>
+    <jooq.version>3.9.0</jooq.version>
+    <hsqldbpath>${project.basedir}/src/test/resources/h2_procedures.sql;shutdown=true</hsqldbpath>
+    <hsqlJdbcUrl>jdbc:hsqldb:${hsqldbpath}</hsqlJdbcUrl>
   </properties>
 
 </project>
