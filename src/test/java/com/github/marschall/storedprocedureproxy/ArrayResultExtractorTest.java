@@ -202,4 +202,10 @@ public class ArrayResultExtractorTest {
     assertArrayEquals(new Integer[] {1}, (Integer[]) result);
   }
 
+  @Test
+  public void testToString()  {
+    ResultExtractor extractor = new ArrayResultExtractor(Integer.class);
+    assertEquals("ArrayResultExtractor[Integer]", extractor.toString());
+  }
+
 }

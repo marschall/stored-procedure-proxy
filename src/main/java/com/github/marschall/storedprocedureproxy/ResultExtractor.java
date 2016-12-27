@@ -107,7 +107,7 @@ final class ScalarResultExtractor implements ResultExtractor {
 
   @Override
   public String toString() {
-    return this.getClass().getSimpleName() +'[' + this.returnType.getName() + ']';
+    return this.getClass().getSimpleName() +'[' + ToStringUtils.classNameToString(this.returnType) + ']';
   }
 
 }
@@ -158,13 +158,8 @@ final class ListResultExtractor implements ResultExtractor {
 
   @Override
   public String toString() {
-    String fetchSize;
-    if (this.fetchSize == ProcedureCaller.DEFAULT_FETCH_SIZE) {
-      fetchSize = "default";
-    } else {
-      fetchSize = Integer.toString(this.fetchSize);
-    }
-    return this.getClass().getSimpleName() +"[type=" + this.listElementType.getName() + ", fetchSize=" + fetchSize + ']';
+    return this.getClass().getSimpleName() +"[type=" + ToStringUtils.classNameToString(this.listElementType)
+      + ", fetchSize=" + ToStringUtils.fetchSizeToString(this.fetchSize) + ']';
   }
 
 }
@@ -218,13 +213,8 @@ final class ValueExtractorResultExtractor implements ResultExtractor {
 
   @Override
   public String toString() {
-    String fetchSize;
-    if (this.fetchSize == ProcedureCaller.DEFAULT_FETCH_SIZE) {
-      fetchSize = "default";
-    } else {
-      fetchSize = Integer.toString(this.fetchSize);
-    }
-    return this.getClass().getSimpleName() +"[methodParameterIndex=" + this.extractorIndex + ", fetchSize=" + fetchSize + ']';
+    return this.getClass().getSimpleName() +"[methodParameterIndex=" + this.extractorIndex
+            + ", fetchSize=" + ToStringUtils.fetchSizeToString(this.fetchSize) + ']';
   }
 
 }
@@ -290,7 +280,7 @@ final class ArrayResultExtractor implements ResultExtractor {
 
   @Override
   public String toString() {
-    return this.getClass().getSimpleName() +'[' + this.arrayElementType.getName() + ']';
+    return this.getClass().getSimpleName() +'[' + ToStringUtils.classNameToString(this.arrayElementType) + ']';
   }
 }
 
@@ -403,7 +393,7 @@ final class OracleArrayResultExtractor implements ResultExtractor {
 
   @Override
   public String toString() {
-    return this.getClass().getSimpleName() +'[' + this.arrayElementType.getName() + ']';
+    return this.getClass().getSimpleName() +'[' + ToStringUtils.classNameToString(this.arrayElementType) + ']';
   }
 
 }

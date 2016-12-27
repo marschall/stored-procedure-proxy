@@ -1110,12 +1110,12 @@ public final class ProcedureCallerFactory<T> {
 
     @Override
     public String toString() {
-      return "call '" + this.procedureName + "' using call string " + this.callString
-              + (this.wantsExceptionTranslation ? " with exception translation " : " without exception translation ")
-              + " resultExtractor: " + this.resultExtractor
-              + " outParameterRegistration: " + this.outParameterRegistration
-              + " inParameterRegistration: " + this.inParameterRegistration
-              + " callResourceFactory: " + this.callResourceFactory;
+      return "call '" + this.procedureName + "' using call string \"" + this.callString + '\"'
+              + (this.wantsExceptionTranslation ? " with exception translation" : " without exception translation")
+              + ", resultExtractor: " + this.resultExtractor
+              + ", outParameterRegistration: " + this.outParameterRegistration
+              + ", inParameterRegistration: " + this.inParameterRegistration
+              + ", callResourceFactory: " + this.callResourceFactory;
     }
 
   }
