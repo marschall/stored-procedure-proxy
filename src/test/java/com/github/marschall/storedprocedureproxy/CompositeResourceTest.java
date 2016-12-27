@@ -71,6 +71,16 @@ public class CompositeResourceTest {
     composite.close();
   }
 
+  @Test
+  public void testToString() throws SQLException {
+    CallResource resource1 = new ToStringResource("resource1");
+    CallResource resource2 = new ToStringResource("resource2");
+
+    try (CallResource composite = new CompositeResource(new CallResource[]{resource1, resource2})) {
+      assertEquals("CompositeResource[resource1, resource2]", composite.toString());
+    }
+  }
+
   static final class NonThrowingResource implements CallResource {
 
 
@@ -112,6 +122,36 @@ public class CompositeResourceTest {
     @Override
     public void close() throws SQLException {
       throw new SQLException(this.message);
+    }
+
+  }
+
+  static final class ToStringResource implements CallResource {
+
+    private final String s;
+
+    ToStringResource(String s) {
+      this.s = s;
+    }
+
+    @Override
+    public boolean hasResourceAt(int index) {
+      throw new IllegalStateException("should not be called");
+    }
+
+    @Override
+    public Object resourceAt(int index) {
+      throw new IllegalStateException("should not be called");
+    }
+
+    @Override
+    public void close() throws SQLException {
+      // ignore
+    }
+
+    @Override
+    public String toString() {
+      return this.s;
     }
 
   }

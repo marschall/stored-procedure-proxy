@@ -40,6 +40,11 @@ final class NoResource implements CallResource {
     // empty
   }
 
+  @Override
+  public String toString() {
+    return this.getClass().getSimpleName();
+  }
+
 }
 
 final class CompositeResource implements CallResource {
@@ -91,6 +96,16 @@ final class CompositeResource implements CallResource {
     }
   }
 
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append(this.getClass().getSimpleName());
+    builder.append('[');
+    ToStringUtils.toStringOn(this.resources, builder);
+    builder.append(']');
+    return builder.toString();
+  }
+
 }
 
 final class ArrayResource implements CallResource {
@@ -119,6 +134,11 @@ final class ArrayResource implements CallResource {
       throw new IllegalArgumentException("no resource at: " + index);
     }
     return this.array;
+  }
+
+  @Override
+  public String toString() {
+    return this.getClass().getSimpleName() + '[' + this.arrayIndex + ']';
   }
 
 }
