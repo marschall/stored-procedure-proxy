@@ -23,26 +23,38 @@ interface OutParameterRegistration {
 final class ByIndexOutParameterRegistration implements OutParameterRegistration {
 
   // an interface method can not have more than 254 parameters
-  private final int outParameterIndex;
+  private final byte outParameterIndex;
   private final int outParameterType;
 
   ByIndexOutParameterRegistration(int outParameterIndex, int outParameterType) {
-    this.outParameterIndex = outParameterIndex;
+    this.outParameterIndex = toByte(outParameterIndex);
     this.outParameterType = outParameterType;
+  }
+
+  static byte toByte(int i) {
+    return (byte) i;
+  }
+
+  static int toInt(byte b) {
+    return Byte.toUnsignedInt(b);
+  }
+
+  private int getOutParameterIndex() {
+    return toInt(outParameterIndex);
   }
 
   @Override
   public void bindOutParamter(CallableStatement statement) throws SQLException {
-    statement.registerOutParameter(this.outParameterIndex, this.outParameterType);
+    statement.registerOutParameter(this.getOutParameterIndex(), this.outParameterType);
   }
 
   @Override
   public <T> T getOutParamter(CallableStatement statement, Class<T> type) throws SQLException {
     try {
-      return statement.getObject(this.outParameterIndex, type);
+      return statement.getObject(this.getOutParameterIndex(), type);
     } catch (SQLFeatureNotSupportedException e) {
       // Postgres hack
-      return type.cast(statement.getObject(this.outParameterIndex));
+      return type.cast(statement.getObject(this.getOutParameterIndex()));
     }
   }
 
@@ -87,29 +99,32 @@ final class ByNameOutParameterRegistration implements OutParameterRegistration {
 final class ByIndexAndTypeNameOutParameterRegistration implements OutParameterRegistration {
 
   // an interface method can not have more than 254 parameters
-  private final int outParameterIndex;
+  private final byte outParameterIndex;
   private final int outParameterType;
   private final String typeName;
 
   ByIndexAndTypeNameOutParameterRegistration(int outParameterIndex, int outParameterType, String typeName) {
-    this.outParameterIndex = outParameterIndex;
+    this.outParameterIndex = ByIndexOutParameterRegistration.toByte(outParameterIndex);
     this.outParameterType = outParameterType;
     this.typeName = typeName;
   }
 
+  private int getOutParameterIndex() {
+    return ByIndexOutParameterRegistration.toInt(outParameterIndex);
+  }
+
   @Override
   public void bindOutParamter(CallableStatement statement) throws SQLException {
-    statement.registerOutParameter(this.outParameterIndex, this.outParameterType, this.typeName);
+    statement.registerOutParameter(this.getOutParameterIndex(), this.outParameterType, this.typeName);
 
   }
 
   @Override
   public <T> T getOutParamter(CallableStatement statement, Class<T> type) throws SQLException {
-    return statement.getObject(this.outParameterIndex, type);
+    return statement.getObject(this.getOutParameterIndex(), type);
   }
 
 }
-
 
 
 /**
