@@ -766,14 +766,23 @@ public final class ProcedureCallerFactory<T> {
             Method method, int outParameterIndex, boolean hasOutParameter) {
       if (hasOutParameter) {
         int outParameterType = this.getOutParameterType(method);
+        String returnTypeName = getReturnTypeName(method);
         switch (this.parameterRegistration) {
           case INDEX_ONLY:
           case INDEX_AND_TYPE:
-            return new ByIndexOutParameterRegistration(outParameterIndex, outParameterType);
+            if (returnTypeName == null) {
+              return new ByIndexOutParameterRegistration(outParameterIndex, outParameterType);
+            } else {
+              return new ByIndexAndTypeNameOutParameterRegistration(outParameterIndex, outParameterType, returnTypeName);
+            }
           case NAME_ONLY:
           case NAME_AND_TYPE:
             String outParameterName = getOutParameterName(method);
-            return new ByNameOutParameterRegistration(outParameterName, outParameterType);
+            if (returnTypeName == null) {
+              return new ByNameOutParameterRegistration(outParameterName, outParameterType);
+            } else {
+              return new ByNameAndTypeNameOutParameterRegistration(outParameterName, outParameterType, returnTypeName);
+            }
           default:
             throw new IllegalStateException("unknown parameter registration: " + this.parameterRegistration);
         }
@@ -803,7 +812,6 @@ public final class ProcedureCallerFactory<T> {
       return outParameterName;
     }
 
-
     private static int getOutParameterIndex(Method method) {
       OutParameter outParameter = method.getAnnotation(OutParameter.class);
       ReturnValue returnValue = method.getAnnotation(ReturnValue.class);
@@ -828,6 +836,23 @@ public final class ProcedureCallerFactory<T> {
         return getParameterCount(method) + 1;
       }
       return outParameterIndex;
+    }
+
+    private static String getReturnTypeName(Method method) {
+      OutParameter outParameter = method.getAnnotation(OutParameter.class);
+      ReturnValue returnValue = method.getAnnotation(ReturnValue.class);
+      String typeName;
+      if (outParameter != null) {
+        typeName = outParameter.typeName();
+      } else if (returnValue != null) {
+        typeName = returnValue.typeName();
+      } else {
+        typeName = ""; // default
+      }
+      if ("".equals(typeName)) {
+        return null;
+      }
+      return typeName;
     }
 
     private int getOutParameterType(Method method) {
