@@ -8,43 +8,20 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import javax.sql.DataSource;
-
 import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.SqlOutParameter;
 import org.springframework.jdbc.core.SqlParameter;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.rules.SpringClassRule;
-import org.springframework.test.context.junit4.rules.SpringMethodRule;
-import org.springframework.transaction.annotation.Transactional;
 
-import com.github.marschall.storedprocedureproxy.configuration.HsqlConfiguration;
-import com.github.marschall.storedprocedureproxy.configuration.TestConfiguration;
-
-@Transactional
-@ContextConfiguration(classes = {HsqlConfiguration.class, TestConfiguration.class})
-public class JdbcTemplateTest {
-
-  @ClassRule
-  public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
-
-  @Rule
-  public final SpringMethodRule springMethodRule = new SpringMethodRule();
-
-  @Autowired
-  private DataSource dataSource;
+public class JdbcTemplateTest extends AbstractExampleTest {
 
   private JdbcOperations jdbcOperations;
 
   @Before
   public void setUp() {
-    this.jdbcOperations = new JdbcTemplate(this.dataSource);
+    this.jdbcOperations = new JdbcTemplate(this.getDataSource());
   }
 
   @Test
