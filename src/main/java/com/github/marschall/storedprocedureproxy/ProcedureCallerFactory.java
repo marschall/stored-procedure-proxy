@@ -402,7 +402,7 @@ public final class ProcedureCallerFactory<T> {
 
     /**
      * The method argument at this index is not an in parameter. It may
-     * be a {@link NumberedValueExtractor}.
+     * be a {@link ValueExtractor} or {@link NumberedValueExtractor}.
      *
      * 0 is not a valid parameter index.
      */
@@ -553,7 +553,7 @@ public final class ProcedureCallerFactory<T> {
       String[] names = new String[parameters.length];
       for (int i = 0; i < parameters.length; i++) {
         Parameter parameter = parameters[i];
-        if (parameter.getType().isAssignableFrom(NumberedValueExtractor.class)) {
+        if (ValueExtractorUtils.isAnyValueExtractor(parameter.getType())) {
           names[i] = null;
           continue;
         }
@@ -588,7 +588,7 @@ public final class ProcedureCallerFactory<T> {
           type = annotation.value();
         } else {
           Class<?> parameterType = parameter.getType();
-          if (parameterType.isAssignableFrom(NumberedValueExtractor.class)) {
+          if (ValueExtractorUtils.isAnyValueExtractor(parameterType)) {
             continue;
           }
           type = this.typeMapper.mapToSqlType(parameterType);
@@ -736,7 +736,12 @@ public final class ProcedureCallerFactory<T> {
           Class<?> listElementType = getListReturnTypeParamter(method);
           return new ListResultExtractor(listElementType, fetchSize);
         } else {
-          return new NumberedValueExtractorResultExtractor(valueExtractorIndex, fetchSize);
+          Class<?> parameterType = method.getParameterTypes()[valueExtractorIndex];
+          if (ValueExtractorUtils.isValueExtractor(parameterType)) {
+            return new ValueExtractorResultExtractor(valueExtractorIndex, fetchSize);
+          } else {
+            return new NumberedValueExtractorResultExtractor(valueExtractorIndex, fetchSize);
+          }
         }
       } else if (isArray) {
         Class<?> componentType = methodReturnType.getComponentType();
@@ -915,7 +920,7 @@ public final class ProcedureCallerFactory<T> {
     static byte[] buildInParameterIndices(int parameterCount, Class<?>[] methodParameterTypes) {
       byte[] indices = new byte[parameterCount];
       for (int i = 0; i < indices.length; i++) {
-        if (methodParameterTypes[i].isAssignableFrom(NumberedValueExtractor.class)) {
+        if (ValueExtractorUtils.isAnyValueExtractor(methodParameterTypes[i])) {
           indices[i] = NO_IN_PARAMTER;
           continue;
         }
@@ -927,7 +932,7 @@ public final class ProcedureCallerFactory<T> {
     static byte[] buildInParameterIndices(int parameterCount, int outParameterIndex, Class<?>[] methodParameterTypes) {
       byte[] indices = new byte[parameterCount];
       for (int i = 0; i < indices.length; i++) {
-        if (methodParameterTypes[i].isAssignableFrom(NumberedValueExtractor.class)) {
+        if (ValueExtractorUtils.isAnyValueExtractor(methodParameterTypes[i])) {
           indices[i] = NO_IN_PARAMTER;
           continue;
         }
@@ -944,7 +949,13 @@ public final class ProcedureCallerFactory<T> {
       Class<?>[] methodParameterTypes = method.getParameterTypes();
       for (int i = 0; i < methodParameterTypes.length; i++) {
         Class<?> methodParameterType = methodParameterTypes[i];
-        if (methodParameterType.isAssignableFrom(NumberedValueExtractor.class)) {
+        boolean valueExtractor = ValueExtractorUtils.isValueExtractor(methodParameterType);
+        boolean numberedValueExtractor = ValueExtractorUtils.isNumberedValueExtractor(methodParameterType);
+        if (valueExtractor && numberedValueExtractor) {
+          throw new IllegalArgumentException(methodParameterType + " is both: " + ValueExtractor.class
+                  + " and " + NumberedValueExtractor.class + " but should only be one");
+        }
+        if (valueExtractor || numberedValueExtractor) {
           return i;
         }
       }
@@ -954,7 +965,7 @@ public final class ProcedureCallerFactory<T> {
     private static int getParameterCount(Method method) {
       int count = 0;
       for (Class<?> parameterType : method.getParameterTypes()) {
-        if (!parameterType.isAssignableFrom(NumberedValueExtractor.class)) {
+        if (!ValueExtractorUtils.isAnyValueExtractor(parameterType)) {
           count += 1;
         }
       }

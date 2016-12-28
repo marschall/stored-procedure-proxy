@@ -9,20 +9,14 @@ import java.sql.SQLException;
  * <p>This class is used to extract a value object from every row in a
  * ref cursor out parameter.</p>
  *
- * <p>This class is modeled after Springs
- * {@link org.springframework.jdbc.core.RowMapper}. If you're using
- * lambdas the the code should directly port over. If not the easiest
- * way to bridge the code is using an method reference.</p>
- *
  * <p>Implementations should not catch {@link SQLException} this will
  * be done by a higher layer.</p>
  *
  * @param <V> the value type
- * @see ValueExtractor
- * @see org.springframework.jdbc.core.RowMapper
+ * @see NumberedValueExtractor
  */
 @FunctionalInterface
-public interface NumberedValueExtractor<V> {
+public interface ValueExtractor<V> {
 
   /**
    * Extract the value from the current row.
@@ -31,12 +25,9 @@ public interface NumberedValueExtractor<V> {
    * instead expect to be called for every method.
    *
    * @param resultSet the ResultSet to the value of the current row from
-   * @param rowNumber
-   *          the 0-based index of the current row, mostly for Spring compatibility
    * @return the value for the current row
    * @throws SQLException propagated if a method on {@link ResultSet} throws an exception
-   * @see org.springframework.jdbc.core.RowMapper#mapRow(ResultSet, int)
    */
-  V extractValue(ResultSet resultSet, int rowNumber) throws SQLException;
+  V extractValue(ResultSet resultSet) throws SQLException;
 
 }

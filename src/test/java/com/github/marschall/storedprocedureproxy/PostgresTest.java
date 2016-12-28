@@ -164,14 +164,26 @@ public class PostgresTest {
   }
 
   @Test
+  public void mappedRefCursorNumbered() {
+    List<String> refCursor = this.procedures.mappedRefCursor((rs, i) -> i + "-" + rs.getString(1));
+    assertEquals(Arrays.asList("0-hello", "1-postgres"), refCursor);
+  }
+
+  @Test
   public void mappedRefCursor() {
-    List<String> refCursor = this.procedures.mappedRefCursor((rs, i) -> "1-" + rs.getString(1));
+    List<String> refCursor = this.procedures.mappedRefCursor(rs -> "1-" + rs.getString(1));
     assertEquals(Arrays.asList("1-hello", "1-postgres"), refCursor);
   }
 
   @Test
+  public void mappedRefCursorAndArgumentNumbered() {
+    List<String> refCursor = this.procedures.mappedRefCursorAndArgument("prefix-", (rs, i) -> i + "-" + rs.getString(1));
+    assertEquals(Arrays.asList("0-prefix-hello", "1-prefix-postgres"), refCursor);
+  }
+
+  @Test
   public void mappedRefCursorAndArgument() {
-    List<String> refCursor = this.procedures.mappedRefCursorAndArgument("prefix-", (rs, i) -> "1-" + rs.getString(1));
+    List<String> refCursor = this.procedures.mappedRefCursorAndArgument("prefix-", rs -> "1-" + rs.getString(1));
     assertEquals(Arrays.asList("1-prefix-hello", "1-prefix-postgres"), refCursor);
   }
 

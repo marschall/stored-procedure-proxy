@@ -20,7 +20,7 @@ interface ResultExtractor {
    *
    * @param statement the executed statement
    * @param outParameterRegistration the out parameter registration
-   * @param args the method arguments, may contain a {@link NumberedValueExtractor}.
+   * @param args the method arguments, may contain a {@link NumberedValueExtractor} or {@link NumberedValueExtractor}.
    * @return the value of the procedure call
    * @throws SQLException if the JDBC driver throws an exception
    */
@@ -166,16 +166,13 @@ final class ListResultExtractor implements ResultExtractor {
 
 }
 
-/**
- * Extracts a {@link List} using a {@link NumberedValueExtractor}.
- */
-final class NumberedValueExtractorResultExtractor implements ResultExtractor {
+abstract class AbstractValueExtractorResultExtractor implements ResultExtractor {
 
   private final int extractorIndex;
 
   private final int fetchSize;
 
-  NumberedValueExtractorResultExtractor(int extractorIndex, int fetchSize) {
+  AbstractValueExtractorResultExtractor(int extractorIndex, int fetchSize) {
     this.extractorIndex = extractorIndex;
     this.fetchSize = fetchSize;
   }
@@ -185,17 +182,45 @@ final class NumberedValueExtractorResultExtractor implements ResultExtractor {
     if (fetchSize != ProcedureCaller.DEFAULT_FETCH_SIZE) {
       statement.setFetchSize(fetchSize);
     }
-    NumberedValueExtractor<?> valueExtractor = (NumberedValueExtractor<?>) args[this.extractorIndex];
+    Object extractor = args[this.extractorIndex];
     boolean hasResultSet = statement.execute();
     if (hasResultSet) {
       try (ResultSet rs = statement.getResultSet()) {
-        return read(rs, valueExtractor);
+        return read(rs, extractor);
       }
     } else {
       try (ResultSet rs = getOutResultSet(statement, outParameterRegistration)) {
-        return read(rs, valueExtractor);
+        return read(rs, extractor);
       }
     }
+  }
+
+  abstract Object read(ResultSet rs, Object extractor) throws SQLException;
+
+  private static ResultSet getOutResultSet(CallableStatement statement, OutParameterRegistration outParameterRegistration) throws SQLException {
+    return outParameterRegistration.getOutParamter(statement, ResultSet.class);
+  }
+
+  @Override
+  public String toString() {
+    return this.getClass().getSimpleName() +"[methodParameterIndex=" + this.extractorIndex
+            + ", fetchSize=" + ToStringUtils.fetchSizeToString(this.fetchSize) + ']';
+  }
+
+}
+
+/**
+ * Extracts a {@link List} using a {@link NumberedValueExtractor}.
+ */
+final class NumberedValueExtractorResultExtractor extends AbstractValueExtractorResultExtractor {
+
+  NumberedValueExtractorResultExtractor(int extractorIndex, int fetchSize) {
+    super(extractorIndex, fetchSize);
+  }
+
+  @Override
+  Object read(ResultSet rs, Object extractor) throws SQLException {
+    return read(rs, (NumberedValueExtractor<?>) extractor);
   }
 
   private static List<Object> read(ResultSet resultSet, NumberedValueExtractor<?> valueExtractor) throws SQLException {
@@ -209,14 +234,29 @@ final class NumberedValueExtractorResultExtractor implements ResultExtractor {
     return result;
   }
 
-  private static ResultSet getOutResultSet(CallableStatement statement, OutParameterRegistration outParameterRegistration) throws SQLException {
-    return outParameterRegistration.getOutParamter(statement, ResultSet.class);
+}
+
+/**
+ * Extracts a {@link List} using a {@link ValueExtractor}.
+ */
+final class ValueExtractorResultExtractor extends AbstractValueExtractorResultExtractor {
+
+  ValueExtractorResultExtractor(int extractorIndex, int fetchSize) {
+    super(extractorIndex, fetchSize);
   }
 
   @Override
-  public String toString() {
-    return this.getClass().getSimpleName() +"[methodParameterIndex=" + this.extractorIndex
-            + ", fetchSize=" + ToStringUtils.fetchSizeToString(this.fetchSize) + ']';
+  Object read(ResultSet rs, Object extractor) throws SQLException {
+    return read(rs, (ValueExtractor<?>) extractor);
+  }
+
+  private static List<Object> read(ResultSet resultSet, ValueExtractor<?> valueExtractor) throws SQLException {
+    List<Object> result = new ArrayList<>();
+    while (resultSet.next()) {
+      Object element = valueExtractor.extractValue(resultSet);
+      result.add(element);
+    }
+    return result;
   }
 
 }

@@ -1,9 +1,7 @@
 package com.github.marschall.storedprocedureproxy;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -22,7 +20,7 @@ import org.junit.Test;
 
 import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ProcedureCaller;
 
-public class NumberedValueExtractorResultExtractorTest {
+public class ValueExtractorResultExtractorTest {
 
   @Test
   public void valueExtractorArguments() throws SQLException {
@@ -32,7 +30,7 @@ public class NumberedValueExtractorResultExtractorTest {
     Connection connection = mock(Connection.class);
     DatabaseMetaData metaData = mock(DatabaseMetaData.class);
     ResultSet resultSet = mock(ResultSet.class);
-    NumberedValueExtractor<String> valueExtractor = mock(NumberedValueExtractor.class);
+    ValueExtractor<String> valueExtractor = mock(ValueExtractor.class);
     SampleInterface procedures = ProcedureCallerFactory.build(SampleInterface.class, dataSource);
 
     when(dataSource.getConnection()).thenReturn(connection);
@@ -44,28 +42,27 @@ public class NumberedValueExtractorResultExtractorTest {
 
     // actual behavior
     when(resultSet.next()).thenReturn(true, true, false);
-    when(valueExtractor.extractValue(eq(resultSet), anyInt())).thenReturn("s");
+    when(valueExtractor.extractValue(resultSet)).thenReturn("s");
 
     // when
     procedures.extractString(valueExtractor);
 
     // then
-    verify(valueExtractor, times(1)).extractValue(resultSet, 0);
-    verify(valueExtractor, times(1)).extractValue(resultSet, 1);
+    verify(valueExtractor, times(2)).extractValue(resultSet);
   }
 
   @Test
   public void testToString()  {
-    ResultExtractor extractor = new NumberedValueExtractorResultExtractor(1, ProcedureCaller.DEFAULT_FETCH_SIZE);
-    assertEquals("NumberedValueExtractorResultExtractor[methodParameterIndex=1, fetchSize=default]", extractor.toString());
+    ResultExtractor extractor = new ValueExtractorResultExtractor(1, ProcedureCaller.DEFAULT_FETCH_SIZE);
+    assertEquals("ValueExtractorResultExtractor[methodParameterIndex=1, fetchSize=default]", extractor.toString());
 
-    extractor = new NumberedValueExtractorResultExtractor(1, 10);
-    assertEquals("NumberedValueExtractorResultExtractor[methodParameterIndex=1, fetchSize=10]", extractor.toString());
+    extractor = new ValueExtractorResultExtractor(1, 10);
+    assertEquals("ValueExtractorResultExtractor[methodParameterIndex=1, fetchSize=10]", extractor.toString());
   }
 
   interface SampleInterface {
 
-    List<String> extractString(NumberedValueExtractor<String> valueExtractor);
+    List<String> extractString(ValueExtractor<String> valueExtractor);
 
   }
 

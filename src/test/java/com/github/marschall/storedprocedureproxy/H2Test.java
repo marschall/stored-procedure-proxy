@@ -117,8 +117,27 @@ public class H2Test {
   }
 
   @Test
-  public void simpleResultSet() {
+  public void simpleResultSetNumbered() {
     List<IdName> names = procedures.simpleResultSet((rs, i) -> {
+      long id = rs.getLong("ID");
+      String name = rs.getString("NAME");
+      return new IdName(id, i + "-" + name);
+    });
+
+    assertThat(names, hasSize(2));
+
+    IdName name = names.get(0);
+    assertEquals(0L, name.getId());
+    assertEquals("0-Hello", name.getName());
+
+    name = names.get(1);
+    assertEquals(1L, name.getId());
+    assertEquals("1-World", name.getName());
+  }
+
+  @Test
+  public void simpleResultSet() {
+    List<IdName> names = procedures.simpleResultSet(rs -> {
       long id = rs.getLong("ID");
       String name = rs.getString("NAME");
       return new IdName(id, name);

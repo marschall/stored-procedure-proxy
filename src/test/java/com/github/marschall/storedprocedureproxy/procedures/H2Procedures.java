@@ -3,6 +3,7 @@ package com.github.marschall.storedprocedureproxy.procedures;
 import java.util.List;
 
 import com.github.marschall.storedprocedureproxy.NumberedValueExtractor;
+import com.github.marschall.storedprocedureproxy.ValueExtractor;
 import com.github.marschall.storedprocedureproxy.annotations.ReturnValue;
 
 public interface H2Procedures {
@@ -28,6 +29,8 @@ public interface H2Procedures {
   Integer[] returnIntegerArray();
 
   List<IdName> simpleResultSet(NumberedValueExtractor<IdName> extractor);
+
+  List<IdName> simpleResultSet(ValueExtractor<IdName> extractor);
 
   default List<IdName> simpleResultSet() {
     return simpleResultSet((rs, i) -> {
