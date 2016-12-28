@@ -3,7 +3,7 @@ package com.github.marschall.storedprocedureproxy.procedures;
 import java.sql.SQLException;
 import java.util.List;
 
-import com.github.marschall.storedprocedureproxy.ValueExtractor;
+import com.github.marschall.storedprocedureproxy.NumberedValueExtractor;
 import com.github.marschall.storedprocedureproxy.annotations.OutParameter;
 import com.github.marschall.storedprocedureproxy.annotations.ProcedureName;
 import com.github.marschall.storedprocedureproxy.annotations.ReturnValue;
@@ -39,11 +39,11 @@ public interface PostgresProcedures {
 
   @OutParameter
   @ProcedureName("simple_ref_cursor")
-  List<String> mappedRefCursor(ValueExtractor<String> extractor);
+  List<String> mappedRefCursor(NumberedValueExtractor<String> extractor);
 
   @OutParameter
   @ProcedureName("ref_cursor_and_argument")
-  List<String> mappedRefCursorAndArgument(String prefix, ValueExtractor<String> extractor);
+  List<String> mappedRefCursorAndArgument(String prefix, NumberedValueExtractor<String> extractor);
 
   @ReturnValue
   @ProcedureName("sample_array_argument")

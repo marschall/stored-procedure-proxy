@@ -21,7 +21,7 @@ import java.sql.SQLException;
  * @see org.springframework.jdbc.core.RowMapper
  */
 @FunctionalInterface
-public interface ValueExtractor<V> {
+public interface NumberedValueExtractor<V> {
 
   /**
    * Extract the value from the current row.

@@ -20,7 +20,7 @@ interface ResultExtractor {
    *
    * @param statement the executed statement
    * @param outParameterRegistration the out parameter registration
-   * @param args the method arguments, may contain a {@link ValueExtractor}.
+   * @param args the method arguments, may contain a {@link NumberedValueExtractor}.
    * @return the value of the procedure call
    * @throws SQLException if the JDBC driver throws an exception
    */
@@ -167,15 +167,15 @@ final class ListResultExtractor implements ResultExtractor {
 }
 
 /**
- * Extracts a {@link List} using a {@link ValueExtractor}.
+ * Extracts a {@link List} using a {@link NumberedValueExtractor}.
  */
-final class ValueExtractorResultExtractor implements ResultExtractor {
+final class NumberedValueExtractorResultExtractor implements ResultExtractor {
 
   private final int extractorIndex;
 
   private final int fetchSize;
 
-  ValueExtractorResultExtractor(int extractorIndex, int fetchSize) {
+  NumberedValueExtractorResultExtractor(int extractorIndex, int fetchSize) {
     this.extractorIndex = extractorIndex;
     this.fetchSize = fetchSize;
   }
@@ -185,7 +185,7 @@ final class ValueExtractorResultExtractor implements ResultExtractor {
     if (fetchSize != ProcedureCaller.DEFAULT_FETCH_SIZE) {
       statement.setFetchSize(fetchSize);
     }
-    ValueExtractor<?> valueExtractor = (ValueExtractor<?>) args[this.extractorIndex];
+    NumberedValueExtractor<?> valueExtractor = (NumberedValueExtractor<?>) args[this.extractorIndex];
     boolean hasResultSet = statement.execute();
     if (hasResultSet) {
       try (ResultSet rs = statement.getResultSet()) {
@@ -198,7 +198,7 @@ final class ValueExtractorResultExtractor implements ResultExtractor {
     }
   }
 
-  private static List<Object> read(ResultSet resultSet, ValueExtractor<?> valueExtractor) throws SQLException {
+  private static List<Object> read(ResultSet resultSet, NumberedValueExtractor<?> valueExtractor) throws SQLException {
     List<Object> result = new ArrayList<>();
     int rowNumber = 0;
     while (resultSet.next()) {

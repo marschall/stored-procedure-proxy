@@ -22,7 +22,7 @@ import org.junit.Test;
 
 import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ProcedureCaller;
 
-public class ValueExtractorResultExtractorTest {
+public class NumberedValueExtractorResultExtractorTest {
 
   @Test
   public void valueExtractorArguments() throws SQLException {
@@ -32,7 +32,7 @@ public class ValueExtractorResultExtractorTest {
     Connection connection = mock(Connection.class);
     DatabaseMetaData metaData = mock(DatabaseMetaData.class);
     ResultSet resultSet = mock(ResultSet.class);
-    ValueExtractor<String> valueExtractor = mock(ValueExtractor.class);
+    NumberedValueExtractor<String> valueExtractor = mock(NumberedValueExtractor.class);
     SampleInterface procedures = ProcedureCallerFactory.build(SampleInterface.class, dataSource);
 
     when(dataSource.getConnection()).thenReturn(connection);
@@ -56,16 +56,16 @@ public class ValueExtractorResultExtractorTest {
 
   @Test
   public void testToString()  {
-    ResultExtractor extractor = new ValueExtractorResultExtractor(1, ProcedureCaller.DEFAULT_FETCH_SIZE);
+    ResultExtractor extractor = new NumberedValueExtractorResultExtractor(1, ProcedureCaller.DEFAULT_FETCH_SIZE);
     assertEquals("ValueExtractorResultExtractor[methodParameterIndex=1, fetchSize=default]", extractor.toString());
 
-    extractor = new ValueExtractorResultExtractor(1, 10);
+    extractor = new NumberedValueExtractorResultExtractor(1, 10);
     assertEquals("ValueExtractorResultExtractor[methodParameterIndex=1, fetchSize=10]", extractor.toString());
   }
 
   interface SampleInterface {
 
-    List<String> extractString(ValueExtractor<String> valueExtractor);
+    List<String> extractString(NumberedValueExtractor<String> valueExtractor);
 
   }
 
