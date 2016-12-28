@@ -182,10 +182,27 @@ final class CompositeFactory implements CallResourceFactory {
     CallResource[] resources = new CallResource[this.factories.length];
     for (int i = 0; i < this.factories.length; ++i) {
       CallResourceFactory factory = this.factories[i];
-      CallResource resource = factory.createResource(connection, args);
+      CallResource resource;
+      try {
+        resource = factory.createResource(connection, args);
+      } catch (SQLException e) {
+        cleanUp(resources, i, e);
+        throw e;
+      }
       resources[i] = resource;
     }
     return new CompositeResource(resources);
+  }
+
+  private static void cleanUp(CallResource[] resources, int endIndex, SQLException originalException) {
+    for (int i = 0; i < endIndex; ++i) {
+      CallResource resource = resources[i];
+      try {
+        resource.close();
+      } catch (SQLException e) {
+        originalException.addSuppressed(e);
+      }
+    }
   }
 
   @Override
