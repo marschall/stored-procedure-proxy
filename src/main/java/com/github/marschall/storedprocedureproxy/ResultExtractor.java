@@ -49,7 +49,9 @@ final class VoidResultExtractor implements ResultExtractor {
           count += 1;
         }
       }
-      // don't check count H2 just returns NULL
+      if (count > 1) {
+        throw new SQLException("expected at most 1 rows but got " + count);
+      }
     }
     return null;
   }
