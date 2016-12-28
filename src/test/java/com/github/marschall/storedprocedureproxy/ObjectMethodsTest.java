@@ -31,11 +31,11 @@ public class ObjectMethodsTest {
     this.connection = mock(Connection.class);
     DatabaseMetaData metaData = mock(DatabaseMetaData.class);
 
-    when(dataSource.getConnection()).thenReturn(connection);
-    when(connection.getMetaData()).thenReturn(metaData);
+    when(this.dataSource.getConnection()).thenReturn(this.connection);
+    when(this.connection.getMetaData()).thenReturn(metaData);
     when(metaData.getDatabaseProductName()).thenReturn("junit");
-    when(connection.prepareCall(anyString())).thenThrow(SQLException.class);
-    procedures = ProcedureCallerFactory.build(SimpleProcedures.class, this.dataSource);
+    when(this.connection.prepareCall(anyString())).thenThrow(SQLException.class);
+    this.procedures = ProcedureCallerFactory.build(SimpleProcedures.class, this.dataSource);
   }
 
   @Test

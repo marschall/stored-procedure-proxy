@@ -37,7 +37,8 @@ public class ByIndexAndTypeNameOutParameterRegistrationTest {
     when(connection.getMetaData()).thenReturn(metaData);
     when(metaData.getDatabaseProductName()).thenReturn("junit");
     when(connection.prepareCall(anyString())).thenReturn(this.callableStatement);
-    procedures = ProcedureCallerFactory.build(ReturnTypeNameUser.class, dataSource);
+
+    this.procedures = ProcedureCallerFactory.build(ReturnTypeNameUser.class, dataSource);
   }
 
   @Test

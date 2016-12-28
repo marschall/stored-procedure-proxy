@@ -37,7 +37,8 @@ public class ByNameAndTypeNameOutParameterRegistrationTest {
     when(connection.getMetaData()).thenReturn(metaData);
     when(metaData.getDatabaseProductName()).thenReturn("junit");
     when(connection.prepareCall(anyString())).thenReturn(this.callableStatement);
-    procedures = ProcedureCallerFactory.of(ReturnTypeNameUser.class, dataSource)
+
+    this.procedures = ProcedureCallerFactory.of(ReturnTypeNameUser.class, dataSource)
             .withParameterRegistration(ParameterRegistration.NAME_ONLY)
             .build();
   }

@@ -28,15 +28,15 @@ public class CallStringTest {
 
   @Before
   public void setUp() throws SQLException {
-    dataSource = mock(DataSource.class);
-    connection = mock(Connection.class);
+    this.dataSource = mock(DataSource.class);
+    this.connection = mock(Connection.class);
     DatabaseMetaData metaData = mock(DatabaseMetaData.class);
     CallableStatement statement = mock(CallableStatement.class);
 
-    when(dataSource.getConnection()).thenReturn(connection);
-    when(connection.getMetaData()).thenReturn(metaData);
+    when(this.dataSource.getConnection()).thenReturn(this.connection);
+    when(this.connection.getMetaData()).thenReturn(metaData);
     when(metaData.getDatabaseProductName()).thenReturn("junit");
-    when(connection.prepareCall(anyString())).thenReturn(statement);
+    when(this.connection.prepareCall(anyString())).thenReturn(statement);
     when(statement.execute()).thenReturn(false);
   }
 
