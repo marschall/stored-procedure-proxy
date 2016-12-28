@@ -30,8 +30,6 @@ public class ValueExtractorResultExtractorTest {
     Connection connection = mock(Connection.class);
     DatabaseMetaData metaData = mock(DatabaseMetaData.class);
     ResultSet resultSet = mock(ResultSet.class);
-    ValueExtractor<String> valueExtractor = mock(ValueExtractor.class);
-    SampleInterface procedures = ProcedureCallerFactory.build(SampleInterface.class, dataSource);
 
     when(dataSource.getConnection()).thenReturn(connection);
     when(connection.getMetaData()).thenReturn(metaData);
@@ -39,6 +37,9 @@ public class ValueExtractorResultExtractorTest {
     when(connection.prepareCall(anyString())).thenReturn(callableStatement);
     when(callableStatement.execute()).thenReturn(true);
     when(callableStatement.getResultSet()).thenReturn(resultSet);
+
+    ValueExtractor<String> valueExtractor = mock(ValueExtractor.class);
+    SampleInterface procedures = ProcedureCallerFactory.build(SampleInterface.class, dataSource);
 
     // actual behavior
     when(resultSet.next()).thenReturn(true, true, false);
