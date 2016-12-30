@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.github.marschall</groupId>
   <artifactId>stored-procedure-proxy</artifactId>
-  <version>0.5.0</version>
+  <version>0.6.0-SNAPSHOT</version>
   <inceptionYear>2013</inceptionYear>
   <name>Spring JDBC Call</name>
   <description>Proxies through which to call stored procedures.</description>
@@ -18,7 +18,7 @@
     <connection>scm:git:git@github.com:marschall/stored-procedure-proxy.git</connection>
     <developerConnection>scm:git:git@github.com:marschall/stored-procedure-proxy.git</developerConnection>
     <url>${project.url}</url>
-    <tag>0.5.0</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <developers>
