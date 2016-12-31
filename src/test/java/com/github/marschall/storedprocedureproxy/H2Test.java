@@ -11,42 +11,23 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import javax.sql.DataSource;
-
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.rules.SpringClassRule;
-import org.springframework.test.context.junit4.rules.SpringMethodRule;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration;
 import com.github.marschall.storedprocedureproxy.configuration.H2Configuration;
-import com.github.marschall.storedprocedureproxy.configuration.TestConfiguration;
 import com.github.marschall.storedprocedureproxy.procedures.H2Procedures;
 import com.github.marschall.storedprocedureproxy.procedures.H2Procedures.IdName;
 import com.github.marschall.storedprocedureproxy.spi.NamingStrategy;
 
 @RunWith(Parameterized.class)
-@Transactional
-@ContextConfiguration(classes = {H2Configuration.class, TestConfiguration.class})
-public class H2Test {
-
-  @ClassRule
-  public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
-
-  @Rule
-  public final SpringMethodRule springMethodRule = new SpringMethodRule();
-
-  @Autowired
-  private DataSource dataSource;
+@ContextConfiguration(classes = H2Configuration.class)
+public class H2Test extends AbstractDataSourceTest {
 
   private H2Procedures procedures;
 
@@ -58,7 +39,7 @@ public class H2Test {
 
   @Before
   public void setUp() {
-    this.procedures = ProcedureCallerFactory.of(H2Procedures.class, this.dataSource)
+    this.procedures = ProcedureCallerFactory.of(H2Procedures.class, this.getDataSource())
             .withProcedureNamingStrategy(NamingStrategy.snakeCase().thenUpperCase())
             .withParameterRegistration(this.parameterRegistration)
             .build();
