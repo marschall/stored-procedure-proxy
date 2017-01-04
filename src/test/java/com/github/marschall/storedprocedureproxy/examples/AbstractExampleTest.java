@@ -1,9 +1,14 @@
 package com.github.marschall.storedprocedureproxy.examples;
 
+import static org.junit.Assert.assertEquals;
+
+import java.sql.SQLException;
+
 import javax.sql.DataSource;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
@@ -29,5 +34,12 @@ public abstract class AbstractExampleTest {
   protected DataSource getDataSource() {
     return this.dataSource;
   }
+
+  @Test
+  public void callProcedure() throws SQLException {
+    assertEquals(2, this.plus1inout(1));
+  }
+
+  protected abstract int plus1inout(int arg) throws SQLException;
 
 }

@@ -1,12 +1,9 @@
 package com.github.marschall.storedprocedureproxy.examples;
 
-import static org.junit.Assert.assertEquals;
-
 import java.sql.Types;
 import java.util.Map;
 
 import org.junit.Before;
-import org.junit.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.SqlOutParameter;
 import org.springframework.jdbc.core.SqlParameter;
@@ -21,9 +18,9 @@ public class StoredProcedureTest extends AbstractExampleTest {
     this.storedProcedure = new Plus1inout(new JdbcTemplate(this.getDataSource()));
   }
 
-  @Test
-  public void call() {
-    assertEquals(2, this.storedProcedure.plus1inout(1));
+  @Override
+  protected int plus1inout(int arg) {
+    return this.storedProcedure.plus1inout(arg);
   }
 
   static final class Plus1inout extends StoredProcedure {
