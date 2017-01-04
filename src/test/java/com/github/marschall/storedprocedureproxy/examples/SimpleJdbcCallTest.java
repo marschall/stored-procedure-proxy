@@ -17,11 +17,11 @@ public class SimpleJdbcCallTest extends AbstractExampleTest {
   public void setUp() {
     this.jdbcCall = new SimpleJdbcCall(getDataSource())
             .withProcedureName("plus1inout")
-            .declareParameters(
+            .declareParameters( // required if you're not schema owner
                     new SqlParameter("arg", Types.INTEGER),
                     new SqlOutParameter("res", Types.INTEGER))
             .withoutProcedureColumnMetaDataAccess(); // required if you're not schema owner
-    this.jdbcCall.compile();
+    this.jdbcCall.compile(); // for some reason is void
   }
 
   @Override
