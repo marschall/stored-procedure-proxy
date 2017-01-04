@@ -97,6 +97,12 @@
       <version>2.77</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>io.ebean</groupId>
+      <artifactId>ebean</artifactId>
+      <version>10.1.2</version>
+      <scope>test</scope>
+    </dependency>
     <!-- 
     <dependency>
       <groupId>org.jooq</groupId>
