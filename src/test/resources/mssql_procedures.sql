@@ -17,3 +17,26 @@ BEGIN
     RETURN @arg + 1
 END;
 
+-- DROP PROCEDURE IF EXISTS simpleCursor;
+-- 
+-- CREATE PROCEDURE simpleCursor
+--     @OutputCursor CURSOR VARYING OUTPUT
+-- AS
+-- BEGIN
+--     SET @OutputCursor = CURSOR
+--     FORWARD_ONLY STATIC FOR
+--     SELECT 'hello' UNION ALL SELECT 'world';
+-- 
+--     OPEN @OutputCursor;
+--     return;
+-- END;
+
+DROP PROCEDURE IF EXISTS fakeCursor;
+
+CREATE PROCEDURE fakeCursor
+AS
+BEGIN
+    SELECT 'hello' UNION ALL SELECT 'world'
+END;
+
+
