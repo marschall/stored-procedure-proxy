@@ -62,6 +62,7 @@ Calling simple stored procedures in JDBC or JPA is unnecessarily [cumbersome](ht
 - [jDBI](https://github.com/jdbi/jdbi/issues/135) falls back to manual parameter registration for out parameters as well.
 - [Ebean](https://ebean-orm.github.io/apidocs/com/avaje/ebean/CallableSql.html) falls back to manual parameter registration for out parameters as well.
 - [Querydsl](https://github.com/querydsl/querydsl/issues/15) has no support at all
+- [Sql2o](https://groups.google.com/forum/#!topic/sql2o/4Fdh5VjZ-uk) seems to have no support at all
 
 While they all have their use case none of them fitted our needs.
 
