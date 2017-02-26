@@ -1,7 +1,8 @@
 package com.github.marschall.storedprocedureproxy;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandles.Lookup;
 import java.sql.Array;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -329,28 +330,29 @@ final class ArrayResultExtractor implements ResultExtractor {
 final class OracleArrayResultExtractor implements ResultExtractor {
 
   private static final Class<?> ARRAY;
-  private static final Method GET_LONG_ARRAY;
-  private static final Method GET_INT_ARRAY;
-  private static final Method GET_DOUBLE_ARRAY;
-  private static final Method GET_FLOAT_ARRAY;
-  private static final Method GET_SHORT_ARRAY;
+  private static final MethodHandle GET_LONG_ARRAY;
+  private static final MethodHandle GET_INT_ARRAY;
+  private static final MethodHandle GET_DOUBLE_ARRAY;
+  private static final MethodHandle GET_FLOAT_ARRAY;
+  private static final MethodHandle GET_SHORT_ARRAY;
 
   static {
     // https://docs.oracle.com/database/121/JJDBC/oraarr.htm#JJDBC28574
     Class<?> array;
-    Method getLongArray;
-    Method getIntArray;
-    Method getFloatArray;
-    Method getDoubleArray;
-    Method getShortArray;
+    MethodHandle getLongArray;
+    MethodHandle getIntArray;
+    MethodHandle getFloatArray;
+    MethodHandle getDoubleArray;
+    MethodHandle getShortArray;
     try {
       array = Class.forName("oracle.jdbc.ARRAY");
 
-      getLongArray = array.getDeclaredMethod("getLongArray");
-      getIntArray = array.getDeclaredMethod("getIntArray");
-      getFloatArray = array.getDeclaredMethod("getFloatArray");
-      getDoubleArray = array.getDeclaredMethod("getDoubleArray");
-      getShortArray = array.getDeclaredMethod("getShortArray");
+      Lookup lookup = MethodHandles.publicLookup();
+      getLongArray = lookup.unreflect(array.getDeclaredMethod("getLongArray"));
+      getIntArray = lookup.unreflect(array.getDeclaredMethod("getIntArray"));
+      getFloatArray = lookup.unreflect(array.getDeclaredMethod("getFloatArray"));
+      getDoubleArray = lookup.unreflect(array.getDeclaredMethod("getDoubleArray"));
+      getShortArray = lookup.unreflect(array.getDeclaredMethod("getShortArray"));
     } catch (ReflectiveOperationException e) {
       array = null;
 
@@ -394,44 +396,105 @@ final class OracleArrayResultExtractor implements ResultExtractor {
     }
   }
 
+  static boolean isSupportedElementType(Class<?> clazz) {
+    return clazz.isPrimitive()
+            && (clazz == int.class
+                    || clazz == long.class
+                    || clazz == float.class
+                    || clazz == double.class
+                    || clazz == short.class);
+
+  }
+
   private Object extractValue(Array array) throws SQLException {
     try {
       if (this.arrayElementType.isPrimitive()) {
-        Method extractionMethod;
         if (this.arrayElementType == int.class) {
-          extractionMethod = GET_INT_ARRAY;
+          return getIntArray(array);
         } else if (this.arrayElementType == long.class) {
-          extractionMethod = GET_LONG_ARRAY;
+          return getLongArray(array);
         } else if (this.arrayElementType == float.class) {
-          extractionMethod = GET_FLOAT_ARRAY;
+          return getFloatArray(array);
         } else if (this.arrayElementType == double.class) {
-          extractionMethod = GET_DOUBLE_ARRAY;
+          return getDoubleArray(array);
         } else if (this.arrayElementType == short.class) {
-          extractionMethod = GET_SHORT_ARRAY;
-        } else if (this.arrayElementType == byte.class) {
-          throw new IllegalArgumentException("byte[] for oracle.sql.ARRAY not yet implemented");
+          return getShortArray(array);
         } else {
-          throw new IllegalArgumentException("unknown element type: " + this.arrayElementType);
-        }
-        try {
-          return extractionMethod.invoke(extractionMethod);
-        } catch (IllegalAccessException e) {
-          throw new RuntimeException("not allowed to call " + extractionMethod, e);
-        } catch (InvocationTargetException e) {
-          Throwable cause = e.getCause();
-          if (cause instanceof SQLException) {
-            throw (SQLException) cause;
-          }
-          if (cause instanceof RuntimeException) {
-            throw (RuntimeException) cause;
-          }
-          throw new RuntimeException("exception occured when calling " + extractionMethod, cause);
+          throw new IllegalArgumentException("unsupported element type: " + this.arrayElementType);
         }
       } else {
         throw new IllegalStateException("for reference arrays " + ArrayResultExtractor.class + " should be used");
       }
     } finally {
       array.free();
+    }
+  }
+
+  private static Object getShortArray(Array array) {
+    try {
+      return GET_SHORT_ARRAY.invoke(array);
+    } catch (RuntimeException e) {
+      throw (RuntimeException) e;
+    } catch (Error e) {
+      throw (Error) e;
+    } catch (Throwable e) {
+      // should not happen, does not fall into type signature
+      throw new RuntimeException("unknwon exception occured when calling " + GET_SHORT_ARRAY, e);
+    }
+  }
+
+  private static Object getDoubleArray(Array array) {
+    try {
+      return GET_DOUBLE_ARRAY.invoke(array);
+    } catch (RuntimeException e) {
+      throw (RuntimeException) e;
+    } catch (Error e) {
+      throw (Error) e;
+    } catch (Throwable e) {
+      // should not happen, does not fall into type signature
+      throw new RuntimeException("unknwon exception occured when calling " + GET_DOUBLE_ARRAY, e);
+    }
+  }
+
+  private static Object getFloatArray(Array array) {
+    // float[]
+    try {
+      return GET_FLOAT_ARRAY.invoke(array);
+    } catch (RuntimeException e) {
+      throw (RuntimeException) e;
+    } catch (Error e) {
+      throw (Error) e;
+    } catch (Throwable e) {
+      // should not happen, does not fall into type signature
+      throw new RuntimeException("unknwon exception occured when calling " + GET_FLOAT_ARRAY, e);
+    }
+  }
+
+  private static Object getLongArray(Array array) {
+    // long[]
+    try {
+      return GET_LONG_ARRAY.invoke(array);
+    } catch (RuntimeException e) {
+      throw (RuntimeException) e;
+    } catch (Error e) {
+      throw (Error) e;
+    } catch (Throwable e) {
+      // should not happen, does not fall into type signature
+      throw new RuntimeException("unknwon exception occured when calling " + GET_LONG_ARRAY, e);
+    }
+  }
+
+  private static Object getIntArray(Array array) {
+    // int[]
+    try {
+      return GET_INT_ARRAY.invoke(array);
+    } catch (RuntimeException e) {
+      throw (RuntimeException) e;
+    } catch (Error e) {
+      throw (Error) e;
+    } catch (Throwable e) {
+      // should not happen, does not fall into type signature
+      throw new RuntimeException("unknwon exception occured when calling " + GET_INT_ARRAY, e);
     }
   }
 

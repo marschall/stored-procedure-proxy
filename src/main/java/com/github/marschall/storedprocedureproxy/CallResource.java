@@ -1,6 +1,7 @@
 package com.github.marschall.storedprocedureproxy;
 
-import java.lang.reflect.InvocationTargetException;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.sql.Array;
 import java.sql.Connection;
@@ -270,15 +271,18 @@ final class ArrayFactory implements CallResourceFactory {
 final class OracleArrayFactory implements CallResourceFactory {
 
   private static final Class<?> ORACLE_CONNECTION;
-  private static final Method CREATE_ARRAY;
+  private static final MethodHandle CREATE_ARRAY;
 
   static {
     // https://docs.oracle.com/database/121/JJDBC/oraarr.htm#JJDBC28574
+    // https://docs.oracle.com/database/121/JAJDB/oracle/jdbc/OracleConnection.html#createARRAY_java_lang_String__java_lang_Object_
     Class<?> oracleConnection;
-    Method createARRAY;
+    MethodHandle createARRAY;
     try {
       oracleConnection = Class.forName("oracle.jdbc.OracleConnection");
-      createARRAY = oracleConnection.getDeclaredMethod("createARRAY", String.class, Object.class);
+      Method createARRAYMethod = oracleConnection.getDeclaredMethod(
+              "createARRAY", String.class, Object.class);
+      createARRAY = MethodHandles.publicLookup().unreflect(createARRAYMethod);
     } catch (ReflectiveOperationException e) {
       oracleConnection = null;
       createARRAY = null;
@@ -306,17 +310,15 @@ final class OracleArrayFactory implements CallResourceFactory {
     Array array;
     try {
       array = (Array) CREATE_ARRAY.invoke(oracleConnection, this.typeName, elements);
-    } catch (InvocationTargetException e) {
-      Throwable cause = e.getCause();
-      if (cause instanceof SQLException) {
-        throw (SQLException) cause;
-      }
-      if (cause instanceof RuntimeException) {
-        throw (RuntimeException) cause;
-      }
-      throw new RuntimeException("exception occured when calling " + CREATE_ARRAY, cause);
-    } catch (ReflectiveOperationException e) {
-      throw new RuntimeException("exception occured when calling " + CREATE_ARRAY, e);
+    } catch (SQLException e) {
+      throw (SQLException) e;
+    } catch (RuntimeException e) {
+      throw (RuntimeException) e;
+    } catch (Error e) {
+      throw (Error) e;
+    } catch (Throwable e) {
+      // should not happen, does not fall into type signature
+      throw new RuntimeException("unknwon exception occured when calling " + CREATE_ARRAY, e);
     }
     return new ArrayResource(array, this.argumentIndex);
   }

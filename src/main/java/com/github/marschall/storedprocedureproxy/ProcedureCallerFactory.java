@@ -745,7 +745,7 @@ public final class ProcedureCallerFactory<T> {
         }
       } else if (isArray) {
         Class<?> componentType = methodReturnType.getComponentType();
-        if (this.useOracleArrays && componentType.isPrimitive()) {
+        if (this.useOracleArrays && OracleArrayResultExtractor.isSupportedElementType(componentType)) {
           return new OracleArrayResultExtractor(componentType);
         }
         return new ArrayResultExtractor(componentType);
