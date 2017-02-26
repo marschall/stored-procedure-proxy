@@ -344,7 +344,7 @@ final class OracleArrayResultExtractor implements ResultExtractor {
     Method getDoubleArray;
     Method getShortArray;
     try {
-      array = Class.forName("oracle.sql.ARRAY");
+      array = Class.forName("oracle.jdbc.ARRAY");
 
       getLongArray = array.getDeclaredMethod("getLongArray");
       getIntArray = array.getDeclaredMethod("getIntArray");
@@ -382,7 +382,9 @@ final class OracleArrayResultExtractor implements ResultExtractor {
     boolean hasResultSet = statement.execute();
     if (hasResultSet) {
       try (ResultSet rs = statement.getResultSet()) {
-        rs.next();
+        if (!rs.next()) {
+          throw new IllegalStateException("result set is empty");
+        }
         Array array = (Array) rs.getObject(1, ARRAY);
         return extractValue(array);
       }
