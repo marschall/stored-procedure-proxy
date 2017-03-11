@@ -12,4 +12,8 @@ public class DerbyProcedureSources {
     return subTotal * 0.06d;
   }
 
+  public static void raisePrice(BigDecimal[] price) {
+    price[0] = price[0].multiply(BigDecimal.valueOf(2L));
+  }
+
 }

@@ -22,6 +22,7 @@ import com.github.marschall.storedprocedureproxy.spi.TypeMapper;
  * {@code "{ ? = call function_name()}"} instead of {@code "{call function_name(?)}"}.</p>
  *
  * @see OutParameter
+ * @see InOutParameter
  */
 @Documented
 @Retention(RUNTIME)

@@ -1,9 +1,17 @@
 CREATE PROCEDURE SALES.TOTAL_REVENUE(IN S_MONTH INTEGER, IN S_YEAR INTEGER, OUT TOTAL DECIMAL(10,2))
-PARAMETER STYLE JAVA READS SQL DATA LANGUAGE JAVA EXTERNAL NAME 
-'com.github.marschall.storedprocedureproxy.DerbyProcedureSources.calculateRevenueByMonth';
+PARAMETER STYLE JAVA READS SQL DATA LANGUAGE JAVA
+EXTERNAL NAME 'com.github.marschall.storedprocedureproxy.DerbyProcedureSources.calculateRevenueByMonth';
 
 CREATE FUNCTION SALES.TAX(SUBTOTAL DOUBLE) RETURNS DOUBLE
-PARAMETER STYLE JAVA NO SQL LANGUAGE JAVA
-EXTERNAL NAME 'com.github.marschall.storedprocedureproxy.DerbyProcedureSources.tax'
+PARAMETER STYLE JAVA
+NO SQL
+LANGUAGE JAVA
+EXTERNAL NAME 'com.github.marschall.storedprocedureproxy.DerbyProcedureSources.tax';
+
+CREATE PROCEDURE SALES.RAISE_PRICE(INOUT newPrice numeric(10,2))
+PARAMETER STYLE JAVA
+LANGUAGE JAVA
+DYNAMIC RESULT SETS 0
+EXTERNAL NAME 'com.github.marschall.storedprocedureproxy.DerbyProcedureSources.raisePrice';
 
 

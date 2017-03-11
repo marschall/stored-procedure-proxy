@@ -55,6 +55,11 @@ public class DerbyTest extends AbstractDataSourceTest {
   }
 
   @Test
+  public void inOutParameter() {
+    assertThat(functions.raisePrice(new BigDecimal("10.1")), comparesEqualTo(new BigDecimal("20.2")));
+  }
+
+  @Test
   public void returnValue() {
     assertEquals(0.01d, 6.0d, functions.salesTax(100.0d));
   }

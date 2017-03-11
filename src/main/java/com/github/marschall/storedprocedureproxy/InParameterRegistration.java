@@ -1,7 +1,9 @@
 package com.github.marschall.storedprocedureproxy;
 
+import java.math.BigDecimal;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 
 import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ProcedureCaller;
 
@@ -159,7 +161,16 @@ final class ByIndexAndTypeInParameterRegistration implements InParameterRegistra
       }
       int type = this.inParameterTypes[i];
       if (arg != null) {
-        statement.setObject(parameterIndex, arg, type);
+        boolean hasScale = type == Types.NUMERIC || type == Types.DECIMAL;
+        if (hasScale && arg instanceof BigDecimal) {
+          // if we don't do this a scale of 0 is assumed
+          statement.setObject(parameterIndex, arg, type, ((BigDecimal) arg).scale());
+        } else {
+          // Javadoc
+          // This method is similar to #setObject
+          // except that it assumes a scale of zero!
+          statement.setObject(parameterIndex, arg, type);
+        }
       } else {
         statement.setNull(parameterIndex, type);
       }
@@ -209,7 +220,16 @@ final class ByNameAndTypeInParameterRegistration implements InParameterRegistrat
       }
       int type = this.inParameterTypes[i];
       if (arg != null) {
-        statement.setObject(parameterName, arg, type);
+        boolean hasScale = type == Types.NUMERIC || type == Types.DECIMAL;
+        if (hasScale && arg instanceof BigDecimal) {
+          // if we don't do this a scale of 0 is assumed
+          statement.setObject(parameterName, arg, type, ((BigDecimal) arg).scale());
+        } else {
+          // Javadoc
+          // This method is similar to #setObject
+          // except that it assumes a scale of zero!
+          statement.setObject(parameterName, arg, type);
+        }
       } else {
         statement.setNull(parameterName, type);
       }

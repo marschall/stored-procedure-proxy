@@ -23,6 +23,7 @@ import javax.sql.DataSource;
 import org.springframework.jdbc.support.SQLErrorCodeSQLExceptionTranslator;
 
 import com.github.marschall.storedprocedureproxy.annotations.FetchSize;
+import com.github.marschall.storedprocedureproxy.annotations.InOutParameter;
 import com.github.marschall.storedprocedureproxy.annotations.Namespace;
 import com.github.marschall.storedprocedureproxy.annotations.OutParameter;
 import com.github.marschall.storedprocedureproxy.annotations.ParameterName;
@@ -553,23 +554,24 @@ public final class ProcedureCallerFactory<T> {
       String[] names = new String[parameters.length];
       for (int i = 0; i < parameters.length; i++) {
         Parameter parameter = parameters[i];
-        if (ValueExtractorUtils.isAnyValueExtractor(parameter.getType())) {
-          names[i] = null;
-          continue;
-        }
-
-        ParameterName annotation = parameter.getAnnotation(ParameterName.class);
-        String parameterName;
-        if (annotation != null) {
-          parameterName = annotation.value();
-        } else if (parameter.isNamePresent()) {
-          parameterName = this.parameterNamingStrategy.translateToDatabase(parameter.getName());
-        } else {
-          throw new IllegalArgumentException(parameterNameMissingMessage(method, i));
-        }
-        names[i] = parameterName;
+        names[i] = getParameterName(parameter, method, i);
       }
       return names;
+    }
+
+    private String getParameterName(Parameter parameter, Method method, int parameterIndex) {
+      if (ValueExtractorUtils.isAnyValueExtractor(parameter.getType())) {
+        return null; // default value of uninitialized array
+      }
+
+      ParameterName annotation = parameter.getAnnotation(ParameterName.class);
+      if (annotation != null) {
+        return annotation.value();
+      } else if (parameter.isNamePresent()) {
+        return this.parameterNamingStrategy.translateToDatabase(parameter.getName());
+      } else {
+        throw new IllegalArgumentException(parameterNameMissingMessage(method, parameterIndex));
+      }
     }
 
     private static String parameterNameMissingMessage(Method method, int i) {
@@ -582,20 +584,23 @@ public final class ProcedureCallerFactory<T> {
       int[] types = new int[parameters.length];
       for (int i = 0; i < parameters.length; i++) {
         Parameter parameter = parameters[i];
-        ParameterType annotation = parameter.getAnnotation(ParameterType.class);
-        int type;
-        if (annotation != null) {
-          type = annotation.value();
-        } else {
-          Class<?> parameterType = parameter.getType();
-          if (ValueExtractorUtils.isAnyValueExtractor(parameterType)) {
-            continue;
-          }
-          type = this.typeMapper.mapToSqlType(parameterType);
-        }
-        types[i] = type;
+        types[i] = getParameterType(parameter);
       }
       return types;
+    }
+
+    private int getParameterType(Parameter parameter) {
+      Class<?> parameterType = parameter.getType();
+      if (ValueExtractorUtils.isAnyValueExtractor(parameterType)) {
+        return 0; // default value of uninitialized array
+      }
+
+      ParameterType annotation = parameter.getAnnotation(ParameterType.class);
+      if (annotation != null) {
+        return annotation.value();
+      } else {
+        return this.typeMapper.mapToSqlType(parameterType);
+      }
     }
 
     private static CallableStatement prepareCall(Connection connection, CallInfo callInfo) throws SQLException {
@@ -616,27 +621,23 @@ public final class ProcedureCallerFactory<T> {
     }
 
     private CallInfo buildCallInfo(Method method, Object[] args) {
-      int sqlParameterCount = getParameterCount(method);
+      int sqlInputParameterCount = getInputParameterCount(method);
       String procedureName = this.extractProcedureName(method);
-      String schema = this.hasSchema(method) ? this.extractSchema(method) : null;
-      String namespace = this.hasNamespace(method) ? this.extractsNamespace(method) : null;
-      boolean isFunction = procedureHasReturnValue(method);
       Class<?> methodReturnType = method.getReturnType();
 
-      int outParameterIndex = getOutParameterIndex(method);
-      boolean hasOutParameter = outParameterIndex != NO_OUT_PARAMTER;
+      int outParameterSqlIndex = getOutParameterSqlIndex(method);
+      boolean hasOutParameter = outParameterSqlIndex != NO_OUT_PARAMTER;
 
       InParameterRegistration inParameterRegistration = buildInParameterRegistration(
-              method, sqlParameterCount, outParameterIndex);
+              method, sqlInputParameterCount, outParameterSqlIndex);
 
       OutParameterRegistration outParameterRegistration = buildOutParameterRegistration(
-              method, outParameterIndex, hasOutParameter);
+              method, outParameterSqlIndex, hasOutParameter);
 
       CallResourceFactory callResourceFactory = buildCallResourceFactory(method);
 
-
-      String callString = buildCallString(
-              namespace, schema, procedureName, sqlParameterCount, isFunction, hasOutParameter);
+      String callString = buildCallString(method,
+              procedureName, sqlInputParameterCount, hasOutParameter);
       boolean wantsExceptionTranslation = wantsExceptionTranslation(method);
       ResultExtractor resultExtractor = buildResultExtractor(method, methodReturnType);
 
@@ -691,18 +692,18 @@ public final class ProcedureCallerFactory<T> {
       }
     }
 
-    private InParameterRegistration buildInParameterRegistration(Method method, int sqlParameterCount, int outParameterIndex) {
-
+    private InParameterRegistration buildInParameterRegistration(Method method, int sqlParameterCount, int outParameterSqlIndex) {
+      boolean hasOutParameter = !method.isAnnotationPresent(InOutParameter.class) && outParameterSqlIndex != NO_OUT_PARAMTER;
       if (sqlParameterCount > 0) {
         switch (this.parameterRegistration) {
           case INDEX_ONLY: {
             int javaParameterCount = method.getParameterCount();
-            byte[] inParameterIndices = buildInParameterIndices(method, javaParameterCount, outParameterIndex);
+            byte[] inParameterIndices = buildInParameterIndices(method, javaParameterCount, hasOutParameter, outParameterSqlIndex);
             return new ByIndexInParameterRegistration(inParameterIndices);
           }
           case INDEX_AND_TYPE: {
             int javaParameterCount = method.getParameterCount();
-            byte[] inParameterIndices = buildInParameterIndices(method, javaParameterCount, outParameterIndex);
+            byte[] inParameterIndices = buildInParameterIndices(method, javaParameterCount, hasOutParameter, outParameterSqlIndex);
             int[] inParameterTypes = this.extractParameterTypes(method);
             return new ByIndexAndTypeInParameterRegistration(inParameterIndices, inParameterTypes);
           }
@@ -755,41 +756,68 @@ public final class ProcedureCallerFactory<T> {
       }
     }
 
-    private static byte[] buildInParameterIndices(Method method, int javaParameterCount, int outParameterIndex) {
+    private static byte[] buildInParameterIndices(Method method, int javaParameterCount, boolean hasOutParameter, int outParameterSqlIndex) {
       Class<?>[] methodParameterTypes = method.getParameterTypes();
-      boolean hasOutParameter = outParameterIndex != NO_OUT_PARAMTER;
-      if (!hasOutParameter || (hasOutParameter && outParameterIndex == javaParameterCount + 1)) {
+      if (!hasOutParameter || (hasOutParameter && outParameterSqlIndex == javaParameterCount + 1)) {
         // we have an no out parameter or
         // we have an out parameter and it's the last parameter
         return buildInParameterIndices(javaParameterCount, methodParameterTypes);
       } else {
-        return buildInParameterIndices(javaParameterCount, outParameterIndex, methodParameterTypes);
+        return buildInParameterIndices(javaParameterCount, outParameterSqlIndex, methodParameterTypes);
       }
     }
 
     private OutParameterRegistration buildOutParameterRegistration(
-            Method method, int outParameterIndex, boolean hasOutParameter) {
+            Method method, int outParameterSqlIndex, boolean hasOutParameter) {
+      InOutParameter inOutParameter = method.getAnnotation(InOutParameter.class);
       if (hasOutParameter) {
-        int outParameterType = this.getOutParameterType(method);
-        String returnTypeName = getReturnTypeName(method);
-        switch (this.parameterRegistration) {
-          case INDEX_ONLY:
-          case INDEX_AND_TYPE:
-            if (returnTypeName == null) {
-              return new ByIndexOutParameterRegistration(outParameterIndex, outParameterType);
-            } else {
-              return new ByIndexAndTypeNameOutParameterRegistration(outParameterIndex, outParameterType, returnTypeName);
-            }
-          case NAME_ONLY:
-          case NAME_AND_TYPE:
-            String outParameterName = getOutParameterName(method);
-            if (returnTypeName == null) {
-              return new ByNameOutParameterRegistration(outParameterName, outParameterType);
-            } else {
-              return new ByNameAndTypeNameOutParameterRegistration(outParameterName, outParameterType, returnTypeName);
-            }
-          default:
-            throw new IllegalStateException("unknown parameter registration: " + this.parameterRegistration);
+        if (inOutParameter == null) {
+          int outParameterType = this.getOutParameterType(method);
+          String returnTypeName = getReturnTypeName(method);
+          switch (this.parameterRegistration) {
+            case INDEX_ONLY:
+            case INDEX_AND_TYPE:
+              if (returnTypeName == null) {
+                return new ByIndexOutParameterRegistration(outParameterSqlIndex, outParameterType);
+              } else {
+                return new ByIndexAndTypeNameOutParameterRegistration(outParameterSqlIndex, outParameterType, returnTypeName);
+              }
+            case NAME_ONLY:
+            case NAME_AND_TYPE:
+              String outParameterName = getOutParameterName(method);
+              if (returnTypeName == null) {
+                return new ByNameOutParameterRegistration(outParameterName, outParameterType);
+              } else {
+                return new ByNameAndTypeNameOutParameterRegistration(outParameterName, outParameterType, returnTypeName);
+              }
+            default:
+              throw new IllegalStateException("unknown parameter registration: " + this.parameterRegistration);
+          }
+        } else {
+          int outParameterIndex = outParameterSqlIndex - 1;
+          Parameter parameter = method.getParameters()[outParameterSqlIndex - 1];
+          int outParameterType = this.getParameterType(parameter);
+          String returnTypeName = null; // FIXME
+
+          switch (this.parameterRegistration) {
+            case INDEX_ONLY:
+            case INDEX_AND_TYPE:
+              if (returnTypeName == null) {
+                return new ByIndexOutParameterRegistration(outParameterSqlIndex, outParameterType);
+              } else {
+                return new ByIndexAndTypeNameOutParameterRegistration(outParameterSqlIndex, outParameterType, returnTypeName);
+              }
+            case NAME_ONLY:
+            case NAME_AND_TYPE:
+              String outParameterName = getParameterName(parameter, method, outParameterIndex);
+              if (returnTypeName == null) {
+                return new ByNameOutParameterRegistration(outParameterName, outParameterType);
+              } else {
+                return new ByNameAndTypeNameOutParameterRegistration(outParameterName, outParameterType, returnTypeName);
+              }
+            default:
+              throw new IllegalStateException("unknown parameter registration: " + this.parameterRegistration);
+          }
         }
       } else {
         return NoOutParameterRegistration.INSTANCE;
@@ -817,15 +845,19 @@ public final class ProcedureCallerFactory<T> {
       return outParameterName;
     }
 
-    private static int getOutParameterIndex(Method method) {
+    private static int getOutParameterSqlIndex(Method method) {
       OutParameter outParameter = method.getAnnotation(OutParameter.class);
+      InOutParameter inOutParameter = method.getAnnotation(InOutParameter.class);
       ReturnValue returnValue = method.getAnnotation(ReturnValue.class);
+      if (countNonNulls(outParameter, inOutParameter, returnValue) > 1) {
+        throw new IllegalArgumentException("method " + method + " needs to be annotated with only one of "
+                + OutParameter.class + ", " + InOutParameter.class + " or " + ReturnValue.class);
+      }
       int outParameterIndex;
       if (outParameter != null) {
-        if (returnValue != null) {
-          throw new IllegalArgumentException("method " + method + " needs to be annotated with only one of" + OutParameter.class + " or " + ReturnValue.class);
-        }
         outParameterIndex = outParameter.index();
+      } else if (inOutParameter != null) {
+          outParameterIndex = inOutParameter.index();
       } else if (returnValue != null) {
         // always the first parameter
         outParameterIndex = 1;
@@ -834,13 +866,32 @@ public final class ProcedureCallerFactory<T> {
         // eg for Mysql or H2
         outParameterIndex = NO_OUT_PARAMTER;
       }
-      if (outParameterIndex == NO_OUT_PARAMTER && (outParameter != null || returnValue != null)) {
-        // default for the out parameter index is the last index
-        // but only if we use an out parameter for function return value
-        // if we use a result set then we have no out parameter
-        return getParameterCount(method) + 1;
+      if (outParameterIndex == NO_OUT_PARAMTER) {
+        if (outParameter != null || returnValue != null) {
+          // default for the out parameter index is the last index
+          // but only if we use an out parameter for function return value
+          // if we use a result set then we have no out parameter
+          return getInputParameterCount(method) + 1;
+        } else if (inOutParameter != null) {
+          // default for the inout parameter index is the last index
+          return getInputParameterCount(method);
+        }
       }
       return outParameterIndex;
+    }
+
+    private static int countNonNulls(Object o1, Object o2, Object o3) {
+      int count = 0;
+      if (o1 != null) {
+        count += 1;
+      }
+      if (o2 != null) {
+        count += 1;
+      }
+      if (o3 != null) {
+        count += 1;
+      }
+      return count;
     }
 
     private static String getReturnTypeName(Method method) {
@@ -962,7 +1013,7 @@ public final class ProcedureCallerFactory<T> {
       return NO_VALUE_EXTRACTOR;
     }
 
-    private static int getParameterCount(Method method) {
+    private static int getInputParameterCount(Method method) {
       int count = 0;
       for (Class<?> parameterType : method.getParameterTypes()) {
         if (!ValueExtractorUtils.isAnyValueExtractor(parameterType)) {
@@ -972,13 +1023,26 @@ public final class ProcedureCallerFactory<T> {
       return count;
     }
 
-    private static String buildCallString(String namespace, String schemaName, String procedureName,
-            int parameterCount, boolean isFunction, boolean hasOutParameter) {
+    private String buildCallString(Method method, String procedureName,
+            int sqlInputParameterCount, boolean hasOutParameter) {
+      String namespace = this.hasNamespace(method) ? this.extractsNamespace(method) : null;
+      String schemaName = this.hasSchema(method) ? this.extractSchema(method) : null;
+      boolean isFunction = procedureHasReturnValue(method);
       if (isFunction) {
-        return buildQualifiedFunctionCallString(namespace, schemaName, procedureName, parameterCount);
+        return buildQualifiedFunctionCallString(namespace, schemaName, procedureName, sqlInputParameterCount);
       } else {
-        return buildQualifiedProcedureCallString(namespace, schemaName, procedureName, hasOutParameter ? parameterCount + 1 : parameterCount);
+        int sqlParameterCount;
+        if (hasOutParameter && !shareOutParameter(method)) {
+          sqlParameterCount = sqlInputParameterCount + 1;
+        } else {
+          sqlParameterCount = sqlInputParameterCount;
+        }
+        return buildQualifiedProcedureCallString(namespace, schemaName, procedureName, sqlParameterCount);
       }
+    }
+
+    private static boolean shareOutParameter(Method method) {
+      return method.isAnnotationPresent(InOutParameter.class);
     }
 
     static String buildQualifiedProcedureCallString(String namespace, String schemaName, String functionName, int parameterCount) {

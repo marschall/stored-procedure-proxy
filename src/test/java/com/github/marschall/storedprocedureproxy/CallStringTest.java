@@ -9,13 +9,16 @@ import static org.mockito.Mockito.when;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 import javax.sql.DataSource;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import com.github.marschall.storedprocedureproxy.annotations.InOutParameter;
 import com.github.marschall.storedprocedureproxy.annotations.OutParameter;
 import com.github.marschall.storedprocedureproxy.annotations.ReturnValue;
 import com.github.marschall.storedprocedureproxy.spi.NamingStrategy;
@@ -113,6 +116,47 @@ public class CallStringTest {
   }
 
   @Test
+  public void inOutParameter() throws SQLException {
+    // given
+
+    SimpleProcedures procedures = ProcedureCallerFactory.of(SimpleProcedures.class, dataSource)
+            .withProcedureNamingStrategy(NamingStrategy.snakeCase().thenLowerCase())
+            .build();
+
+    // when
+    procedures.inOutParameter("test");
+
+    verify(connection).prepareCall(eq("{call in_out_parameter(?)}"));
+  }
+
+  @Test
+  public void valueExtractor() throws SQLException {
+    // given
+    this.dataSource = mock(DataSource.class);
+    this.connection = mock(Connection.class);
+    ResultSet resultSet = mock(ResultSet.class);
+    DatabaseMetaData metaData = mock(DatabaseMetaData.class);
+    CallableStatement statement = mock(CallableStatement.class);
+
+    when(this.dataSource.getConnection()).thenReturn(this.connection);
+    when(this.connection.getMetaData()).thenReturn(metaData);
+    when(metaData.getDatabaseProductName()).thenReturn("junit");
+    when(this.connection.prepareCall(anyString())).thenReturn(statement);
+    when(statement.execute()).thenReturn(true);
+    when(statement.getResultSet()).thenReturn(resultSet);
+    when(resultSet.next()).thenReturn(false);
+
+    SimpleProcedures procedures = ProcedureCallerFactory.of(SimpleProcedures.class, dataSource)
+            .withProcedureNamingStrategy(NamingStrategy.snakeCase().thenLowerCase())
+            .build();
+
+    // when
+    procedures.valueExtractor(rs -> "ok");
+
+    verify(connection).prepareCall(eq("{call value_extractor()}"));
+  }
+
+  @Test
   public void outParameterDynamicSchema() throws SQLException {
     // given
 
@@ -198,6 +242,11 @@ public class CallStringTest {
 
     @OutParameter
     String outParameter();
+
+    @InOutParameter
+    String inOutParameter(String s);
+
+    List<String> valueExtractor(ValueExtractor<String> extractor);
 
   }
 

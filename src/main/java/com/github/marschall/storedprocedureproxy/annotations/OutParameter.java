@@ -23,6 +23,7 @@ import com.github.marschall.storedprocedureproxy.spi.TypeMapper;
  * where one of the function arguments is an out parameter.</p>
  *
  * @see ReturnValue
+ * @see InOutParameter
  */
 @Documented
 @Retention(RUNTIME)
