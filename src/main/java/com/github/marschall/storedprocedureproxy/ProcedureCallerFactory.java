@@ -17,11 +17,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.sql.DataSource;
 
 import org.springframework.jdbc.support.SQLErrorCodeSQLExceptionTranslator;
 
+import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.CallInfo;
 import com.github.marschall.storedprocedureproxy.annotations.FetchSize;
 import com.github.marschall.storedprocedureproxy.annotations.InOutParameter;
 import com.github.marschall.storedprocedureproxy.annotations.Namespace;
@@ -439,6 +444,8 @@ public final class ProcedureCallerFactory<T> {
      */
     private final Map<Method, CallInfo> callInfoCache;
 
+    private final ReadWriteLock cacheLock;
+
     private final boolean useOracleArrays;
 
     ProcedureCaller(DataSource dataSource,
@@ -465,7 +472,8 @@ public final class ProcedureCallerFactory<T> {
       this.typeMapper = typeMapper;
       this.typeNameResolver = typeNameResolver;
       this.useOracleArrays = useOracleArrays;
-      this.callInfoCache = Collections.synchronizedMap(new HashMap<>());
+      this.callInfoCache = new HashMap<>();
+      this.cacheLock = new ReentrantReadWriteLock();
     }
 
     @Override
@@ -609,15 +617,37 @@ public final class ProcedureCallerFactory<T> {
 
 
     private CallInfo getCallInfo(Method method, Object[] args) {
-      CallInfo callInfo = this.callInfoCache.get(method);
+      CallInfo callInfo = getFromCacheOrNull(method);
       if (callInfo != null) {
         return callInfo;
       }
+
       // potentially compute callInfo multiple times
       // rather than locking for a long time
       callInfo = this.buildCallInfo(method, args);
-      CallInfo previous = this.callInfoCache.putIfAbsent(method, callInfo);
+
+      CallInfo previous = tryWriteToCache(method, callInfo);
       return previous != null ? previous : callInfo;
+    }
+
+    private CallInfo tryWriteToCache(Method method, CallInfo callInfo) {
+      Lock lock = this.cacheLock.writeLock();
+      lock.lock();
+      try {
+        return this.callInfoCache.putIfAbsent(method, callInfo);
+      } finally {
+        lock.unlock();
+      }
+    }
+
+    private CallInfo getFromCacheOrNull(Method method) {
+      Lock lock = this.cacheLock.readLock();
+      lock.lock();
+      try {
+        return this.callInfoCache.get(method);
+      } finally {
+        lock.unlock();
+      }
     }
 
     private CallInfo buildCallInfo(Method method, Object[] args) {
