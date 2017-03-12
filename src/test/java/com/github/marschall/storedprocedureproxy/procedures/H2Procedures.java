@@ -1,6 +1,8 @@
 package com.github.marschall.storedprocedureproxy.procedures;
 
+import java.sql.ResultSet;
 import java.util.List;
+import java.util.function.Function;
 
 import com.github.marschall.storedprocedureproxy.NumberedValueExtractor;
 import com.github.marschall.storedprocedureproxy.ValueExtractor;
@@ -31,6 +33,8 @@ public interface H2Procedures {
   List<IdName> simpleResultSet(NumberedValueExtractor<IdName> extractor);
 
   List<IdName> simpleResultSet(ValueExtractor<IdName> extractor);
+
+  List<IdName> simpleResultSet(Function<ResultSet, IdName> extractor);
 
   default List<IdName> simpleResultSet() {
     return simpleResultSet((rs, i) -> {

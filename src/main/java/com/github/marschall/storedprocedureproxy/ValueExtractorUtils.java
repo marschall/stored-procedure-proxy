@@ -7,7 +7,9 @@ final class ValueExtractorUtils {
   }
 
   static boolean isAnyValueExtractor(Class<?> clazz) {
-    return isValueExtractor(clazz) || isNumberedValueExtractor(clazz);
+    return isValueExtractor(clazz)
+//            || isFunction(clazz)
+            || isNumberedValueExtractor(clazz);
   }
 
   static boolean isValueExtractor(Class<?> clazz) {
@@ -17,5 +19,9 @@ final class ValueExtractorUtils {
   static boolean isNumberedValueExtractor(Class<?> clazz) {
     return clazz.isAssignableFrom(NumberedValueExtractor.class);
   }
+
+//  static boolean isFunction(Class<?> clazz) {
+//    return clazz.isAssignableFrom(Function.class);
+//  }
 
 }

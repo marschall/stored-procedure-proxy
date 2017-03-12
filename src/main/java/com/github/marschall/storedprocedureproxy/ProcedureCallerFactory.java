@@ -767,8 +767,12 @@ public final class ProcedureCallerFactory<T> {
           Class<?> parameterType = method.getParameterTypes()[valueExtractorIndex];
           if (ValueExtractorUtils.isValueExtractor(parameterType)) {
             return new ValueExtractorResultExtractor(valueExtractorIndex, fetchSize);
-          } else {
+          } else if (ValueExtractorUtils.isNumberedValueExtractor(parameterType)) {
             return new NumberedValueExtractorResultExtractor(valueExtractorIndex, fetchSize);
+//          } else if (ValueExtractorUtils.isFunction(parameterType)) {
+//            return new ValueExtractorResultExtractor(valueExtractorIndex, fetchSize);
+          } else {
+            throw new IllegalStateException("unknown type of value extractor: " + parameterType);
           }
         }
       } else if (isArray) {

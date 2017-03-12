@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ProcedureCaller;
 
@@ -255,6 +256,32 @@ final class ValueExtractorResultExtractor extends AbstractValueExtractorResultEx
     List<Object> result = new ArrayList<>();
     while (resultSet.next()) {
       Object element = valueExtractor.extractValue(resultSet);
+      result.add(element);
+    }
+    return result;
+  }
+
+}
+
+/**
+ * Extracts a {@link List} using a {@link Function}.
+ */
+final class FunctionResultExtractor extends AbstractValueExtractorResultExtractor {
+
+  FunctionResultExtractor(int extractorIndex, int fetchSize) {
+    super(extractorIndex, fetchSize);
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  Object read(ResultSet rs, Object extractor) throws SQLException {
+    return read(rs, (Function<ResultSet, ?>) extractor);
+  }
+
+  private static List<Object> read(ResultSet resultSet, Function<ResultSet, ?> function) throws SQLException {
+    List<Object> result = new ArrayList<>();
+    while (resultSet.next()) {
+      Object element = function.apply(resultSet);
       result.add(element);
     }
     return result;

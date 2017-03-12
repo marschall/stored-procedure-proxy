@@ -7,9 +7,14 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
+
+import javax.management.RuntimeErrorException;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -118,9 +123,35 @@ public class H2Test extends AbstractDataSourceTest {
 
   @Test
   public void simpleResultSet() {
-    List<IdName> names = procedures.simpleResultSet(rs -> {
+    List<IdName> names = procedures.simpleResultSet((ValueExtractor<IdName>) rs -> {
       long id = rs.getLong("ID");
       String name = rs.getString("NAME");
+      return new IdName(id, name);
+    });
+
+    assertThat(names, hasSize(2));
+
+    IdName name = names.get(0);
+    assertEquals(0L, name.getId());
+    assertEquals("Hello", name.getName());
+
+    name = names.get(1);
+    assertEquals(1L, name.getId());
+    assertEquals("World", name.getName());
+  }
+
+  @Test
+  @Ignore("feature not ready")
+  public void simpleResultSetFunction() {
+    List<IdName> names = procedures.simpleResultSet((Function<ResultSet, IdName>) rs -> {
+      long id;
+      String name;
+      try {
+        id = rs.getLong("ID");
+        name = rs.getString("NAME");
+      } catch (SQLException e) {
+        throw new RuntimeException(e);
+      }
       return new IdName(id, name);
     });
 
