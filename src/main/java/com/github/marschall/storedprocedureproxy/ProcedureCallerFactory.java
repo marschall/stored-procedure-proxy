@@ -777,19 +777,11 @@ public final class ProcedureCallerFactory<T> {
           switch (this.parameterRegistration) {
             case INDEX_ONLY:
             case INDEX_AND_TYPE:
-              if (returnTypeName == null) {
-                return new ByIndexOutParameterRegistration(outParameterSqlIndex, outParameterType);
-              } else {
-                return new ByIndexAndTypeNameOutParameterRegistration(outParameterSqlIndex, outParameterType, returnTypeName);
-              }
+              return createIndexedOutParameterRegistration(outParameterSqlIndex, outParameterType, returnTypeName);
             case NAME_ONLY:
             case NAME_AND_TYPE:
               String outParameterName = getOutParameterName(method);
-              if (returnTypeName == null) {
-                return new ByNameOutParameterRegistration(outParameterName, outParameterType);
-              } else {
-                return new ByNameAndTypeNameOutParameterRegistration(outParameterName, outParameterType, returnTypeName);
-              }
+              return createNamedOutParameterRegistration(outParameterType, returnTypeName, outParameterName);
             default:
               throw new IllegalStateException("unknown parameter registration: " + this.parameterRegistration);
           }
@@ -797,30 +789,43 @@ public final class ProcedureCallerFactory<T> {
           int outParameterIndex = outParameterSqlIndex - 1;
           Parameter parameter = method.getParameters()[outParameterSqlIndex - 1];
           int outParameterType = this.getParameterType(parameter);
-          String returnTypeName = null; // FIXME
+          String typeName;
+          if (isCollection(parameter.getType())) {
+            typeName = this.typeNameResolver.resolveTypeName(parameter);
+          } else {
+            typeName = null;
+          }
 
           switch (this.parameterRegistration) {
             case INDEX_ONLY:
             case INDEX_AND_TYPE:
-              if (returnTypeName == null) {
-                return new ByIndexOutParameterRegistration(outParameterSqlIndex, outParameterType);
-              } else {
-                return new ByIndexAndTypeNameOutParameterRegistration(outParameterSqlIndex, outParameterType, returnTypeName);
-              }
+              return createIndexedOutParameterRegistration(outParameterSqlIndex, outParameterType, typeName);
             case NAME_ONLY:
             case NAME_AND_TYPE:
               String outParameterName = getParameterName(parameter, method, outParameterIndex);
-              if (returnTypeName == null) {
-                return new ByNameOutParameterRegistration(outParameterName, outParameterType);
-              } else {
-                return new ByNameAndTypeNameOutParameterRegistration(outParameterName, outParameterType, returnTypeName);
-              }
+              return createNamedOutParameterRegistration(outParameterType, typeName, outParameterName);
             default:
               throw new IllegalStateException("unknown parameter registration: " + this.parameterRegistration);
           }
         }
       } else {
         return NoOutParameterRegistration.INSTANCE;
+      }
+    }
+
+    private static OutParameterRegistration createNamedOutParameterRegistration(int outParameterType, String returnTypeName, String outParameterName) {
+      if (returnTypeName == null) {
+        return new ByNameOutParameterRegistration(outParameterName, outParameterType);
+      } else {
+        return new ByNameAndTypeNameOutParameterRegistration(outParameterName, outParameterType, returnTypeName);
+      }
+    }
+
+    private static OutParameterRegistration createIndexedOutParameterRegistration(int outParameterSqlIndex, int outParameterType, String returnTypeName) {
+      if (returnTypeName == null) {
+        return new ByIndexOutParameterRegistration(outParameterSqlIndex, outParameterType);
+      } else {
+        return new ByIndexAndTypeNameOutParameterRegistration(outParameterSqlIndex, outParameterType, returnTypeName);
       }
     }
 
