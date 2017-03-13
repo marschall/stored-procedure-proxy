@@ -43,21 +43,10 @@ final class NoInParameterRegistration implements InParameterRegistration {
 
 }
 
-/**
- * In parameters are registered by index.
- */
-final class ByIndexInParameterRegistration implements InParameterRegistration {
+abstract class AbstractByInParameterRegistration implements InParameterRegistration  {
 
-  // an interface method can not have more than 254 parameters
-  private final byte[] inParameterIndices;
 
-  ByIndexInParameterRegistration(byte[] inParameterIndices) {
-    this.inParameterIndices = inParameterIndices;
-  }
-
-  int inParameterIndexAt(int i) {
-    return ByteUtils.toByte(this.inParameterIndices[i]);
-  }
+  abstract int inParameterIndexAt(int i);
 
   @Override
   public void bindInParamters(CallableStatement statement, CallResource callResource, Object[] args) throws SQLException {
@@ -77,6 +66,25 @@ final class ByIndexInParameterRegistration implements InParameterRegistration {
     }
   }
 
+}
+
+/**
+ * In parameters are registered by index.
+ */
+final class ByIndexInParameterRegistration extends AbstractByInParameterRegistration {
+
+  // an interface method can not have more than 254 parameters
+  private final byte[] inParameterIndices;
+
+  ByIndexInParameterRegistration(byte[] inParameterIndices) {
+    this.inParameterIndices = inParameterIndices;
+  }
+
+  @Override
+  int inParameterIndexAt(int i) {
+    return ByteUtils.toByte(this.inParameterIndices[i]);
+  }
+
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
@@ -84,6 +92,53 @@ final class ByIndexInParameterRegistration implements InParameterRegistration {
     builder.append('[');
     ByteUtils.toStringOn(this.inParameterIndices, builder);
     builder.append(']');
+    return builder.toString();
+  }
+
+}
+
+
+/**
+ * In parameters are registered by index. Special case where the out
+ * parameter is the first parameter.
+ */
+final class PrefixByIndexInParameterRegistration extends AbstractByInParameterRegistration {
+
+  static final InParameterRegistration INSTANCE = new PrefixByIndexInParameterRegistration();
+
+  @Override
+  int inParameterIndexAt(int i) {
+    return i + 2;
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append(this.getClass().getSimpleName());
+    builder.append("[i + 2]");
+    return builder.toString();
+  }
+
+}
+
+/**
+ * In parameters are registered by index. Special case where the out
+ * parameter is the last parameter.
+ */
+final class SuffixByIndexInParameterRegistration extends AbstractByInParameterRegistration {
+
+  static final InParameterRegistration INSTANCE = new SuffixByIndexInParameterRegistration();
+
+  @Override
+  int inParameterIndexAt(int i) {
+    return i + i;
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append(this.getClass().getSimpleName());
+    builder.append("[i + i]");
     return builder.toString();
   }
 
