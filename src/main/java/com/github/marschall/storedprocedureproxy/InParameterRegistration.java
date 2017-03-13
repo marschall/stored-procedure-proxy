@@ -55,7 +55,7 @@ final class ByIndexInParameterRegistration implements InParameterRegistration {
     this.inParameterIndices = inParameterIndices;
   }
 
-  private int inParameterIndexAt(int i) {
+  int inParameterIndexAt(int i) {
     return ByteUtils.toByte(this.inParameterIndices[i]);
   }
 

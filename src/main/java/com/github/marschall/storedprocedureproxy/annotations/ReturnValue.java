@@ -30,8 +30,8 @@ import com.github.marschall.storedprocedureproxy.spi.TypeMapper;
 public @interface ReturnValue {
 
   /**
-   * Defines the SQL type of the return value. If nothing is specified the default
-   * from {@link TypeMapper} is used.
+   * Defines the SQL type of the return value. If nothing is specified
+   * the default from {@link TypeMapper} is used.
    *
    * @return the return value SQL type, can be a vendor type
    * @see java.sql.Types
@@ -39,8 +39,8 @@ public @interface ReturnValue {
   int type() default Integer.MIN_VALUE;
 
   /**
-   * Defines the name of the return value. Only used if the parameter registration
-   * is either {@link ParameterRegistration#NAME_ONLY} or
+   * Defines the name of the return value. Only used if the parameter
+   * registration is either {@link ParameterRegistration#NAME_ONLY} or
    * {@link ParameterRegistration#NAME_AND_TYPE}.
    *
    * @return the name of the return value
@@ -48,8 +48,8 @@ public @interface ReturnValue {
   String name() default "";
 
   /**
-   * If the out parameter is a a user defined type like a named array types
-   * then this method denotes the type name.
+   * If the out parameter is a a user defined type like a named array
+   * types then this method denotes the type name.
    *
    * @return the fully-qualified name of an SQL structured type
    * @see java.sql.CallableStatement#registerOutParameter(int, int, String)

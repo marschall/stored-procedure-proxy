@@ -30,8 +30,8 @@ import java.lang.annotation.Target;
 public @interface InOutParameter {
 
   /**
-   * Defines the index of the out parameter. If not specified the out parameter
-   * is assumed to be the last parameter.
+   * Defines the index of the inout parameter. If not specified the
+   * inout parameter is assumed to be the last parameter.
    *
    * <p>If the out parameter isn't the last parameter you have to
    * provide the index of the out parameter.<p>
