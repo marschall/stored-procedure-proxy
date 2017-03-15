@@ -9,7 +9,7 @@ public class SuffixByIndexInParameterRegistrationTest {
   @Test
   public void testToString() {
     InParameterRegistration registration = SuffixByIndexInParameterRegistration.INSTANCE;
-    assertEquals("SuffixByIndexInParameterRegistration[i + i]", registration.toString());
+    assertEquals("SuffixByIndexInParameterRegistration[i + 1]", registration.toString());
   }
 
 }
