@@ -12,3 +12,4 @@ Unsure
 - SQL Arrays with Value extractors
 - ref cursors as Java arrays
 - @TypeName for array return types
+- should @InOutParameter be on an argument instead of the method
