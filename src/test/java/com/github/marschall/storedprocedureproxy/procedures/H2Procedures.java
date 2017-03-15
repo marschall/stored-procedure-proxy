@@ -7,6 +7,7 @@ import java.util.function.Function;
 import com.github.marschall.storedprocedureproxy.NumberedValueExtractor;
 import com.github.marschall.storedprocedureproxy.ValueExtractor;
 import com.github.marschall.storedprocedureproxy.annotations.ReturnValue;
+import com.github.marschall.storedprocedureproxy.annotations.TypeName;
 
 public interface H2Procedures {
 
@@ -19,7 +20,7 @@ public interface H2Procedures {
   String noArgProcedure();
 
   @ReturnValue
-  Object[] reverseObjectArray(Object[] input);
+  Object[] reverseObjectArray(@TypeName("ignored") Object[] input);
 
   @ReturnValue
   Integer[] reverseIntegerArray(Integer[] input);

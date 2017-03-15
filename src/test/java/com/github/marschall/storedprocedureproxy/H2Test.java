@@ -14,8 +14,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
-import javax.management.RuntimeErrorException;
-
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -75,7 +73,6 @@ public class H2Test extends AbstractDataSourceTest {
   }
 
   @Test
-  @Ignore("unsupported")
   public void reverseObjectArray() {
     Object[] input = new Object[] {1, "null", 1.1d};
     Object[] expected = new Object[] {1.1d, "null", 1};
@@ -83,7 +80,6 @@ public class H2Test extends AbstractDataSourceTest {
   }
 
   @Test
-  @Ignore("unsupported")
   public void reverseIntegerArray() {
     Integer[] input = new Integer[] {11, 2, 15};
     Integer[] expected = new Integer[] {15, 2, 11};
