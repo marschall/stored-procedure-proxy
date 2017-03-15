@@ -131,14 +131,14 @@ final class SuffixByIndexInParameterRegistration extends AbstractByInParameterRe
 
   @Override
   int inParameterIndexAt(int i) {
-    return i + i;
+    return i + 1;
   }
 
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
     builder.append(this.getClass().getSimpleName());
-    builder.append("[i + i]");
+    builder.append("[i + 1]");
     return builder.toString();
   }
 
