@@ -724,7 +724,16 @@ public final class ProcedureCallerFactory<T> {
       if (sqlParameterCount > 0) {
         switch (this.parameterRegistration) {
           case INDEX_ONLY: {
+            int valueExtractorIndex = getValueExtractorIndex(method);
             int javaParameterCount = method.getParameterCount();
+            if (valueExtractorIndex == NO_VALUE_EXTRACTOR) {
+              if (hasOutParameter && outParameterSqlIndex == 1) {
+                return PrefixByIndexInParameterRegistration.INSTANCE;
+              }
+              if (!hasOutParameter || outParameterSqlIndex == javaParameterCount + 1) {
+                return SuffixByIndexInParameterRegistration.INSTANCE;
+              }
+            }
             byte[] inParameterIndices = buildInParameterIndices(method, javaParameterCount, hasOutParameter, outParameterSqlIndex);
             return new ByIndexInParameterRegistration(inParameterIndices);
           }

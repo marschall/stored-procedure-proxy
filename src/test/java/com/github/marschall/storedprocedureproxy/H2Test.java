@@ -57,7 +57,7 @@ public class H2Test extends AbstractDataSourceTest {
   }
 
   @Test
-  public void callScalarProcedure() {
+  public void callScalarFunction() {
     String input = "test";
     assertEquals("pre" + input + "post", procedures.stringProcedure(input));
   }
