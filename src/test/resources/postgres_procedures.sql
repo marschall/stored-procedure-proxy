@@ -1,3 +1,4 @@
+-- use @ as a separator so Spring JDBC can deduce the end of a procedure definition
 -- https://www.postgresql.org/docs/9.5/static/plpgsql-declarations.html
 
 CREATE OR REPLACE FUNCTION sales_tax(subtotal real)
@@ -5,13 +6,13 @@ RETURNS real AS $$
 BEGIN
     RETURN subtotal * 0.06;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql@
 
 CREATE OR REPLACE FUNCTION property_tax(subtotal real, OUT tax real) AS $$
 BEGIN
     tax := subtotal * 0.06;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql@
 
 
 -- https://www.postgresql.org/docs/9.5/static/plpgsql-porting.html
@@ -25,14 +26,14 @@ BEGIN
     END IF;
     RETURN v_name || '/' || v_version;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql@
 
 CREATE OR REPLACE FUNCTION raise_exception()
 RETURNS void AS $$
 BEGIN
     RAISE SQLSTATE '22000';
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql@
 
 -- https://www.postgresql.org/docs/9.6/static/plpgsql-cursors.html
 
@@ -43,7 +44,7 @@ BEGIN
     OPEN ref FOR SELECT 'hello' UNION ALL SELECT 'postgres';
     RETURN ref;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql@
 
 CREATE OR REPLACE FUNCTION ref_cursor_and_argument(v_prefix varchar) RETURNS refcursor AS $$
 DECLARE
@@ -52,32 +53,32 @@ BEGIN
     OPEN ref FOR SELECT v_prefix || 'hello' UNION ALL SELECT v_prefix || 'postgres';
     RETURN ref;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql@
 
 CREATE OR REPLACE FUNCTION simple_ref_cursor_out(OUT o_strings refcursor) AS $$
 BEGIN
     OPEN o_strings FOR SELECT 'hello' UNION ALL SELECT 'postgres';
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql@
 
 CREATE OR REPLACE FUNCTION sample_array_argument(input_values int[])
 RETURNS varchar AS $$
 BEGIN
     return array_to_string(input_values, ', ');
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql@
 
 CREATE OR REPLACE FUNCTION array_return_value()
 RETURNS int[] AS $$
 BEGIN
     return ARRAY [1,2,3,4];
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql@
 
 CREATE OR REPLACE FUNCTION concatenate_two_arrays(first int[], second int[])
 RETURNS int[] AS $$
 BEGIN
     return array_cat(first, second);
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql@
 

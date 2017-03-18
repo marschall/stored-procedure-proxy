@@ -2,7 +2,6 @@ package com.github.marschall.storedprocedureproxy;
 
 import static com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration.INDEX_AND_TYPE;
 import static com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration.INDEX_ONLY;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -19,12 +18,10 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.postgresql.util.PSQLException;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.support.EncodedResource;
 import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.datasource.init.DatabasePopulator;
-import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.SqlConfig;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration;
@@ -34,6 +31,7 @@ import com.github.marschall.storedprocedureproxy.procedures.PostgresProcedures;
 @RunWith(Parameterized.class)
 @Transactional
 @ContextConfiguration(classes = PostgresConfiguration.class)
+@Sql(scripts = "classpath:postgres_procedures.sql", config = @SqlConfig(separator = "@"))
 public class PostgresTest extends AbstractDataSourceTest {
 
   private PostgresProcedures procedures;
@@ -49,10 +47,6 @@ public class PostgresTest extends AbstractDataSourceTest {
     this.procedures = ProcedureCallerFactory.of(PostgresProcedures.class, this.getDataSource())
             .withParameterRegistration(this.parameterRegistration)
             .build();
-
-    EncodedResource resource = new EncodedResource(new ClassPathResource("postgres_procedures.sql"), UTF_8);
-    DatabasePopulator populator = new PostgresDatabasePopulator("LANGUAGE plpgsql;", resource);
-    DatabasePopulatorUtils.execute(populator, this.getDataSource());
   }
 
   @Parameters
