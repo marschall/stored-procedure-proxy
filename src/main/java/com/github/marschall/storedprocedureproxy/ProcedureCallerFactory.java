@@ -338,6 +338,33 @@ public final class ProcedureCallerFactory<T> {
   }
 
   /**
+   * Uses Oracle JDBC types.
+   *
+   * <p>Currently only required if you use boolean types.</p>
+   *
+   * @return this builder for chaining
+   */
+  public ProcedureCallerFactory<T> withOracleTypeMapper() {
+    return withTypeMapper(OracleTypeMapper.INSTANCE);
+  }
+
+  /**
+   * Enables all Oracle extensions.
+   *
+   * <p>Currently only required for:</p>
+   * <ul>
+   *  <li>boolean types</li>
+   *  <li>arrays</li>
+   * </ul>
+   *
+   * @return this builder for chaining
+   */
+  public ProcedureCallerFactory<T> withOracleExtensions() {
+    this.withOracleArrays();
+    return withOracleTypeMapper();
+  }
+
+  /**
    * Creates a caller for the interface of stored procedures using the configured options.
    *
    * @return the interface instance
