@@ -331,6 +331,7 @@ public final class ProcedureCallerFactory<T> {
    * Uses Oracle API to create arrays.
    *
    * @return this builder for chaining
+   * @see #withOracleExtensions()
    */
   public ProcedureCallerFactory<T> withOracleArrays() {
     this.useOracleArrays = true;
@@ -340,9 +341,13 @@ public final class ProcedureCallerFactory<T> {
   /**
    * Uses Oracle JDBC types.
    *
-   * <p>Currently only required if you use boolean types.</p>
+   * <p>Maps booleans to PL/SQL booleans instead of SQL booleans.</p>
+   *
+   * <p>This requires at least the 12.2c JDBC driver.</p>
    *
    * @return this builder for chaining
+   * @see #withOracleExtensions()
+   * @see <a href="https://github.com/marschall/stored-procedure-proxy/wiki/Binding-Oracle-Booleans">Binding Oracle Booleans</a>
    */
   public ProcedureCallerFactory<T> withOracleTypeMapper() {
     return withTypeMapper(OracleTypeMapper.INSTANCE);
@@ -358,6 +363,8 @@ public final class ProcedureCallerFactory<T> {
    * </ul>
    *
    * @return this builder for chaining
+   * @see #withOracleArrays()
+   * @see #withOracleTypeMapper()
    */
   public ProcedureCallerFactory<T> withOracleExtensions() {
     this.withOracleArrays();
