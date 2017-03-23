@@ -23,6 +23,7 @@ import com.github.marschall.storedprocedureproxy.spi.TypeMapper;
  *
  * @see OutParameter
  * @see InOutParameter
+ * @see <a href="https://github.com/marschall/stored-procedure-proxy/wiki/Result-Extraction#return-value">Return Value Result Extraction</a>
  */
 @Documented
 @Retention(RUNTIME)

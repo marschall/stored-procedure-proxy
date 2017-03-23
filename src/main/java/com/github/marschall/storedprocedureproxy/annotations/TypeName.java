@@ -13,6 +13,7 @@ import java.sql.Connection;
  * Defines the name of a type. Useful for array types.
  *
  * @see Connection#createArrayOf(String, Object[])
+ * @see <a href="https://github.com/marschall/stored-procedure-proxy/wiki/Arrays">Binding Arrays</a>
  */
 @Documented
 @Retention(RUNTIME)

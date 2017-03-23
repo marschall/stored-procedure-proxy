@@ -245,6 +245,7 @@ public final class ProcedureCallerFactory<T> {
    *
    * @param namespaceNamingStrategy the naming strategy for namespaces, not {@code null}
    * @return this builder for chaining
+   * @see <a href="https://github.com/marschall/stored-procedure-proxy/wiki/Oracle-Packages">Oracle Packages</a>
    */
   public ProcedureCallerFactory<T> withNamespaceNamingStrategy(NamingStrategy namespaceNamingStrategy) {
     Objects.requireNonNull(namespaceNamingStrategy);
@@ -261,6 +262,7 @@ public final class ProcedureCallerFactory<T> {
    * @return this builder for chaining
    * @see Namespace
    * @see ProcedureCallerFactory#withNamespaceNamingStrategy(NamingStrategy)
+   * @see <a href="https://github.com/marschall/stored-procedure-proxy/wiki/Oracle-Packages">Oracle Packages</a>
    */
   public ProcedureCallerFactory<T> withNamespace() {
     this.hasNamespace = true;
@@ -273,6 +275,7 @@ public final class ProcedureCallerFactory<T> {
    *
    * @param parameterRegistration the parameter registration
    * @return this builder for chaining
+   * @see <a href="https://github.com/marschall/stored-procedure-proxy/wiki/Binding-Parameters">Binding Parameters</a>
    */
   public ProcedureCallerFactory<T> withParameterRegistration(ParameterRegistration parameterRegistration) {
     Objects.requireNonNull(parameterRegistration);
@@ -332,6 +335,7 @@ public final class ProcedureCallerFactory<T> {
    *
    * @return this builder for chaining
    * @see #withOracleExtensions()
+   * @see <a href="https://github.com/marschall/stored-procedure-proxy/wiki/Arrays#oracle">Binding Oracle Arrays</a>
    */
   public ProcedureCallerFactory<T> withOracleArrays() {
     this.useOracleArrays = true;

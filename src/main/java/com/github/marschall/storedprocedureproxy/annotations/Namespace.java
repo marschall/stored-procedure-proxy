@@ -13,6 +13,8 @@ import java.lang.annotation.Target;
  * <p>This should be used for Oracle
  * <a href="https://docs.oracle.com/database/121/LNPLS/packages.htm#LNPLS009">PL/SQL Packages</a>
  * or IBM <a href="https://www.ibm.com/support/knowledgecenter/SSEPGG_11.1.0/com.ibm.db2.luw.apdv.sqlpl.doc/doc/c0053740.html">DB2 Modules</a>.</p>
+ *
+ * @see <a href="https://github.com/marschall/stored-procedure-proxy/wiki/Oracle-Packages">Oracle Packages</a>
  */
 @Documented
 @Retention(RUNTIME)

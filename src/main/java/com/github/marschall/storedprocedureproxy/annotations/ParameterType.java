@@ -11,6 +11,8 @@ import com.github.marschall.storedprocedureproxy.spi.TypeMapper;
 
 /**
  * Defines the SQL type of an in parameter.
+ *
+ * @see <a href="https://github.com/marschall/stored-procedure-proxy/wiki/Binding-Parameters">Binding Parameters</a>
  */
 @Documented
 @Retention(RUNTIME)

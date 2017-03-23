@@ -9,6 +9,8 @@ import java.lang.annotation.Target;
 
 /**
  * Defines the name of a stored procedure.
+ *
+ * @see <a href="https://github.com/marschall/stored-procedure-proxy/wiki/Deriving-Names">Deriving Names</a>
  */
 @Documented
 @Retention(RUNTIME)

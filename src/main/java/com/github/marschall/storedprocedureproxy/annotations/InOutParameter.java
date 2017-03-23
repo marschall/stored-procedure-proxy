@@ -23,6 +23,7 @@ import java.lang.annotation.Target;
  *
  * @see ReturnValue
  * @see OutParameter
+ * @see <a href="https://github.com/marschall/stored-procedure-proxy/wiki/Result-Extraction#inout-parameter">InOut Parameter Result Extraction</a>
  */
 @Documented
 @Retention(RUNTIME)

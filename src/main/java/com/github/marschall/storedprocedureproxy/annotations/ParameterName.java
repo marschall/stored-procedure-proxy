@@ -13,6 +13,8 @@ import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.Paramete
  * Defines the name of an in parameter. Only used if the parameter registration
  * is either {@link ParameterRegistration#NAME_ONLY} or
  * {@link ParameterRegistration#NAME_AND_TYPE}.
+ *
+ * @see <a href="https://github.com/marschall/stored-procedure-proxy/wiki/Binding-Parameters">Binding Parameters</a>
  */
 @Documented
 @Retention(RUNTIME)

@@ -14,6 +14,7 @@ import java.util.Objects;
  *    .thenPrefix("sp_") // converts "Blitz" to "sp_Blitz"
  * </code></pre>
  *
+ * @see <a href="https://github.com/marschall/stored-procedure-proxy/wiki/Deriving-Names">Deriving Names</a>
  */
 @FunctionalInterface
 public interface NamingStrategy {
