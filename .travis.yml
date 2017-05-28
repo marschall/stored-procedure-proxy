@@ -2,15 +2,22 @@
 sudo: false
 
 language: java
+
+addons:
+  apt:
+    packages:
+      - oracle-java8-installer
+
 jdk:
   - oraclejdk8
+  
 services:
   - mysql
   - postgresql
 
 cache:
-directories:
-- '$HOME/.m2/repository'
+  directories:
+    - '$HOME/.m2/repository'
 
 before_script:
   - mysql -e 'create database travis;'
