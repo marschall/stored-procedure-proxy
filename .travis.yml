@@ -1,12 +1,15 @@
-udo: required
-dist: trusty
-group: edge
+# Use docker-based build environment (instead of openvz)
+sudo: false
 
 language: java
 
+addons:
+  apt:
+    packages:
+      - oracle-java8-installer
+
 jdk:
   - oraclejdk8
-  - oraclejdk9
   
 services:
   - mysql
@@ -17,6 +20,7 @@ cache:
     - '$HOME/.m2/repository'
 
 before_script:
+  - mysql -e 'create database travis;'
   - psql -c 'create database travis;' -U postgres
 
 install: /bin/true
