@@ -18,7 +18,7 @@ public class FirebirdTest extends AbstractDataSourceTest {
   @Test
   public void select() throws SQLException {
     try (Connection connection = this.getDataSource().getConnection();
-         PreparedStatement statement = connection.prepareStatement("SELECT 1");
+         PreparedStatement statement = connection.prepareStatement("SELECT 1 from RDB$DATABASE");
          ResultSet resultSet = statement.executeQuery()) {
       while (resultSet.next()) {
         System.out.println(resultSet.getInt(1));
