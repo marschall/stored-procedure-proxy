@@ -26,7 +26,7 @@ import com.github.marschall.storedprocedureproxy.procedures.MssqlProcedures;
 @RunWith(Parameterized.class)
 @Sql("classpath:mssql_procedures.sql")
 @ContextConfiguration(classes = MssqlConfiguration.class)
-@Ignore
+@Ignore("not availale on Travis")
 public class MssqlTest extends AbstractDataSourceTest {
 
   private MssqlProcedures procedures;
@@ -64,7 +64,6 @@ public class MssqlTest extends AbstractDataSourceTest {
   }
 
   @Test
-  @Ignore
   public void fakeCursor() {
     assertEquals(Arrays.asList("hello", "world"), this.procedures.fakeCursor());
   }
