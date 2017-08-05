@@ -1,0 +1,7 @@
+CREATE OR ALTER  PROCEDURE increment( y INTEGER )
+RETURNS( x INTEGER)
+AS
+	BEGIN
+	x = y + 1;
+	SUSPEND;
+END^

@@ -5,14 +5,16 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.SqlConfig;
 
 import com.github.marschall.storedprocedureproxy.configuration.FirebirdConfiguration;
 
 @ContextConfiguration(classes = FirebirdConfiguration.class)
-@Ignore
+@Sql(scripts = "classpath:firebird_procedures.sql", config = @SqlConfig(separator = "^"))
+//@Ignore("not availale on Travis")
 public class FirebirdTest extends AbstractDataSourceTest {
 
   @Test
