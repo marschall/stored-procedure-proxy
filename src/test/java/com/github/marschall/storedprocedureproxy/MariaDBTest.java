@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -20,25 +21,26 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
 
 import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration;
-import com.github.marschall.storedprocedureproxy.configuration.MysqlConfiguration;
-import com.github.marschall.storedprocedureproxy.procedures.MysqlProcedures;
+import com.github.marschall.storedprocedureproxy.configuration.MariaDBConfiguration;
+import com.github.marschall.storedprocedureproxy.procedures.MariaDBProcedures;
 
+@ContextConfiguration(classes = MariaDBConfiguration.class)
 @RunWith(Parameterized.class)
-@Sql("classpath:mysql_procedures.sql")
-@ContextConfiguration(classes = MysqlConfiguration.class)
-public class MysqlTest extends AbstractDataSourceTest {
+@Sql("classpath:mariadb_procedures.sql")
+@Ignore("not availale on Travis")
+public class MariaDBTest extends AbstractDataSourceTest {
 
-  private MysqlProcedures procedures;
+  private MariaDBProcedures procedures;
 
   private ParameterRegistration parameterRegistration;
 
-  public MysqlTest(ParameterRegistration parameterRegistration) {
+  public MariaDBTest(ParameterRegistration parameterRegistration) {
     this.parameterRegistration = parameterRegistration;
   }
 
   @Before
   public void setUp() {
-    this.procedures = ProcedureCallerFactory.of(MysqlProcedures.class, this.getDataSource())
+    this.procedures = ProcedureCallerFactory.of(MariaDBProcedures.class, this.getDataSource())
             .withParameterRegistration(this.parameterRegistration)
             .build();
   }
@@ -64,6 +66,8 @@ public class MysqlTest extends AbstractDataSourceTest {
 
   @Test
   public void helloProcedure() {
+    assumeFalse(this.parameterRegistration == NAME_ONLY);
+    assumeFalse(this.parameterRegistration == NAME_AND_TYPE);
     assertEquals("Hello, Monty!", this.procedures.helloProcedure("Monty"));
   }
 

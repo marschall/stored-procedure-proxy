@@ -41,7 +41,7 @@ public class DerbyTest extends AbstractDataSourceTest {
             .build();
   }
 
-  @Parameters
+  @Parameters(name = "{0}")
   public static Collection<Object[]> parameters() {
     return Arrays.asList(
             new Object[] {INDEX_ONLY},
