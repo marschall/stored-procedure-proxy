@@ -1,10 +1,10 @@
 package com.github.marschall.storedprocedureproxy;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.lang.annotation.Annotation;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ProcedureCaller;
 

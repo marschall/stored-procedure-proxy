@@ -1,14 +1,14 @@
 package com.github.marschall.storedprocedureproxy;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.github.marschall.storedprocedureproxy.annotations.TypeName;
 import com.github.marschall.storedprocedureproxy.spi.TypeNameResolver;
@@ -17,7 +17,7 @@ public class AnnotationBasedTypeNameResolverTest {
 
   private TypeNameResolver resolver;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     this.resolver = AnnotationBasedTypeNameResolver.INSTANCE;
   }

@@ -1,6 +1,6 @@
 package com.github.marschall.storedprocedureproxy;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -18,7 +18,7 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ProcedureCaller;
 

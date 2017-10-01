@@ -15,8 +15,8 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.github.marschall.storedprocedureproxy.annotations.InOutParameter;
 import com.github.marschall.storedprocedureproxy.annotations.OutParameter;
@@ -29,7 +29,7 @@ public class CallStringTest {
 
   private Connection connection;
 
-  @Before
+  @BeforeEach
   public void setUp() throws SQLException {
     this.dataSource = mock(DataSource.class);
     this.connection = mock(Connection.class);

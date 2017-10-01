@@ -1,6 +1,6 @@
 package com.github.marschall.storedprocedureproxy;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -14,8 +14,8 @@ import java.sql.Types;
 
 import javax.sql.DataSource;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.github.marschall.storedprocedureproxy.annotations.OutParameter;
 import com.github.marschall.storedprocedureproxy.annotations.ReturnValue;
@@ -26,7 +26,7 @@ public class ByIndexAndTypeNameOutParameterRegistrationTest {
 
   private ReturnTypeNameUser procedures;
 
-  @Before
+  @BeforeEach
   public void setUp() throws SQLException {
     DataSource dataSource = mock(DataSource.class);
     this.callableStatement = mock(CallableStatement.class);

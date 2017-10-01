@@ -16,8 +16,8 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.github.marschall.storedprocedureproxy.annotations.FetchSize;
 import com.github.marschall.storedprocedureproxy.annotations.OutParameter;
@@ -28,7 +28,7 @@ public class FetchSizeTest {
 
   private CallableStatement statement;
 
-  @Before
+  @BeforeEach
   public void setUp() throws SQLException {
     dataSource = mock(DataSource.class);
     Connection connection = mock(Connection.class);

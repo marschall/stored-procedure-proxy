@@ -1,12 +1,12 @@
 package com.github.marschall.storedprocedureproxy;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 
 import java.sql.Array;
 import java.sql.SQLException;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class ArrayResourceTest {
 

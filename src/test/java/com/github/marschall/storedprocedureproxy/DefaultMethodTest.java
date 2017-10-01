@@ -1,6 +1,6 @@
 package com.github.marschall.storedprocedureproxy;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -12,8 +12,8 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class DefaultMethodTest {
 
@@ -21,7 +21,7 @@ public class DefaultMethodTest {
 
   private Connection connection;
 
-  @Before
+  @BeforeEach
   public void setUp() throws SQLException {
     this.dataSource = mock(DataSource.class);
     this.connection = mock(Connection.class);

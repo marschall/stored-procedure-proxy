@@ -1,77 +1,62 @@
 package com.github.marschall.storedprocedureproxy;
 
-import static com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration.INDEX_AND_TYPE;
-import static com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration.INDEX_ONLY;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.test.context.ContextConfiguration;
 
 import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration;
 import com.github.marschall.storedprocedureproxy.configuration.HsqlConfiguration;
 import com.github.marschall.storedprocedureproxy.procedures.HsqlProcedures;
 
-@RunWith(Parameterized.class)
 @ContextConfiguration(classes = HsqlConfiguration.class)
 public class HsqlTest extends AbstractDataSourceTest {
 
-  private HsqlProcedures procedures;
-
-  private ParameterRegistration parameterRegistration;
-
-  public HsqlTest(ParameterRegistration parameterRegistration) {
-    this.parameterRegistration = parameterRegistration;
-  }
-
-  @Before
-  public void setUp() {
-    this.procedures = ProcedureCallerFactory.of(HsqlProcedures.class, this.getDataSource())
-            .withParameterRegistration(this.parameterRegistration)
+  private HsqlProcedures procedures(ParameterRegistration parameterRegistration) {
+    return ProcedureCallerFactory.of(HsqlProcedures.class, this.getDataSource())
+            .withParameterRegistration(parameterRegistration)
             .build();
   }
 
-  @Parameters(name = "{0}")
-  public static Collection<Object[]> parameters() {
-    return Arrays.asList(
-            new Object[] {INDEX_ONLY},
-            new Object[] {INDEX_AND_TYPE}
-    );
+  public static Stream<ParameterRegistration> parameters() {
+    return Stream.of(ParameterRegistration.INDEX_ONLY, ParameterRegistration.INDEX_AND_TYPE);
   }
 
-  @Test
-  public void function() {
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void function(ParameterRegistration parameterRegistration) {
     LocalDateTime after = LocalDateTime.of(2016, 10, 12, 17, 19);
     LocalDateTime before = after.minusHours(1L);
-    assertEquals(Timestamp.valueOf(before), this.procedures.anHourBefore(Timestamp.valueOf(after)));
+    assertEquals(Timestamp.valueOf(before), this.procedures(parameterRegistration).anHourBefore(Timestamp.valueOf(after)));
   }
 
-  @Test
-  public void refCursor() {
-    List<Integer> list = this.procedures.refCursor();
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void refCursor(ParameterRegistration parameterRegistration) {
+    List<Integer> list = this.procedures(parameterRegistration).refCursor();
     assertEquals(Arrays.asList(1, 2), list);
   }
 
-  @Test
-  public void arrayCardinality() {
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void arrayCardinality(ParameterRegistration parameterRegistration) {
     Integer[] array = new Integer[] {1, 2, 3};
-    int arrayCardinality = this.procedures.arrayCardinality(array);
+    int arrayCardinality = this.procedures(parameterRegistration).arrayCardinality(array);
     assertEquals(array.length, arrayCardinality);
   }
 
-  @Test
-  public void returnArray() {
-    Integer[] actual = this.procedures.returnArray();
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void returnArray(ParameterRegistration parameterRegistration) {
+    Integer[] actual = this.procedures(parameterRegistration).returnArray();
     Integer[] expected = new Integer[] {0, 5, 10};
     assertArrayEquals(expected, actual);
   }

@@ -2,8 +2,8 @@ package com.github.marschall.storedprocedureproxy;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -14,8 +14,8 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class ObjectMethodsTest {
 
@@ -25,7 +25,7 @@ public class ObjectMethodsTest {
 
   private SimpleProcedures procedures;
 
-  @Before
+  @BeforeEach
   public void setUp() throws SQLException {
     this.dataSource = mock(DataSource.class);
     this.connection = mock(Connection.class);

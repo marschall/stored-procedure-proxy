@@ -1,25 +1,19 @@
 package com.github.marschall.storedprocedureproxy;
 
-import static com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration.INDEX_AND_TYPE;
-import static com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration.INDEX_ONLY;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.test.context.ContextConfiguration;
 
 import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration;
@@ -28,79 +22,73 @@ import com.github.marschall.storedprocedureproxy.procedures.H2Procedures;
 import com.github.marschall.storedprocedureproxy.procedures.H2Procedures.IdName;
 import com.github.marschall.storedprocedureproxy.spi.NamingStrategy;
 
-@RunWith(Parameterized.class)
 @ContextConfiguration(classes = H2Configuration.class)
 public class H2Test extends AbstractDataSourceTest {
 
-  private H2Procedures procedures;
-
-  private ParameterRegistration parameterRegistration;
-
-  public H2Test(ParameterRegistration parameterRegistration) {
-    this.parameterRegistration = parameterRegistration;
-  }
-
-  @Before
-  public void setUp() {
-    this.procedures = ProcedureCallerFactory.of(H2Procedures.class, this.getDataSource())
+  private H2Procedures procedures(ParameterRegistration parameterRegistration) {
+    return ProcedureCallerFactory.of(H2Procedures.class, this.getDataSource())
             .withProcedureNamingStrategy(NamingStrategy.snakeCase().thenUpperCase())
-            .withParameterRegistration(this.parameterRegistration)
+            .withParameterRegistration(parameterRegistration)
             .build();
   }
 
-  @Parameters(name = "{0}")
-  public static Collection<Object[]> parameters() {
-    return Arrays.asList(
-            new Object[] {INDEX_ONLY},
-            new Object[] {INDEX_AND_TYPE}
-    );
+  public static Stream<ParameterRegistration> parameters() {
+    return Stream.of(ParameterRegistration.INDEX_ONLY, ParameterRegistration.INDEX_AND_TYPE);
   }
 
-  @Test
-  public void callScalarFunction() {
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void callScalarFunction(ParameterRegistration parameterRegistration) {
     String input = "test";
-    assertEquals("pre" + input + "post", procedures.stringProcedure(input));
+    assertEquals("pre" + input + "post", this.procedures(parameterRegistration).stringProcedure(input));
   }
 
-  @Test
-  public void callVoidProcedure() {
-    procedures.voidProcedure("test");
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void callVoidProcedure(ParameterRegistration parameterRegistration) {
+    this.procedures(parameterRegistration).voidProcedure("test");
   }
 
-  @Test
-  public void noArgProcedure() {
-    assertEquals("output", procedures.noArgProcedure());
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void noArgProcedure(ParameterRegistration parameterRegistration) {
+    assertEquals("output", this.procedures(parameterRegistration).noArgProcedure());
   }
 
-  @Test
-  public void reverseObjectArray() {
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void reverseObjectArray(ParameterRegistration parameterRegistration) {
     Object[] input = new Object[] {1, "null", 1.1d};
     Object[] expected = new Object[] {1.1d, "null", 1};
-    assertArrayEquals(expected, procedures.reverseObjectArray(input));
+    assertArrayEquals(expected, this.procedures(parameterRegistration).reverseObjectArray(input));
   }
 
-  @Test
-  public void reverseIntegerArray() {
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void reverseIntegerArray(ParameterRegistration parameterRegistration) {
     Integer[] input = new Integer[] {11, 2, 15};
     Integer[] expected = new Integer[] {15, 2, 11};
-    assertArrayEquals(expected, procedures.reverseIntegerArray(input));
+    assertArrayEquals(expected, this.procedures(parameterRegistration).reverseIntegerArray(input));
   }
 
-  @Test
-  public void returnObjectArray() {
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void returnObjectArray(ParameterRegistration parameterRegistration) {
     Object[] expected = new Object[] {1, "string"};
-    assertArrayEquals(expected, procedures.returnObjectArray());
+    assertArrayEquals(expected, this.procedures(parameterRegistration).returnObjectArray());
   }
 
-  @Test
-  public void returnIntegerArray() {
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void returnIntegerArray(ParameterRegistration parameterRegistration) {
     Integer[] expected = new Integer[] {4, 1, 7};
-    assertArrayEquals(expected, procedures.returnIntegerArray());
+    assertArrayEquals(expected, this.procedures(parameterRegistration).returnIntegerArray());
   }
 
-  @Test
-  public void simpleResultSetNumbered() {
-    List<IdName> names = procedures.simpleResultSet((rs, i) -> {
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void simpleResultSetNumbered(ParameterRegistration parameterRegistration) {
+    List<IdName> names = this.procedures(parameterRegistration).simpleResultSet((rs, i) -> {
       long id = rs.getLong("ID");
       String name = rs.getString("NAME");
       return new IdName(id, i + "-" + name);
@@ -117,9 +105,10 @@ public class H2Test extends AbstractDataSourceTest {
     assertEquals("1-World", name.getName());
   }
 
-  @Test
-  public void simpleResultSet() {
-    List<IdName> names = procedures.simpleResultSet((ValueExtractor<IdName>) rs -> {
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void simpleResultSet(ParameterRegistration parameterRegistration) {
+    List<IdName> names = this.procedures(parameterRegistration).simpleResultSet((ValueExtractor<IdName>) rs -> {
       long id = rs.getLong("ID");
       String name = rs.getString("NAME");
       return new IdName(id, name);
@@ -136,10 +125,11 @@ public class H2Test extends AbstractDataSourceTest {
     assertEquals("World", name.getName());
   }
 
-  @Test
-  @Ignore("feature not ready")
-  public void simpleResultSetFunction() {
-    List<IdName> names = procedures.simpleResultSet((Function<ResultSet, IdName>) rs -> {
+  @ParameterizedTest
+  @MethodSource("parameters")
+  @Disabled("feature not ready")
+  public void simpleResultSetFunction(ParameterRegistration parameterRegistration) {
+    List<IdName> names = this.procedures(parameterRegistration).simpleResultSet((Function<ResultSet, IdName>) rs -> {
       long id;
       String name;
       try {
@@ -162,10 +152,11 @@ public class H2Test extends AbstractDataSourceTest {
     assertEquals("World", name.getName());
   }
 
-  @Test
-  @Ignore("#23")
-  public void simpleResultSetWithDefaultMethod() {
-    List<IdName> names = procedures.simpleResultSet();
+  @ParameterizedTest
+  @MethodSource("parameters")
+  @Disabled("#23")
+  public void simpleResultSetWithDefaultMethod(ParameterRegistration parameterRegistration) {
+    List<IdName> names = this.procedures(parameterRegistration).simpleResultSet();
 
     assertThat(names, hasSize(2));
 

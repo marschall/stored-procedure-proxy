@@ -1,21 +1,13 @@
 package com.github.marschall.storedprocedureproxy;
 
-import static com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration.INDEX_AND_TYPE;
-import static com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration.INDEX_ONLY;
-import static com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration.NAME_AND_TYPE;
-import static com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration.NAME_ONLY;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.stream.Stream;
 
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
 
@@ -23,49 +15,37 @@ import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.Paramete
 import com.github.marschall.storedprocedureproxy.configuration.MssqlConfiguration;
 import com.github.marschall.storedprocedureproxy.procedures.MssqlProcedures;
 
-@RunWith(Parameterized.class)
 @Sql("classpath:mssql_procedures.sql")
 @ContextConfiguration(classes = MssqlConfiguration.class)
-@Ignore("not availale on Travis")
+@Disabled("not availale on Travis")
 public class MssqlTest extends AbstractDataSourceTest {
 
-  private MssqlProcedures procedures;
-
-  private ParameterRegistration parameterRegistration;
-
-  public MssqlTest(ParameterRegistration parameterRegistration) {
-    this.parameterRegistration = parameterRegistration;
-  }
-
-  @Before
-  public void setUp() {
-    this.procedures = ProcedureCallerFactory.of(MssqlProcedures.class, this.getDataSource())
-            .withParameterRegistration(this.parameterRegistration)
+  private MssqlProcedures procedures(ParameterRegistration parameterRegistration) {
+    return ProcedureCallerFactory.of(MssqlProcedures.class, this.getDataSource())
+            .withParameterRegistration(parameterRegistration)
             .build();
   }
 
-  @Parameters(name = "{0}")
-  public static Collection<Object[]> parameters() {
-    return Arrays.asList(
-            new Object[] {INDEX_ONLY},
-            new Object[] {INDEX_AND_TYPE}
-    );
+  public static Stream<ParameterRegistration> parameters(ParameterRegistration parameterRegistration) {
+    return Stream.of(ParameterRegistration.INDEX_ONLY, ParameterRegistration.INDEX_AND_TYPE);
   }
 
-  @Test
-  public void plus1inout() {
-    assertEquals(2, this.procedures.plus1inout(1));
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void plus1inout(ParameterRegistration parameterRegistration) {
+    assertEquals(2, this.procedures(parameterRegistration).plus1inout(1));
   }
 
-  @Test
-  public void plus1inret() {
-    assumeTrue(this.parameterRegistration != NAME_ONLY && this.parameterRegistration != NAME_AND_TYPE);
-    assertEquals(2, this.procedures.plus1inret(1));
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void plus1inret(ParameterRegistration parameterRegistration) {
+    assertEquals(2, this.procedures(parameterRegistration).plus1inret(1));
   }
 
-  @Test
-  public void fakeCursor() {
-    assertEquals(Arrays.asList("hello", "world"), this.procedures.fakeCursor());
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void fakeCursor(ParameterRegistration parameterRegistration) {
+    assertEquals(Arrays.asList("hello", "world"), this.procedures(parameterRegistration).fakeCursor());
   }
 
 }
