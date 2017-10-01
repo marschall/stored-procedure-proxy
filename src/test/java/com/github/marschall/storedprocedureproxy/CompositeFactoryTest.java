@@ -2,7 +2,7 @@ package com.github.marschall.storedprocedureproxy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -32,16 +32,12 @@ public class CompositeFactoryTest {
     });
 
     // when
-    try {
-      factory.createResource(connection, new Object[0]);
-      fail("should throw");
-    } catch (SQLException e) {
-      assertEquals(exceptionMessage, e.getMessage());
-      Throwable[] suppressed = e.getSuppressed();
-      assertNotNull(suppressed);
-      assertEquals(1, suppressed.length);
-      assertEquals(supressedMessage, suppressed[0].getMessage());
-    }
+    SQLException e = assertThrows(SQLException.class, () -> factory.createResource(connection, new Object[0]));
+    assertEquals(exceptionMessage, e.getMessage());
+    Throwable[] suppressed = e.getSuppressed();
+    assertNotNull(suppressed);
+    assertEquals(1, suppressed.length);
+    assertEquals(supressedMessage, suppressed[0].getMessage());
 
     // then
     verify(throwOnCloseResource, times(1)).close();

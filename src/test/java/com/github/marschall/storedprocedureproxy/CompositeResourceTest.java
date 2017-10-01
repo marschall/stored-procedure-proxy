@@ -2,7 +2,7 @@ package com.github.marschall.storedprocedureproxy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.sql.SQLException;
 
@@ -16,16 +16,12 @@ public class CompositeResourceTest {
     CallResource resource2 = new ThrowingResource("message2");
     CallResource composite = new CompositeResource(new CallResource[]{resource1, resource2});
 
-    try {
-      composite.close();
-      fail("should throw");
-    } catch (SQLException e) {
-      assertEquals("message1", e.getMessage());
-      Throwable[] suppressed = e.getSuppressed();
-      assertNotNull(suppressed);
-      assertEquals(1, suppressed.length);
-      assertEquals("message2", suppressed[0].getMessage());
-    }
+    SQLException e = assertThrows(SQLException.class, () -> composite.close());
+    assertEquals("message1", e.getMessage());
+    Throwable[] suppressed = e.getSuppressed();
+    assertNotNull(suppressed);
+    assertEquals(1, suppressed.length);
+    assertEquals("message2", suppressed[0].getMessage());
   }
 
   @Test
@@ -34,15 +30,11 @@ public class CompositeResourceTest {
     CallResource resource2 = new ThrowingResource("message2");
     CallResource composite = new CompositeResource(new CallResource[]{resource1, resource2});
 
-    try {
-      composite.close();
-      fail("should throw");
-    } catch (SQLException e) {
-      assertEquals("message2", e.getMessage());
-      Throwable[] suppressed = e.getSuppressed();
-      assertNotNull(suppressed);
-      assertEquals(0, suppressed.length);
-    }
+    SQLException e = assertThrows(SQLException.class, () -> composite.close());
+    assertEquals("message2", e.getMessage());
+    Throwable[] suppressed = e.getSuppressed();
+    assertNotNull(suppressed);
+    assertEquals(0, suppressed.length);
   }
 
   @Test
@@ -51,15 +43,11 @@ public class CompositeResourceTest {
     CallResource resource2 = new NonThrowingResource();
     CallResource composite = new CompositeResource(new CallResource[]{resource1, resource2});
 
-    try {
-      composite.close();
-      fail("should throw");
-    } catch (SQLException e) {
-      assertEquals("message1", e.getMessage());
-      Throwable[] suppressed = e.getSuppressed();
-      assertNotNull(suppressed);
-      assertEquals(0, suppressed.length);
-    }
+    SQLException e = assertThrows(SQLException.class, () -> composite.close());
+    assertEquals("message1", e.getMessage());
+    Throwable[] suppressed = e.getSuppressed();
+    assertNotNull(suppressed);
+    assertEquals(0, suppressed.length);
   }
 
   @Test

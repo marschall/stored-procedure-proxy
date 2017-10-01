@@ -1,7 +1,7 @@
 package com.github.marschall.storedprocedureproxy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
@@ -17,18 +17,9 @@ public class ByteUtilsTest {
 
   @Test
   public void invalidConversions() {
-    try {
-      ByteUtils.toByte(-1);
-      fail("-1 is invalid");
-    } catch (IllegalArgumentException e) {
-      // should reach here
-    }
-    try {
-      ByteUtils.toByte(256);
-      fail("256 is invalid");
-    } catch (IllegalArgumentException e) {
-      // should reach here
-    }
+    assertThrows(IllegalArgumentException.class, () -> ByteUtils.toByte(-1));
+
+    assertThrows(IllegalArgumentException.class, () -> ByteUtils.toByte(256));
   }
 
   private static void assertInt(int i) {

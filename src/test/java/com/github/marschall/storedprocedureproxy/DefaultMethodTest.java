@@ -1,6 +1,6 @@
 package com.github.marschall.storedprocedureproxy;
 
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -41,12 +41,7 @@ public class DefaultMethodTest {
   public void defaultMethod() throws SQLException {
     DefaultMethod defaultMethod = ProcedureCallerFactory.build(DefaultMethod.class, this.dataSource);
 
-    try {
-      defaultMethod.hello();
-      fail("default methods not are supported");
-    } catch (IllegalStateException e) {
-      // should reach here
-    }
+    assertThrows(IllegalStateException.class, () -> defaultMethod.hello());
   }
 
 
