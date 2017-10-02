@@ -1,4 +1,4 @@
-module com.github.marschall.stored-procedure-proxy {
+module com.github.marschall.stored.procedure.proxy {
 
   exports com.github.marschall.storedprocedureproxy;
   exports com.github.marschall.storedprocedureproxy.annotations;
