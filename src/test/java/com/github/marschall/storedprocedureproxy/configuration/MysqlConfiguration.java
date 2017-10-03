@@ -6,6 +6,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 
+import com.github.marschall.storedprocedureproxy.Travis;
+
 @Configuration
 public class MysqlConfiguration {
 
@@ -18,13 +20,9 @@ public class MysqlConfiguration {
     // https://dev.mysql.com/doc/connector-j/6.0/en/connector-j-reference-configuration-properties.html
     dataSource.setUrl("jdbc:mysql://localhost:3306/" + database + "?useSSL=false&logger=com.mysql.cj.core.log.Slf4JLogger");
     dataSource.setUsername(userName);
-    String password = this.isTravis() ? "" : userName;
+    String password = Travis.isTravis() ? "" : userName;
     dataSource.setPassword(password);
     return dataSource;
-  }
-
-  private boolean isTravis() {
-    return System.getenv().getOrDefault("TRAVIS", "false").equals("true");
   }
 
 }

@@ -17,7 +17,7 @@ import com.github.marschall.storedprocedureproxy.procedures.MssqlProcedures;
 
 @Sql("classpath:mssql_procedures.sql")
 @ContextConfiguration(classes = MssqlConfiguration.class)
-@Disabled("not availale on Travis")
+@DisabledOnTravis
 public class MssqlTest extends AbstractDataSourceTest {
 
   private MssqlProcedures procedures(ParameterRegistration parameterRegistration) {

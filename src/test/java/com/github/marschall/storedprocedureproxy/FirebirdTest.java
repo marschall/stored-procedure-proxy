@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.test.context.ContextConfiguration;
@@ -19,7 +18,7 @@ import com.github.marschall.storedprocedureproxy.procedures.FirebirdProcedures;
 
 @ContextConfiguration(classes = FirebirdConfiguration.class)
 @Sql(scripts = "classpath:firebird_procedures.sql", config = @SqlConfig(separator = "^"))
-@Disabled("not availale on Travis")
+@DisabledOnTravis
 public class FirebirdTest extends AbstractDataSourceTest {
 
   private FirebirdProcedures procedures(ParameterRegistration parameterRegistration) {
