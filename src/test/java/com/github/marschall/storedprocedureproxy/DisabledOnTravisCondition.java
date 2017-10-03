@@ -23,7 +23,7 @@ public final class DisabledOnTravisCondition implements ExecutionCondition {
     Optional<DisabledOnTravis> disabled = findAnnotation(element, DisabledOnTravis.class);
     if (disabled.isPresent()) {
       if (Travis.isTravis()) {
-        String reason = element.get() + " is @Disabled";
+        String reason = element.get() + " is disabled on TravisCI";
         return ConditionEvaluationResult.disabled(reason);
       } else {
         return NOT_TRAVIS_CI;
