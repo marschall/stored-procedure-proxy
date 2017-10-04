@@ -8,10 +8,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.postgresql.util.PSQLException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.test.context.ContextConfiguration;
@@ -34,30 +32,26 @@ public class PostgresTest extends AbstractDataSourceTest {
             .build();
   }
 
-  public static Stream<ParameterRegistration> parameters() {
-    return Stream.of(ParameterRegistration.INDEX_ONLY, ParameterRegistration.INDEX_AND_TYPE);
-  }
-
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void browserVersion(ParameterRegistration parameterRegistration) {
     assertEquals("Servo/0.0.1", this.procedures(parameterRegistration).browserVersion("Servo", "0.0.1"));
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void salesTax(ParameterRegistration parameterRegistration) {
     assertEquals(0.01f, 6.0f, this.procedures(parameterRegistration).salesTax(100.0f));
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void propertyTax(ParameterRegistration parameterRegistration) {
     assertEquals(0.01f, 6.0f, this.procedures(parameterRegistration).propertyTax(100.0f));
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void raiseCheckedException(ParameterRegistration parameterRegistration) {
     SQLException sqlException = assertThrows(SQLException.class, () -> this.procedures(parameterRegistration).raiseCheckedException());
     assertTrue(sqlException instanceof PSQLException);
@@ -65,7 +59,7 @@ public class PostgresTest extends AbstractDataSourceTest {
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void raiseUncheckedException(ParameterRegistration parameterRegistration) {
     DataAccessException e = assertThrows(DataAccessException.class, () -> this.procedures(parameterRegistration).raiseUncheckedException());
     Throwable cause = e.getCause();
@@ -74,84 +68,84 @@ public class PostgresTest extends AbstractDataSourceTest {
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void simpleRefCursor(ParameterRegistration parameterRegistration) {
     List<String> refCursor = this.procedures(parameterRegistration).simpleRefCursor();
     assertEquals(Arrays.asList("hello", "postgres"), refCursor);
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void simpleRefCursorOut(ParameterRegistration parameterRegistration) {
     List<String> refCursor = this.procedures(parameterRegistration).simpleRefCursorOut();
     assertEquals(Arrays.asList("hello", "postgres"), refCursor);
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void mappedRefCursorNumbered(ParameterRegistration parameterRegistration) {
     List<String> refCursor = this.procedures(parameterRegistration).mappedRefCursor((rs, i) -> i + "-" + rs.getString(1));
     assertEquals(Arrays.asList("0-hello", "1-postgres"), refCursor);
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void mappedRefCursor(ParameterRegistration parameterRegistration) {
     List<String> refCursor = this.procedures(parameterRegistration).mappedRefCursor(rs -> "1-" + rs.getString(1));
     assertEquals(Arrays.asList("1-hello", "1-postgres"), refCursor);
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void mappedRefCursorAndArgumentNumbered(ParameterRegistration parameterRegistration) {
     List<String> refCursor = this.procedures(parameterRegistration).mappedRefCursorAndArgument("prefix-", (rs, i) -> i + "-" + rs.getString(1));
     assertEquals(Arrays.asList("0-prefix-hello", "1-prefix-postgres"), refCursor);
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void mappedRefCursorAndArgument(ParameterRegistration parameterRegistration) {
     List<String> refCursor = this.procedures(parameterRegistration).mappedRefCursorAndArgument("prefix-", rs -> "1-" + rs.getString(1));
     assertEquals(Arrays.asList("1-prefix-hello", "1-prefix-postgres"), refCursor);
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void sampleArrayArgumentList(ParameterRegistration parameterRegistration) {
     String result = this.procedures(parameterRegistration).sampleArrayArgumentList(Arrays.asList(1, 2, 3));
     assertEquals("1, 2, 3", result);
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void sampleArrayArgumentArray(ParameterRegistration parameterRegistration) {
     String result = this.procedures(parameterRegistration).sampleArrayArgumentArray(new Integer[] {1, 2, 3});
     assertEquals("1, 2, 3", result);
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void sampleArrayArgumentPrimitiveArray(ParameterRegistration parameterRegistration) {
     String result = this.procedures(parameterRegistration).sampleArrayArgumentPrimitiveArray(new int[] {1, 2, 3});
     assertEquals("1, 2, 3", result);
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void concatenateTwoArrays(ParameterRegistration parameterRegistration) {
     Integer[] result = this.procedures(parameterRegistration).concatenateTwoArrays(new Integer[] {1, 2, 3}, new Integer[] {4, 5, 6});
     assertArrayEquals(new Integer[] {1, 2, 3, 4, 5, 6}, result);
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void arrayReturnValuePrimitive(ParameterRegistration parameterRegistration) {
     int[] result = this.procedures(parameterRegistration).arrayReturnValuePrimitive();
     assertArrayEquals(new int[] {1, 2, 3, 4}, result);
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void arrayReturnValueRefernce(ParameterRegistration parameterRegistration) {
     Integer[] result = this.procedures(parameterRegistration).arrayReturnValueRefernce();
     assertArrayEquals(new Integer[] {1, 2, 3, 4}, result);

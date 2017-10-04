@@ -7,10 +7,8 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.test.context.ContextConfiguration;
 
 import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration;
@@ -26,12 +24,8 @@ public class HsqlTest extends AbstractDataSourceTest {
             .build();
   }
 
-  public static Stream<ParameterRegistration> parameters() {
-    return Stream.of(ParameterRegistration.INDEX_ONLY, ParameterRegistration.INDEX_AND_TYPE);
-  }
-
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void function(ParameterRegistration parameterRegistration) {
     LocalDateTime after = LocalDateTime.of(2016, 10, 12, 17, 19);
     LocalDateTime before = after.minusHours(1L);
@@ -39,14 +33,14 @@ public class HsqlTest extends AbstractDataSourceTest {
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void refCursor(ParameterRegistration parameterRegistration) {
     List<Integer> list = this.procedures(parameterRegistration).refCursor();
     assertEquals(Arrays.asList(1, 2), list);
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void arrayCardinality(ParameterRegistration parameterRegistration) {
     Integer[] array = new Integer[] {1, 2, 3};
     int arrayCardinality = this.procedures(parameterRegistration).arrayCardinality(array);
@@ -54,7 +48,7 @@ public class HsqlTest extends AbstractDataSourceTest {
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void returnArray(ParameterRegistration parameterRegistration) {
     Integer[] actual = this.procedures(parameterRegistration).returnArray();
     Integer[] expected = new Integer[] {0, 5, 10};

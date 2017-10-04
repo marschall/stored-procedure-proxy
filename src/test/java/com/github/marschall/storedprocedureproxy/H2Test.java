@@ -9,11 +9,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.test.context.ContextConfiguration;
 
 import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration;
@@ -32,31 +30,27 @@ public class H2Test extends AbstractDataSourceTest {
             .build();
   }
 
-  public static Stream<ParameterRegistration> parameters() {
-    return Stream.of(ParameterRegistration.INDEX_ONLY, ParameterRegistration.INDEX_AND_TYPE);
-  }
-
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void callScalarFunction(ParameterRegistration parameterRegistration) {
     String input = "test";
     assertEquals("pre" + input + "post", this.procedures(parameterRegistration).stringProcedure(input));
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void callVoidProcedure(ParameterRegistration parameterRegistration) {
     this.procedures(parameterRegistration).voidProcedure("test");
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void noArgProcedure(ParameterRegistration parameterRegistration) {
     assertEquals("output", this.procedures(parameterRegistration).noArgProcedure());
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void reverseObjectArray(ParameterRegistration parameterRegistration) {
     Object[] input = new Object[] {1, "null", 1.1d};
     Object[] expected = new Object[] {1.1d, "null", 1};
@@ -64,7 +58,7 @@ public class H2Test extends AbstractDataSourceTest {
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void reverseIntegerArray(ParameterRegistration parameterRegistration) {
     Integer[] input = new Integer[] {11, 2, 15};
     Integer[] expected = new Integer[] {15, 2, 11};
@@ -72,21 +66,21 @@ public class H2Test extends AbstractDataSourceTest {
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void returnObjectArray(ParameterRegistration parameterRegistration) {
     Object[] expected = new Object[] {1, "string"};
     assertArrayEquals(expected, this.procedures(parameterRegistration).returnObjectArray());
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void returnIntegerArray(ParameterRegistration parameterRegistration) {
     Integer[] expected = new Integer[] {4, 1, 7};
     assertArrayEquals(expected, this.procedures(parameterRegistration).returnIntegerArray());
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void simpleResultSetNumbered(ParameterRegistration parameterRegistration) {
     List<IdName> names = this.procedures(parameterRegistration).simpleResultSet((rs, i) -> {
       long id = rs.getLong("ID");
@@ -106,7 +100,7 @@ public class H2Test extends AbstractDataSourceTest {
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   public void simpleResultSet(ParameterRegistration parameterRegistration) {
     List<IdName> names = this.procedures(parameterRegistration).simpleResultSet((ValueExtractor<IdName>) rs -> {
       long id = rs.getLong("ID");
@@ -126,7 +120,7 @@ public class H2Test extends AbstractDataSourceTest {
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   @Disabled("feature not ready")
   public void simpleResultSetFunction(ParameterRegistration parameterRegistration) {
     List<IdName> names = this.procedures(parameterRegistration).simpleResultSet((Function<ResultSet, IdName>) rs -> {
@@ -153,7 +147,7 @@ public class H2Test extends AbstractDataSourceTest {
   }
 
   @ParameterizedTest
-  @MethodSource("parameters")
+  @IndexRegistrationParameters
   @Disabled("#23")
   public void simpleResultSetWithDefaultMethod(ParameterRegistration parameterRegistration) {
     List<IdName> names = this.procedures(parameterRegistration).simpleResultSet();
