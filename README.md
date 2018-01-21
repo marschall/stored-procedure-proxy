@@ -40,7 +40,7 @@ The project has no runtime dependencies and is a single JAR below 100 kB.
 <dependency>
   <groupId>com.github.marschall</groupId>
   <artifactId>stored-procedure-proxy</artifactId>
-  <version>0.8.3</version>
+  <version>0.9.0</version>
 </dependency>
 ```
 
@@ -58,7 +58,7 @@ Calling simple stored procedures in JDBC or JPA is unnecessarily [cumbersome](ht
 - [Spring Data JPA](https://github.com/spring-projects/spring-data-examples/tree/master/jpa/jpa21) offers two ways
   - the first is hardly an improvement since it still needs a `@NamedStoredProcedureQuery`
   - the [second](https://jira.spring.io/browse/DATAJPA-455) is quite nice, we take inspiration from this approach and add more flexibility
-- [jOOQ](http://www.jooq.org/doc/3.8/manual/sql-execution/stored-procedures/) offers stored procedure support in a way that is similar to this project, in addition it supports many more features and can generate classes from a database schema. The only down sides are that it requires passing a configuration object ([for now](https://github.com/jOOQ/jOOQ/issues/5677)) and Oracle support is commercial.
+- [jOOQ](https://www.jooq.org/doc/3.10/manual/sql-execution/stored-procedures/) offers stored procedure support in a way that is similar to this project, in addition it supports many more features and can generate classes from a database schema. The only down sides are that it requires passing a configuration object ([for now](https://github.com/jOOQ/jOOQ/issues/5677)) and Oracle support is commercial.
 - [jDBI](https://github.com/jdbi/jdbi/issues/135) falls back to manual parameter registration for out parameters as well.
 - [Ebean](https://ebean-orm.github.io/apidocs/com/avaje/ebean/CallableSql.html) falls back to manual parameter registration for out parameters as well.
 - [Querydsl](https://github.com/querydsl/querydsl/issues/15) has no support at all
