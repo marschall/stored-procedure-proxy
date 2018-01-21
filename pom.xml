@@ -351,7 +351,7 @@
         </plugin>
         <plugin>
           <artifactId>maven-site-plugin</artifactId>
-          <version>3.6</version>
+          <version>3.7</version>
         </plugin>
         <plugin>
           <artifactId>maven-deploy-plugin</artifactId>
