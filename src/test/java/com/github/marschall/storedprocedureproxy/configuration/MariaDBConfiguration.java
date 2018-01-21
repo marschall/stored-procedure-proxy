@@ -14,7 +14,7 @@ public class MariaDBConfiguration {
     SingleConnectionDataSource dataSource = new SingleConnectionDataSource();
     dataSource.setSuppressClose(true);
     // https://mariadb.com/kb/en/mariadb/about-mariadb-connector-j/
-    dataSource.setUrl("jdbc:mariadb://localhost:3306/jdbc");
+    dataSource.setUrl("jdbc:mariadb://localhost:3307/jdbc");
     dataSource.setUsername("jdbc");
     dataSource.setPassword("Cent-Quick-Space-Bath-8");
     return dataSource;

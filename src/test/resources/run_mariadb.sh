@@ -4,5 +4,5 @@ docker run --name jdbc-mariadb \
  -e 'MYSQL_USER=jdbc' \
  -e 'MYSQL_PASSWORD=Cent-Quick-Space-Bath-8' \
  -e 'MYSQL_DATABASE=jdbc' \
- -p 3306:3306 \
+ -p 3307:3306 \
  -d mariadb:10.3
