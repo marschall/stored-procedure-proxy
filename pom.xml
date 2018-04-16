@@ -462,7 +462,9 @@
               <jdkToolchain>
                 <version>9</version>
               </jdkToolchain>
-              <release>8</release>
+              <!-- do not use release 8 so we can access MethodHandles.privateLookupIn without a multi release JAR -->
+              <source>1.8</source>
+              <target>1.8</target>
             </configuration>
           </execution>
         </executions>
@@ -472,7 +474,9 @@
           <jdkToolchain>
             <version>9</version>
           </jdkToolchain>
-          <release>8</release>
+          <!-- do not use release 8 so we can access MethodHandles.privateLookupIn without a multi release JAR -->
+          <source>1.8</source>
+          <target>1.8</target>
         </configuration>
       </plugin>
         </plugins>

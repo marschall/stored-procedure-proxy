@@ -148,7 +148,6 @@ public class H2Test extends AbstractDataSourceTest {
 
   @ParameterizedTest
   @IndexRegistrationParameters
-  @Disabled("#23")
   public void simpleResultSetWithDefaultMethod(ParameterRegistration parameterRegistration) {
     List<IdName> names = this.procedures(parameterRegistration).simpleResultSet();
 

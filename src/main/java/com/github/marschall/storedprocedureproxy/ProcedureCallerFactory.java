@@ -1,5 +1,9 @@
 package com.github.marschall.storedprocedureproxy;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -354,7 +358,7 @@ public final class ProcedureCallerFactory<T> {
    * @see <a href="https://github.com/marschall/stored-procedure-proxy/wiki/Binding-Oracle-Booleans">Binding Oracle Booleans</a>
    */
   public ProcedureCallerFactory<T> withOracleTypeMapper() {
-    return withTypeMapper(OracleTypeMapper.INSTANCE);
+    return this.withTypeMapper(OracleTypeMapper.INSTANCE);
   }
 
   /**
@@ -372,7 +376,7 @@ public final class ProcedureCallerFactory<T> {
    */
   public ProcedureCallerFactory<T> withOracleExtensions() {
     this.withOracleArrays();
-    return withOracleTypeMapper();
+    return this.withOracleTypeMapper();
   }
 
   /**
@@ -449,6 +453,8 @@ public final class ProcedureCallerFactory<T> {
      */
     static final int NO_IN_PARAMTER = 0;
 
+    private static final boolean SUPPORTS_DEFAULT_METHODS = isJava9OrLater();
+
     private final DataSource dataSource;
 
     private final Class<?> interfaceDeclaration;
@@ -479,6 +485,12 @@ public final class ProcedureCallerFactory<T> {
      */
     private final Map<Method, CallInfo> callInfoCache;
 
+    /**
+     * We assume this is uncontended since we only do a few lookups and gets.
+     * Save the memory overhead of a {@link ConcurrentHashMap}.
+     */
+    private final Map<Method, MethodHandle> defaultMethodCache;
+
     private final ReadWriteLock cacheLock;
 
     private final boolean useOracleArrays;
@@ -508,23 +520,28 @@ public final class ProcedureCallerFactory<T> {
       this.typeNameResolver = typeNameResolver;
       this.useOracleArrays = useOracleArrays;
       this.callInfoCache = new HashMap<>();
+      this.defaultMethodCache = new HashMap<>();
       this.cacheLock = new ReentrantReadWriteLock();
     }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
       if (method.isDefault()) {
-        throw new IllegalStateException("default methods are not supported");
+        if (!SUPPORTS_DEFAULT_METHODS) {
+          throw new IllegalStateException("default methods are not supported");
+        }
+        return this.getDefaultMethodHandle(proxy, method)
+                .invokeWithArguments(args);
       }
 
       // handle methods defined in Object: toString, hashCode, equals
       String methodName = method.getName();
       int argCount = args == null ? 0 : args.length;
-      if (methodName.equals("toString") && argCount == 0) {
+      if (methodName.equals("toString") && (argCount == 0)) {
         return "stored procedures defined in " + this.interfaceDeclaration.getName();
-      } else if (methodName.equals("hashCode") && argCount == 0) {
+      } else if (methodName.equals("hashCode") && (argCount == 0)) {
         return System.identityHashCode(proxy);
-      } else if (methodName.equals("equals") && argCount == 1) {
+      } else if (methodName.equals("equals") && (argCount == 1)) {
         return proxy == args[0];
       }
 
@@ -597,7 +614,7 @@ public final class ProcedureCallerFactory<T> {
       String[] names = new String[parameters.length];
       for (int i = 0; i < parameters.length; i++) {
         Parameter parameter = parameters[i];
-        names[i] = getParameterName(parameter, method, i);
+        names[i] = this.getParameterName(parameter, method, i);
       }
       return names;
     }
@@ -627,7 +644,7 @@ public final class ProcedureCallerFactory<T> {
       int[] types = new int[parameters.length];
       for (int i = 0; i < parameters.length; i++) {
         Parameter parameter = parameters[i];
-        types[i] = getParameterType(parameter);
+        types[i] = this.getParameterType(parameter);
       }
       return types;
     }
@@ -650,9 +667,8 @@ public final class ProcedureCallerFactory<T> {
       return connection.prepareCall(callInfo.callString);
     }
 
-
     private CallInfo getCallInfo(Method method, Object[] args) {
-      CallInfo callInfo = getFromCacheOrNull(method);
+      CallInfo callInfo = this.getCallInfoFromCacheOrNull(method);
       if (callInfo != null) {
         return callInfo;
       }
@@ -661,25 +677,25 @@ public final class ProcedureCallerFactory<T> {
       // rather than locking for a long time
       callInfo = this.buildCallInfo(method, args);
 
-      CallInfo previous = tryWriteToCache(method, callInfo);
+      CallInfo previous = this.tryWriteCallInfoToCache(method, callInfo);
       return previous != null ? previous : callInfo;
     }
 
-    private CallInfo tryWriteToCache(Method method, CallInfo callInfo) {
-      Lock lock = this.cacheLock.writeLock();
+    private CallInfo getCallInfoFromCacheOrNull(Method method) {
+      Lock lock = this.cacheLock.readLock();
       lock.lock();
       try {
-        return this.callInfoCache.putIfAbsent(method, callInfo);
+        return this.callInfoCache.get(method);
       } finally {
         lock.unlock();
       }
     }
 
-    private CallInfo getFromCacheOrNull(Method method) {
-      Lock lock = this.cacheLock.readLock();
+    private CallInfo tryWriteCallInfoToCache(Method method, CallInfo callInfo) {
+      Lock lock = this.cacheLock.writeLock();
       lock.lock();
       try {
-        return this.callInfoCache.get(method);
+        return this.callInfoCache.putIfAbsent(method, callInfo);
       } finally {
         lock.unlock();
       }
@@ -693,18 +709,18 @@ public final class ProcedureCallerFactory<T> {
       int outParameterSqlIndex = getOutParameterSqlIndex(method);
       boolean hasOutParameter = outParameterSqlIndex != NO_OUT_PARAMTER;
 
-      InParameterRegistration inParameterRegistration = buildInParameterRegistration(
+      InParameterRegistration inParameterRegistration = this.buildInParameterRegistration(
               method, sqlInputParameterCount, outParameterSqlIndex);
 
-      OutParameterRegistration outParameterRegistration = buildOutParameterRegistration(
+      OutParameterRegistration outParameterRegistration = this.buildOutParameterRegistration(
               method, outParameterSqlIndex, hasOutParameter);
 
-      CallResourceFactory callResourceFactory = buildCallResourceFactory(method);
+      CallResourceFactory callResourceFactory = this.buildCallResourceFactory(method);
 
-      String callString = buildCallString(method,
+      String callString = this.buildCallString(method,
               procedureName, sqlInputParameterCount, hasOutParameter);
       boolean wantsExceptionTranslation = wantsExceptionTranslation(method);
-      ResultExtractor resultExtractor = buildResultExtractor(method, methodReturnType);
+      ResultExtractor resultExtractor = this.buildResultExtractor(method, methodReturnType);
 
       return new CallInfo(procedureName, callString,
               wantsExceptionTranslation, resultExtractor, outParameterRegistration,
@@ -726,7 +742,7 @@ public final class ProcedureCallerFactory<T> {
         for (int i = 0; i < parameters.length; i++) {
           Parameter parameter = parameters[i];
           if (isCollection(parameter.getType())) {
-            return createArrayResourceFactory(parameter, i);
+            return this.createArrayResourceFactory(parameter, i);
           }
         }
         throw new AssertionError("inconsistent state we checked for an array but found none");
@@ -737,7 +753,7 @@ public final class ProcedureCallerFactory<T> {
         for (int i = 0; i < parameters.length; i++) {
           Parameter parameter = parameters[i];
           if (isCollection(parameter.getType())) {
-            factories[factoryIndex++] = createArrayResourceFactory(parameter, i);
+            factories[factoryIndex++] = this.createArrayResourceFactory(parameter, i);
           }
         }
         return new CompositeFactory(factories);
@@ -758,17 +774,17 @@ public final class ProcedureCallerFactory<T> {
     }
 
     private InParameterRegistration buildInParameterRegistration(Method method, int sqlParameterCount, int outParameterSqlIndex) {
-      boolean hasOutParameter = !method.isAnnotationPresent(InOutParameter.class) && outParameterSqlIndex != NO_OUT_PARAMTER;
+      boolean hasOutParameter = !method.isAnnotationPresent(InOutParameter.class) && (outParameterSqlIndex != NO_OUT_PARAMTER);
       if (sqlParameterCount > 0) {
         switch (this.parameterRegistration) {
           case INDEX_ONLY: {
             int valueExtractorIndex = getValueExtractorIndex(method);
             int javaParameterCount = method.getParameterCount();
             if (valueExtractorIndex == NO_VALUE_EXTRACTOR) {
-              if (hasOutParameter && outParameterSqlIndex == 1) {
+              if (hasOutParameter && (outParameterSqlIndex == 1)) {
                 return PrefixByIndexInParameterRegistration.INSTANCE;
               }
-              if (!hasOutParameter || outParameterSqlIndex == javaParameterCount + 1) {
+              if (!hasOutParameter || (outParameterSqlIndex == (javaParameterCount + 1))) {
                 return SuffixByIndexInParameterRegistration.INSTANCE;
               }
             }
@@ -782,11 +798,11 @@ public final class ProcedureCallerFactory<T> {
             return new ByIndexAndTypeInParameterRegistration(inParameterIndices, inParameterTypes);
           }
           case NAME_ONLY: {
-            String[] inParameterNames = extractParameterNames(method);
+            String[] inParameterNames = this.extractParameterNames(method);
             return new ByNameInParameterRegistration(inParameterNames);
           }
           case NAME_AND_TYPE: {
-            String[] inParameterNames = extractParameterNames(method);
+            String[] inParameterNames = this.extractParameterNames(method);
             int[] inParameterTypes = this.extractParameterTypes(method);
             return new ByNameAndTypeInParameterRegistration(inParameterNames, inParameterTypes);
           }
@@ -800,7 +816,7 @@ public final class ProcedureCallerFactory<T> {
 
     private ResultExtractor buildResultExtractor(Method method, Class<?> methodReturnType) {
       boolean methodHasReturnValue = methodReturnType != void.class;
-      boolean isList = methodHasReturnValue && methodReturnType == List.class;
+      boolean isList = methodHasReturnValue && (methodReturnType == List.class);
       boolean isArray = methodHasReturnValue && methodReturnType.isArray();
       if (!methodHasReturnValue) {
         return VoidResultExtractor.INSTANCE;
@@ -836,7 +852,7 @@ public final class ProcedureCallerFactory<T> {
 
     private static byte[] buildInParameterIndices(Method method, int javaParameterCount, boolean hasOutParameter, int outParameterSqlIndex) {
       Class<?>[] methodParameterTypes = method.getParameterTypes();
-      if (!hasOutParameter || (hasOutParameter && outParameterSqlIndex == javaParameterCount + 1)) {
+      if (!hasOutParameter || (hasOutParameter && (outParameterSqlIndex == (javaParameterCount + 1)))) {
         // we have an no out parameter or
         // we have an out parameter and it's the last parameter
         return buildInParameterIndices(javaParameterCount, methodParameterTypes);
@@ -880,7 +896,7 @@ public final class ProcedureCallerFactory<T> {
               return createIndexedOutParameterRegistration(outParameterSqlIndex, outParameterType, typeName);
             case NAME_ONLY:
             case NAME_AND_TYPE:
-              String outParameterName = getParameterName(parameter, method, outParameterIndex);
+              String outParameterName = this.getParameterName(parameter, method, outParameterIndex);
               return createNamedOutParameterRegistration(outParameterType, typeName, outParameterName);
             default:
               throw new IllegalStateException("unknown parameter registration: " + this.parameterRegistration);
@@ -922,7 +938,7 @@ public final class ProcedureCallerFactory<T> {
         outParameterName = null;
       }
       // correct annotation default values
-      if (outParameterName != null && outParameterName.isEmpty()) {
+      if ((outParameterName != null) && outParameterName.isEmpty()) {
         return null;
       }
       return outParameterName;
@@ -950,7 +966,7 @@ public final class ProcedureCallerFactory<T> {
         outParameterIndex = NO_OUT_PARAMTER;
       }
       if (outParameterIndex == NO_OUT_PARAMTER) {
-        if (outParameter != null || returnValue != null) {
+        if ((outParameter != null) || (returnValue != null)) {
           // default for the out parameter index is the last index
           // but only if we use an out parameter for function return value
           // if we use a result set then we have no out parameter
@@ -1070,7 +1086,7 @@ public final class ProcedureCallerFactory<T> {
           indices[i] = NO_IN_PARAMTER;
           continue;
         }
-        if (outParameterIndex > i + 1) {
+        if (outParameterIndex > (i + 1)) {
           indices[i] = ByteUtils.toByte(i + 1);
         } else {
           indices[i] = ByteUtils.toByte(i + 2);
@@ -1151,7 +1167,7 @@ public final class ProcedureCallerFactory<T> {
       }
       capacity += functionName.length()
               + 1 // (
-              + Math.max(parameterCount * 2 - 1, 0) // ?,?
+              + Math.max((parameterCount * 2) - 1, 0) // ?,?
               + 2; // )}
 
       // build the string
@@ -1219,6 +1235,59 @@ public final class ProcedureCallerFactory<T> {
       return this.hasNamespace || method.getDeclaringClass().isAnnotationPresent(Schema.class);
     }
 
+
+    private MethodHandle getDefaultMethodHandle(Object proxy, Method method) {
+      MethodHandle methodHandle = this.getDefaultMethodHandleFromCacheOrNull(method);
+      if (methodHandle != null) {
+        return methodHandle;
+      }
+
+      // potentially compute callInfo multiple times
+      // rather than locking for a long time
+      methodHandle = this.lookupDefaultMethod(proxy, method);
+
+      MethodHandle previous = this.tryWriteDefaultMethodHandleToCache(method, methodHandle);
+      return previous != null ? previous : methodHandle;
+    }
+
+    private MethodHandle getDefaultMethodHandleFromCacheOrNull(Method method) {
+      Lock lock = this.cacheLock.readLock();
+      lock.lock();
+      try {
+        return this.defaultMethodCache.get(method);
+      } finally {
+        lock.unlock();
+      }
+    }
+
+    private MethodHandle tryWriteDefaultMethodHandleToCache(Method method, MethodHandle methodHandle) {
+      Lock lock = this.cacheLock.writeLock();
+      lock.lock();
+      try {
+        return this.defaultMethodCache.putIfAbsent(method, methodHandle);
+      } finally {
+        lock.unlock();
+      }
+    }
+
+    private MethodHandle lookupDefaultMethod(Object proxy, Method method) {
+      // https://gist.github.com/raphw/c1faf2f40e80afce6f13511098cfb90f
+      try {
+        Lookup lookup;
+        if (proxy.getClass().getModule().isNamed()) {
+          lookup = MethodHandles.privateLookupIn(this.interfaceDeclaration, MethodHandles.lookup());
+        } else {
+          ProcedureCaller.class.getModule().addReads(proxy.getClass().getModule());
+          lookup = MethodHandles.privateLookupIn(proxy.getClass(), MethodHandles.lookup());
+        }
+        MethodType methodType = MethodType.methodType(method.getReturnType(), method.getParameterTypes());
+        return lookup.findSpecial(this.interfaceDeclaration, method.getName(), methodType, this.interfaceDeclaration)
+                .bindTo(proxy);
+      } catch (ReflectiveOperationException e) {
+        throw new IllegalArgumentException("default method " + method + " is not accessible", e);
+      }
+    }
+
     private String extractsNamespace(Method method) {
       Class<?> declaringClass = method.getDeclaringClass();
       Namespace namespaceAnnotation = declaringClass.getAnnotation(Namespace.class);
@@ -1229,6 +1298,15 @@ public final class ProcedureCallerFactory<T> {
         }
       }
       return this.namespaceNamingStrategy.translateToDatabase(declaringClass.getSimpleName());
+    }
+
+    private static boolean isJava9OrLater() {
+      try {
+        Class.forName("java.lang.Runtime$Version");
+        return true;
+      } catch (ClassNotFoundException e) {
+        return false;
+      }
     }
 
   }

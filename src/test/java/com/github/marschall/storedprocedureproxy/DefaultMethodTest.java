@@ -1,6 +1,7 @@
 package com.github.marschall.storedprocedureproxy;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -39,12 +40,22 @@ public class DefaultMethodTest {
 
   @Test
   public void defaultMethod() throws SQLException {
+    assumeFalse(isJava9OrLater());
     DefaultMethod defaultMethod = ProcedureCallerFactory.build(DefaultMethod.class, this.dataSource);
 
     assertThrows(IllegalStateException.class, () -> defaultMethod.hello());
   }
 
 
+
+  private static boolean isJava9OrLater() {
+    try {
+      Class.forName("java.lang.Runtime$Version");
+      return true;
+    } catch (ClassNotFoundException e) {
+      return false;
+    }
+  }
 
   interface DefaultMethod {
 
