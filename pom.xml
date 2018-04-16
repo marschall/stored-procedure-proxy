@@ -129,7 +129,7 @@
     <dependency>
       <groupId>org.mariadb.jdbc</groupId>
       <artifactId>mariadb-java-client</artifactId>
-      <version>2.2.1</version>
+      <version>2.2.3</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -161,7 +161,7 @@
     <dependency>
       <groupId>com.microsoft.sqlserver</groupId>
       <artifactId>mssql-jdbc</artifactId>
-      <version>6.3.6.jre8-preview</version>
+      <version>6.4.0.jre8</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -376,7 +376,7 @@
         <plugin>
           <groupId>com.github.marschall</groupId>
           <artifactId>jdeps-maven-plugin</artifactId>
-          <version>0.4.0</version>
+          <version>0.4.2</version>
         </plugin>
         <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself. -->
         <plugin>
