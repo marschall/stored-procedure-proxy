@@ -4,6 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -149,17 +150,33 @@ public class H2Test extends AbstractDataSourceTest {
   @ParameterizedTest
   @IndexRegistrationParameters
   public void simpleResultSetWithDefaultMethod(ParameterRegistration parameterRegistration) {
-    List<IdName> names = this.procedures(parameterRegistration).simpleResultSet();
+    if (isJava9OrLater()) {
+      List<IdName> names = this.procedures(parameterRegistration)
+              .simpleResultSet();
+      assertThat(names, hasSize(2));
+      IdName name = names.get(0);
+      assertEquals(0L, name.getId());
+      assertEquals("Hello", name.getName());
+      name = names.get(1);
+      assertEquals(1L, name.getId());
+      assertEquals("World", name.getName());
+    } else {
+      assertThrows(IllegalStateException.class, () -> {
+        this.procedures(parameterRegistration)
+          .simpleResultSet();
+      });
+    }
+  }
 
-    assertThat(names, hasSize(2));
 
-    IdName name = names.get(0);
-    assertEquals(0L, name.getId());
-    assertEquals("Hello", name.getName());
 
-    name = names.get(1);
-    assertEquals(1L, name.getId());
-    assertEquals("World", name.getName());
+  private static boolean isJava9OrLater() {
+    try {
+      Class.forName("java.lang.Runtime$Version");
+      return true;
+    } catch (ClassNotFoundException e) {
+      return false;
+    }
   }
 
 }
