@@ -40,7 +40,7 @@ The project has no runtime dependencies and is a single JAR below 100 kB.
 <dependency>
   <groupId>com.github.marschall</groupId>
   <artifactId>stored-procedure-proxy</artifactId>
-  <version>0.10.0</version>
+  <version>0.10.1</version>
 </dependency>
 ```
 
