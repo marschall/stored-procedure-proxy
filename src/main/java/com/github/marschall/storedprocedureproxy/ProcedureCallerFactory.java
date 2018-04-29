@@ -455,6 +455,51 @@ public final class ProcedureCallerFactory<T> {
 
     private static final boolean SUPPORTS_DEFAULT_METHODS = isJava9OrLater();
 
+    private static final MethodHandle CLASS_GETMODULE;
+
+    private static final MethodHandle MODULE_ISNAMED;
+
+    private static final MethodHandle MODULE_ADDREADS;
+
+    static {
+      MethodHandle classGetModule;
+      MethodHandle moduleIsNamed;
+      MethodHandle moduleAddReads;
+      if (SUPPORTS_DEFAULT_METHODS) {
+        try {
+          Class<?> moduleClass = Class.forName("java.lang.Module");
+
+          // java.lang.Class.getModule()
+          MethodType returnsModule = MethodType.methodType(moduleClass);
+          classGetModule = MethodHandles.publicLookup().findVirtual(Class.class, "getModule", returnsModule);
+
+          // java.lang.Module.isNamed()
+          MethodType returnsBoolean = MethodType.methodType(boolean.class);
+          moduleIsNamed = MethodHandles.publicLookup().findVirtual(moduleClass, "isNamed", returnsBoolean );
+
+          // java.lang.Module.addReads(Module)
+          MethodType moduleReturnsModule = MethodType.methodType(moduleClass, moduleClass);
+          moduleAddReads = MethodHandles.lookup().findVirtual(moduleClass, "addReads", moduleReturnsModule)
+                  .bindTo(classGetModule.invoke(ParameterRegistration.class));
+        } catch (RuntimeException e) {
+          throw e;
+        } catch (ReflectiveOperationException e) {
+          throw new RuntimeException("could not initialize class", e);
+        } catch (Error e) {
+          throw e;
+        } catch (Throwable e) {
+          throw new RuntimeException("could not initialize class", e);
+        }
+      } else {
+        classGetModule = null;
+        moduleIsNamed = null;
+        moduleAddReads = null;
+      }
+      CLASS_GETMODULE = classGetModule;
+      MODULE_ISNAMED = moduleIsNamed;
+      MODULE_ADDREADS = moduleAddReads;
+    }
+
     private final DataSource dataSource;
 
     private final Class<?> interfaceDeclaration;
@@ -554,7 +599,7 @@ public final class ProcedureCallerFactory<T> {
           return execute(statement, callInfo, args);
         }
       } catch (SQLException e) {
-        throw translate(e, callInfo);
+        throw this.translate(e, callInfo);
       }
     }
 
@@ -1274,11 +1319,21 @@ public final class ProcedureCallerFactory<T> {
       // https://gist.github.com/raphw/c1faf2f40e80afce6f13511098cfb90f
       try {
         Lookup lookup;
-        if (proxy.getClass().getModule().isNamed()) {
-          lookup = MethodHandles.privateLookupIn(this.interfaceDeclaration, MethodHandles.lookup());
-        } else {
-          ProcedureCaller.class.getModule().addReads(proxy.getClass().getModule());
-          lookup = MethodHandles.privateLookupIn(proxy.getClass(), MethodHandles.lookup());
+        try {
+          // proxy.getClass().getModule().isNamed()
+          if ((boolean) MODULE_ISNAMED.invoke(CLASS_GETMODULE.invoke(proxy.getClass()))) {
+            lookup = MethodHandles.privateLookupIn(this.interfaceDeclaration, MethodHandles.lookup());
+          } else {
+            // ProcedureCaller.class.getModule().addReads(proxy.getClass().getModule());
+            MODULE_ADDREADS.invoke(CLASS_GETMODULE.invoke(proxy.getClass()));
+            lookup = MethodHandles.privateLookupIn(proxy.getClass(), MethodHandles.lookup());
+          }
+        } catch (RuntimeException e) {
+          throw e;
+        } catch (Error e) {
+          throw e;
+        } catch (Throwable e) {
+          throw new RuntimeException("create lookup for default method", e);
         }
         MethodType methodType = MethodType.methodType(method.getReturnType(), method.getParameterTypes());
         return lookup.findSpecial(this.interfaceDeclaration, method.getName(), methodType, this.interfaceDeclaration)
