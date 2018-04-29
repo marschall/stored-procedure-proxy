@@ -461,10 +461,13 @@ public final class ProcedureCallerFactory<T> {
 
     private static final MethodHandle MODULE_ADDREADS;
 
+    private static final MethodHandle PRIVE_LOOKUP_IN;
+
     static {
       MethodHandle classGetModule;
       MethodHandle moduleIsNamed;
       MethodHandle moduleAddReads;
+      MethodHandle privateLookupIn;
       if (SUPPORTS_DEFAULT_METHODS) {
         try {
           Class<?> moduleClass = Class.forName("java.lang.Module");
@@ -478,9 +481,13 @@ public final class ProcedureCallerFactory<T> {
           moduleIsNamed = MethodHandles.publicLookup().findVirtual(moduleClass, "isNamed", returnsBoolean );
 
           // java.lang.Module.addReads(Module)
-          MethodType moduleReturnsModule = MethodType.methodType(moduleClass, moduleClass);
-          moduleAddReads = MethodHandles.lookup().findVirtual(moduleClass, "addReads", moduleReturnsModule)
+          MethodType addReadsSignature = MethodType.methodType(moduleClass, moduleClass);
+          moduleAddReads = MethodHandles.lookup().findVirtual(moduleClass, "addReads", addReadsSignature)
                   .bindTo(classGetModule.invoke(ParameterRegistration.class));
+
+          // java.lang.invoke.MethodHandles.privateLookupIn(Class<?>, Lookup)
+          MethodType privateLookupInSignature = MethodType.methodType(Lookup.class, Class.class, Lookup.class);
+          privateLookupIn = MethodHandles.lookup().findStatic(MethodHandles.class, "privateLookupIn", privateLookupInSignature);
         } catch (RuntimeException e) {
           throw e;
         } catch (ReflectiveOperationException e) {
@@ -494,10 +501,12 @@ public final class ProcedureCallerFactory<T> {
         classGetModule = null;
         moduleIsNamed = null;
         moduleAddReads = null;
+        privateLookupIn = null;
       }
       CLASS_GETMODULE = classGetModule;
       MODULE_ISNAMED = moduleIsNamed;
       MODULE_ADDREADS = moduleAddReads;
+      PRIVE_LOOKUP_IN = privateLookupIn;
     }
 
     private final DataSource dataSource;
@@ -1322,11 +1331,11 @@ public final class ProcedureCallerFactory<T> {
         try {
           // proxy.getClass().getModule().isNamed()
           if ((boolean) MODULE_ISNAMED.invoke(CLASS_GETMODULE.invoke(proxy.getClass()))) {
-            lookup = MethodHandles.privateLookupIn(this.interfaceDeclaration, MethodHandles.lookup());
+            lookup = (Lookup) PRIVE_LOOKUP_IN.invoke(this.interfaceDeclaration, MethodHandles.lookup());
           } else {
             // ProcedureCaller.class.getModule().addReads(proxy.getClass().getModule());
             MODULE_ADDREADS.invoke(CLASS_GETMODULE.invoke(proxy.getClass()));
-            lookup = MethodHandles.privateLookupIn(proxy.getClass(), MethodHandles.lookup());
+            lookup = (Lookup) PRIVE_LOOKUP_IN.invoke(proxy.getClass(), MethodHandles.lookup());
           }
         } catch (RuntimeException e) {
           throw e;
