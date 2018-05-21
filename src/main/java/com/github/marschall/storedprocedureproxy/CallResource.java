@@ -14,6 +14,7 @@ interface CallResource extends AutoCloseable {
 
   Object resourceAt(int index);
 
+  @Override
   void close() throws SQLException;
 
 }
@@ -231,7 +232,7 @@ final class ArrayFactory implements CallResourceFactory {
   @Override
   public CallResource createResource(Connection connection, Object[] args) throws SQLException {
     // REVIEW what if null
-    Object[] elements = extractElements(args);
+    Object[] elements = this.extractElements(args);
     Array array = connection.createArrayOf(this.typeName, elements);
     return new ArrayResource(array, this.argumentIndex);
   }
@@ -271,24 +272,24 @@ final class ArrayFactory implements CallResourceFactory {
 final class OracleArrayFactory implements CallResourceFactory {
 
   private static final Class<?> ORACLE_CONNECTION;
-  private static final MethodHandle CREATE_ARRAY;
+  private static final MethodHandle CREATE_ORACLE_ARRAY;
 
   static {
     // https://docs.oracle.com/database/121/JJDBC/oraarr.htm#JJDBC28574
-    // https://docs.oracle.com/database/121/JAJDB/oracle/jdbc/OracleConnection.html#createARRAY_java_lang_String__java_lang_Object_
+    // https://docs.oracle.com/en/database/oracle/oracle-database/12.2/jajdb/oracle/jdbc/OracleConnection.html#createOracleArray-java.lang.String-java.lang.Object-
     Class<?> oracleConnection;
     MethodHandle createARRAY;
     try {
       oracleConnection = Class.forName("oracle.jdbc.OracleConnection");
-      Method createARRAYMethod = oracleConnection.getDeclaredMethod(
-              "createARRAY", String.class, Object.class);
-      createARRAY = MethodHandles.publicLookup().unreflect(createARRAYMethod);
+      Method createOracleArrayMethod = oracleConnection.getDeclaredMethod(
+              "createOracleArray", String.class, Object.class);
+      createARRAY = MethodHandles.publicLookup().unreflect(createOracleArrayMethod);
     } catch (ReflectiveOperationException e) {
       oracleConnection = null;
       createARRAY = null;
     }
     ORACLE_CONNECTION = oracleConnection;
-    CREATE_ARRAY = createARRAY;
+    CREATE_ORACLE_ARRAY = createARRAY;
   }
 
   private final int argumentIndex;
@@ -301,24 +302,24 @@ final class OracleArrayFactory implements CallResourceFactory {
 
   @Override
   public CallResource createResource(Connection connection, Object[] args) throws SQLException {
-    if (ORACLE_CONNECTION == null || CREATE_ARRAY == null) {
+    if ((ORACLE_CONNECTION == null) || (CREATE_ORACLE_ARRAY == null)) {
       throw new IllegalStateException("Oracle JDBC classes not found in expected shape");
     }
     // REVIEW what if null
-    Object elements = extractElements(args);
+    Object elements = this.extractElements(args);
     Object oracleConnection = connection.unwrap(ORACLE_CONNECTION);
     Array array;
     try {
-      array = (Array) CREATE_ARRAY.invoke(oracleConnection, this.typeName, elements);
+      array = (Array) CREATE_ORACLE_ARRAY.invoke(oracleConnection, this.typeName, elements);
     } catch (SQLException e) {
-      throw (SQLException) e;
+      throw e;
     } catch (RuntimeException e) {
-      throw (RuntimeException) e;
+      throw e;
     } catch (Error e) {
-      throw (Error) e;
+      throw e;
     } catch (Throwable e) {
       // should not happen, does not fall into type signature
-      throw new RuntimeException("unknwon exception occured when calling " + CREATE_ARRAY, e);
+      throw new RuntimeException("unknwon exception occured when calling " + CREATE_ORACLE_ARRAY, e);
     }
     return new ArrayResource(array, this.argumentIndex);
   }
@@ -329,7 +330,7 @@ final class OracleArrayFactory implements CallResourceFactory {
       return ((Collection<?>) argument).toArray();
     }
     if (argument instanceof Object[]) {
-      return (Object[]) argument;
+      return argument;
     }
     if (argument.getClass().isArray()) {
       // primitive array, directly supported by Oracle
