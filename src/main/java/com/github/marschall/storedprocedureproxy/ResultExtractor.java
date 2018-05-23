@@ -84,9 +84,9 @@ final class ScalarResultExtractor implements ResultExtractor {
     // REVIEW for functions does retrieving the value by name make sense?
     boolean hasResultSet = statement.execute();
     if (hasResultSet) {
-      return readFromResultSet(statement, outParameterRegistration);
+      return this.readFromResultSet(statement, outParameterRegistration);
     } else {
-      return readFromStatement(statement, outParameterRegistration);
+      return this.readFromStatement(statement, outParameterRegistration);
     }
   }
 
@@ -181,18 +181,18 @@ abstract class AbstractValueExtractorResultExtractor implements ResultExtractor 
 
   @Override
   public Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration, Object[] args) throws SQLException {
-    if (fetchSize != ProcedureCaller.DEFAULT_FETCH_SIZE) {
-      statement.setFetchSize(fetchSize);
+    if (this.fetchSize != ProcedureCaller.DEFAULT_FETCH_SIZE) {
+      statement.setFetchSize(this.fetchSize);
     }
     Object extractor = args[this.extractorIndex];
     boolean hasResultSet = statement.execute();
     if (hasResultSet) {
       try (ResultSet rs = statement.getResultSet()) {
-        return read(rs, extractor);
+        return this.read(rs, extractor);
       }
     } else {
       try (ResultSet rs = getOutResultSet(statement, outParameterRegistration)) {
-        return read(rs, extractor);
+        return this.read(rs, extractor);
       }
     }
   }
@@ -307,29 +307,29 @@ final class ArrayResultExtractor implements ResultExtractor {
     if (hasResultSet) {
       try (ResultSet rs = statement.getResultSet()) {
         rs.next();
-        Array array = rs.getArray(1);
-        return extractValue(array);
+        Array jdbcArray = rs.getArray(1);
+        return this.extractValue(jdbcArray);
       }
     } else {
       Array array = outParameterRegistration.getOutParamter(statement, Array.class);
-      return extractValue(array);
+      return this.extractValue(array);
     }
   }
 
-  private Object extractValue(Array array) throws SQLException {
+  private Object extractValue(Array jdbcArray) throws SQLException {
     try {
-      Object value = array.getArray();
-      Class<? extends Object> clazz = value.getClass();
-      if (!clazz.isArray()) {
-        throw new ClassCastException("expected array of " + this.arrayElementType + " but got " + clazz);
+      Object array = jdbcArray.getArray();
+      Class<? extends Object> arrayClass = array.getClass();
+      if (!arrayClass.isArray()) {
+        throw new ClassCastException("expected array of " + this.arrayElementType + " but got " + arrayClass);
       }
-      Class<?> actualComponentType = clazz.getComponentType();
+      Class<?> actualComponentType = arrayClass.getComponentType();
       if (actualComponentType == this.arrayElementType) {
-        return value;
+        return array;
       }
-      return convertElementType(value, actualComponentType);
+      return this.convertElementType(array, actualComponentType);
     } finally {
-      array.free();
+      jdbcArray.free();
     }
   }
 
@@ -415,21 +415,21 @@ final class OracleArrayResultExtractor implements ResultExtractor {
           throw new IllegalStateException("result set is empty");
         }
         Array array = (Array) rs.getObject(1, ARRAY);
-        return extractValue(array);
+        return this.extractValue(array);
       }
     } else {
       Array array = (Array) outParameterRegistration.getOutParamter(statement, ARRAY);
-      return extractValue(array);
+      return this.extractValue(array);
     }
   }
 
   static boolean isSupportedElementType(Class<?> clazz) {
     return clazz.isPrimitive()
-            && (clazz == int.class
-                    || clazz == long.class
-                    || clazz == float.class
-                    || clazz == double.class
-                    || clazz == short.class);
+            && ((clazz == int.class)
+                    || (clazz == long.class)
+                    || (clazz == float.class)
+                    || (clazz == double.class)
+                    || (clazz == short.class));
 
   }
 
@@ -461,9 +461,9 @@ final class OracleArrayResultExtractor implements ResultExtractor {
     try {
       return GET_SHORT_ARRAY.invoke(array);
     } catch (RuntimeException e) {
-      throw (RuntimeException) e;
+      throw e;
     } catch (Error e) {
-      throw (Error) e;
+      throw e;
     } catch (Throwable e) {
       // should not happen, does not fall into type signature
       throw new RuntimeException("unknwon exception occured when calling " + GET_SHORT_ARRAY, e);
@@ -474,9 +474,9 @@ final class OracleArrayResultExtractor implements ResultExtractor {
     try {
       return GET_DOUBLE_ARRAY.invoke(array);
     } catch (RuntimeException e) {
-      throw (RuntimeException) e;
+      throw e;
     } catch (Error e) {
-      throw (Error) e;
+      throw e;
     } catch (Throwable e) {
       // should not happen, does not fall into type signature
       throw new RuntimeException("unknwon exception occured when calling " + GET_DOUBLE_ARRAY, e);
@@ -488,9 +488,9 @@ final class OracleArrayResultExtractor implements ResultExtractor {
     try {
       return GET_FLOAT_ARRAY.invoke(array);
     } catch (RuntimeException e) {
-      throw (RuntimeException) e;
+      throw e;
     } catch (Error e) {
-      throw (Error) e;
+      throw e;
     } catch (Throwable e) {
       // should not happen, does not fall into type signature
       throw new RuntimeException("unknwon exception occured when calling " + GET_FLOAT_ARRAY, e);
@@ -502,9 +502,9 @@ final class OracleArrayResultExtractor implements ResultExtractor {
     try {
       return GET_LONG_ARRAY.invoke(array);
     } catch (RuntimeException e) {
-      throw (RuntimeException) e;
+      throw e;
     } catch (Error e) {
-      throw (Error) e;
+      throw e;
     } catch (Throwable e) {
       // should not happen, does not fall into type signature
       throw new RuntimeException("unknwon exception occured when calling " + GET_LONG_ARRAY, e);
@@ -516,9 +516,9 @@ final class OracleArrayResultExtractor implements ResultExtractor {
     try {
       return GET_INT_ARRAY.invoke(array);
     } catch (RuntimeException e) {
-      throw (RuntimeException) e;
+      throw e;
     } catch (Error e) {
-      throw (Error) e;
+      throw e;
     } catch (Throwable e) {
       // should not happen, does not fall into type signature
       throw new RuntimeException("unknwon exception occured when calling " + GET_INT_ARRAY, e);

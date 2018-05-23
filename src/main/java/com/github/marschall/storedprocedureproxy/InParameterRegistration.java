@@ -43,7 +43,7 @@ final class NoInParameterRegistration implements InParameterRegistration {
 
 }
 
-abstract class AbstractByInParameterRegistration implements InParameterRegistration  {
+abstract class AbstractInParameterRegistration implements InParameterRegistration  {
 
 
   abstract int inParameterIndexAt(int i);
@@ -71,7 +71,7 @@ abstract class AbstractByInParameterRegistration implements InParameterRegistrat
 /**
  * In parameters are registered by index.
  */
-final class ByIndexInParameterRegistration extends AbstractByInParameterRegistration {
+final class ByIndexInParameterRegistration extends AbstractInParameterRegistration {
 
   // an interface method can not have more than 254 parameters
   private final byte[] inParameterIndices;
@@ -102,7 +102,7 @@ final class ByIndexInParameterRegistration extends AbstractByInParameterRegistra
  * In parameters are registered by index. Special case where the out
  * parameter is the first parameter.
  */
-final class PrefixByIndexInParameterRegistration extends AbstractByInParameterRegistration {
+final class PrefixByIndexInParameterRegistration extends AbstractInParameterRegistration {
 
   static final InParameterRegistration INSTANCE = new PrefixByIndexInParameterRegistration();
 
@@ -125,7 +125,7 @@ final class PrefixByIndexInParameterRegistration extends AbstractByInParameterRe
  * In parameters are registered by index. Special case where the out
  * parameter is the last parameter.
  */
-final class SuffixByIndexInParameterRegistration extends AbstractByInParameterRegistration {
+final class SuffixByIndexInParameterRegistration extends AbstractInParameterRegistration {
 
   static final InParameterRegistration INSTANCE = new SuffixByIndexInParameterRegistration();
 
