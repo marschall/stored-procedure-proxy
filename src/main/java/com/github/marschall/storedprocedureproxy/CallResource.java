@@ -8,6 +8,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collection;
 
+import org.postgresql.PGConnection;
+
 interface CallResource extends AutoCloseable {
 
   boolean hasResourceAt(int index);
@@ -219,18 +221,17 @@ final class CompositeFactory implements CallResourceFactory {
 
 }
 
-final class ArrayFactory implements CallResourceFactory {
+abstract class AbstractArrayFactory implements CallResourceFactory {
 
-  private final int argumentIndex;
-  private final String typeName;
+  final int argumentIndex;
+  final String typeName;
 
-  ArrayFactory(int argumentIndex, String typeName) {
+  AbstractArrayFactory(int argumentIndex, String typeName) {
     this.argumentIndex = argumentIndex;
     this.typeName = typeName;
   }
 
-  @Override
-  public CallResource createResource(Connection connection, Object[] args) throws SQLException {
+  CallResource createArrayOf(Connection connection, Object[] args) throws SQLException {
     // REVIEW what if null
     Object[] elements = this.extractElements(args);
     Array array = connection.createArrayOf(this.typeName, elements);
@@ -238,19 +239,19 @@ final class ArrayFactory implements CallResourceFactory {
   }
 
   private Object[] extractElements(Object[] args) {
-    Object argument = args[this.argumentIndex];
-    if (argument instanceof Collection) {
-      return ((Collection<?>) argument).toArray();
+    Object elements = args[this.argumentIndex];
+    if (elements instanceof Collection) {
+      return ((Collection<?>) elements).toArray();
     }
-    if (argument instanceof Object[]) {
-      return (Object[]) argument;
+    if (elements instanceof Object[]) {
+      return (Object[]) elements;
     }
-    if (argument.getClass().isArray()) {
+    if (elements.getClass().isArray()) {
       // primitive array
-      int length = java.lang.reflect.Array.getLength(argument);
+      int length = java.lang.reflect.Array.getLength(elements);
       Object[] array = new Object[length];
       for (int i = 0; i < length; ++i) {
-        array[i] = java.lang.reflect.Array.get(argument, i);
+        array[i] = java.lang.reflect.Array.get(elements, i);
       }
       return array;
     }
@@ -265,11 +266,66 @@ final class ArrayFactory implements CallResourceFactory {
 
 }
 
+final class ArrayFactory extends AbstractArrayFactory {
+
+  ArrayFactory(int argumentIndex, String typeName) {
+    super(argumentIndex, typeName);
+  }
+
+  @Override
+  public CallResource createResource(Connection connection, Object[] args) throws SQLException {
+    return this.createArrayOf(connection, args);
+  }
+
+}
+
+/**
+ * Creates array using the PostgreS API. PostgreS supports creating
+ * arrays from primitive arrays.
+ */
+final class PgArrayFactory extends AbstractArrayFactory {
+
+  PgArrayFactory(int argumentIndex, String typeName) {
+    super(argumentIndex, typeName);
+  }
+
+  @Override
+  public CallResource createResource(Connection connection, Object[] args)
+          throws SQLException {
+
+    Object elements = args[this.argumentIndex];
+    if ((elements != null) && isSupportedPrimitiveArray(this.getClass())) {
+      return this.createPgArrayOf(connection, elements);
+    } else {
+      return this.createArrayOf(connection, args);
+    }
+  }
+
+  private ArrayResource createPgArrayOf(Connection connection, Object elements) throws SQLException {
+    PGConnection pgConnection = connection.unwrap(PGConnection.class);
+    Array array = pgConnection.createArrayOf(this.typeName, elements);
+    return new ArrayResource(array, this.argumentIndex);
+  }
+
+  private static boolean isSupportedPrimitiveArray(Class<?> clazz) {
+    // org.postgresql.jdbc.PrimitiveArraySupport.isSupportedPrimitiveArray(Object)
+    return (clazz == long[].class)
+            || (clazz == int[].class)
+            || (clazz == short[].class)
+            || (clazz == double[].class)
+            || (clazz == float[].class)
+            || (clazz == boolean[].class)
+            || (clazz == String[].class);
+  }
+
+}
+
 /**
  * Creates array using the Oracle API. In Oracle arrays are created
- * using the array name instead of the element name.
+ * using the array name instead of the element name. In addition
+ * Oracle supports creating arrays from primitive arrays.
  */
-final class OracleArrayFactory implements CallResourceFactory {
+final class OracleArrayFactory extends AbstractArrayFactory {
 
   private static final Class<?> ORACLE_CONNECTION;
   private static final MethodHandle CREATE_ORACLE_ARRAY;
@@ -292,12 +348,8 @@ final class OracleArrayFactory implements CallResourceFactory {
     CREATE_ORACLE_ARRAY = createARRAY;
   }
 
-  private final int argumentIndex;
-  private final String typeName;
-
   OracleArrayFactory(int argumentIndex, String typeName) {
-    this.argumentIndex = argumentIndex;
-    this.typeName = typeName;
+    super(argumentIndex, typeName);
   }
 
   @Override
@@ -307,6 +359,11 @@ final class OracleArrayFactory implements CallResourceFactory {
     }
     // REVIEW what if null
     Object elements = this.extractElements(args);
+    Array array = this.createOracleArray(elements, connection);
+    return new ArrayResource(array, this.argumentIndex);
+  }
+
+  private Array createOracleArray(Object elements, Connection connection) throws SQLException {
     Object oracleConnection = connection.unwrap(ORACLE_CONNECTION);
     Array array;
     try {
@@ -321,28 +378,35 @@ final class OracleArrayFactory implements CallResourceFactory {
       // should not happen, does not fall into type signature
       throw new RuntimeException("unknwon exception occured when calling " + CREATE_ORACLE_ARRAY, e);
     }
-    return new ArrayResource(array, this.argumentIndex);
+    return array;
   }
 
   private Object extractElements(Object[] args) {
-    Object argument = args[this.argumentIndex];
-    if (argument instanceof Collection) {
-      return ((Collection<?>) argument).toArray();
+    Object elements = args[this.argumentIndex];
+    if (elements instanceof Collection) {
+      return ((Collection<?>) elements).toArray();
     }
-    if (argument instanceof Object[]) {
-      return argument;
+    if (elements instanceof Object[]) {
+      return elements;
     }
-    if (argument.getClass().isArray()) {
+    if (elements.getClass().isArray()) {
       // primitive array, directly supported by Oracle
-      return argument;
+      return elements;
     }
     throw new IllegalArgumentException("argument at index: " + this.argumentIndex + " expected to be a collection or array but was not");
   }
 
-  @Override
-  public String toString() {
-    return this.getClass().getSimpleName() + "[argumentIndex=" + this.argumentIndex
-            + ", typeName=" + this.typeName + ']';
-  }
+}
+
+interface ArrayResourceFactoryFactory {
+
+  CallResourceFactory createArrayFactory(int argumentIndex, String typeName);
+
+  ArrayResourceFactoryFactory JDBC = ArrayFactory::new;
+
+  ArrayResourceFactoryFactory ORACLE = OracleArrayFactory::new;
+
+  ArrayResourceFactoryFactory POSTGRES = PgArrayFactory::new;
 
 }
+

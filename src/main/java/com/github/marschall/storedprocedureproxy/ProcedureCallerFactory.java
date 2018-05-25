@@ -126,7 +126,7 @@ public final class ProcedureCallerFactory<T> {
 
   private TypeNameResolver typeNameResolver;
 
-  private boolean useOracleArrays;
+  private ArrayResourceFactoryFactory arrayResourceFactoryFactory;
 
   private ProcedureCallerFactory(Class<T> interfaceDeclaration, DataSource dataSource) {
     this.interfaceDeclaration = interfaceDeclaration;
@@ -141,7 +141,7 @@ public final class ProcedureCallerFactory<T> {
     this.exceptionAdapter = getDefaultExceptionAdapter(dataSource);
     this.typeMapper = DefaultTypeMapper.INSTANCE;
     this.typeNameResolver = DEFAULT_TYPE_NAME_RESOLVER;
-    this.useOracleArrays = false;
+    this.arrayResourceFactoryFactory = ArrayResourceFactoryFactory.JDBC;
   }
 
   private static SQLExceptionAdapter getDefaultExceptionAdapter(DataSource dataSource) {
@@ -338,7 +338,19 @@ public final class ProcedureCallerFactory<T> {
    * @see <a href="https://github.com/marschall/stored-procedure-proxy/wiki/Arrays#oracle">Binding Oracle Arrays</a>
    */
   public ProcedureCallerFactory<T> withOracleArrays() {
-    this.useOracleArrays = true;
+    this.arrayResourceFactoryFactory = ArrayResourceFactoryFactory.ORACLE;
+    return this;
+  }
+
+  /**
+   * Uses PostgreS API to create primitive arrays.
+   *
+   * @return this builder for chaining
+   * @see #withOracleExtensions()
+   * @see <a href="https://github.com/marschall/stored-procedure-proxy/wiki/Arrays#oracle">Binding Oracle Arrays</a>
+   */
+  public ProcedureCallerFactory<T> withPostgresArrays() {
+    this.arrayResourceFactoryFactory = ArrayResourceFactoryFactory.POSTGRES;
     return this;
   }
 
@@ -387,7 +399,7 @@ public final class ProcedureCallerFactory<T> {
             this.namespaceNamingStrategy, this.hasNamespace,
             this.parameterRegistration, this.exceptionAdapter,
             this.typeMapper, this.typeNameResolver,
-            this.useOracleArrays);
+            this.arrayResourceFactoryFactory);
     // REVIEW correct class loader
     Object proxy = Proxy.newProxyInstance(this.interfaceDeclaration.getClassLoader(),
             new Class<?>[]{this.interfaceDeclaration}, caller);
@@ -481,7 +493,7 @@ public final class ProcedureCallerFactory<T> {
 
     private final ReadWriteLock cacheLock;
 
-    private final boolean useOracleArrays;
+    private final ArrayResourceFactoryFactory arrayResourceFactoryFactory;
 
     private final DefaultMethodSupport defaultMethodSupport;
 
@@ -495,7 +507,7 @@ public final class ProcedureCallerFactory<T> {
             SQLExceptionAdapter exceptionAdapter,
             TypeMapper typeMapper,
             TypeNameResolver typeNameResolver,
-            boolean useOracleArrays) {
+            ArrayResourceFactoryFactory arrayResourceFactoryFactory) {
       this.dataSource = dataSource;
       this.interfaceDeclaration = interfaceDeclaration;
       this.parameterNamingStrategy = parameterNamingStrategy;
@@ -508,7 +520,7 @@ public final class ProcedureCallerFactory<T> {
       this.exceptionAdapter = exceptionAdapter;
       this.typeMapper = typeMapper;
       this.typeNameResolver = typeNameResolver;
-      this.useOracleArrays = useOracleArrays;
+      this.arrayResourceFactoryFactory = arrayResourceFactoryFactory;
       this.callInfoCache = new HashMap<>();
       this.cacheLock = new ReentrantReadWriteLock();
       this.defaultMethodSupport = DefaultMethodSupportFactory.newInstance(interfaceDeclaration);
@@ -753,11 +765,7 @@ public final class ProcedureCallerFactory<T> {
 
     private CallResourceFactory createArrayResourceFactory(Parameter parameter, int parameterIndex) {
       String typeName = this.typeNameResolver.resolveTypeName(parameter);
-      if (this.useOracleArrays) {
-        return new OracleArrayFactory(parameterIndex, typeName);
-      } else {
-        return new ArrayFactory(parameterIndex, typeName);
-      }
+      return this.arrayResourceFactoryFactory.createArrayFactory(parameterIndex, typeName);
     }
 
     private InParameterRegistration buildInParameterRegistration(Method method, int sqlParameterCount, int outParameterSqlIndex) {
