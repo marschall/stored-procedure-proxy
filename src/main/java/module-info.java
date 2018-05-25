@@ -6,6 +6,7 @@ module com.github.marschall.stored.procedure.proxy {
 
   requires java.sql;
 
+  requires static spring.beans;
   requires static spring.core;
   requires static spring.jdbc;
   requires static spring.tx;
