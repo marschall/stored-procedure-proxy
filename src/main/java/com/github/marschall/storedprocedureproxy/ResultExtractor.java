@@ -423,13 +423,13 @@ final class OracleArrayResultExtractor implements ResultExtractor {
     }
   }
 
-  static boolean isSupportedElementType(Class<?> clazz) {
-    return clazz.isPrimitive()
-            && ((clazz == int.class)
-                    || (clazz == long.class)
-                    || (clazz == float.class)
-                    || (clazz == double.class)
-                    || (clazz == short.class));
+  static boolean isSupportedElementType(Class<?> elementType) {
+    return elementType.isPrimitive()
+            && ((elementType == int.class)
+                    || (elementType == long.class)
+                    || (elementType == float.class)
+                    || (elementType == double.class)
+                    || (elementType == short.class));
 
   }
 
@@ -531,6 +531,24 @@ final class OracleArrayResultExtractor implements ResultExtractor {
   public String toString() {
     return this.getClass().getSimpleName() +'[' + ToStringUtils.classNameToString(this.arrayElementType) + ']';
   }
+
+}
+
+@FunctionalInterface
+interface ArrayResultExtractorFactory {
+
+  ResultExtractor newArrayResultExtractor(Class<?> methodReturnType);
+
+  ArrayResultExtractorFactory JDBC = (methodReturnType) -> new ArrayResultExtractor(methodReturnType.getComponentType());
+
+  ArrayResultExtractorFactory ORACLE = (methodReturnType) -> {
+    Class<?> componentType = methodReturnType.getComponentType();
+    if (OracleArrayResultExtractor.isSupportedElementType(componentType)) {
+      return new OracleArrayResultExtractor(componentType);
+    } else {
+      return new ArrayResultExtractor(componentType);
+    }
+  };
 
 }
 

@@ -128,6 +128,8 @@ public final class ProcedureCallerFactory<T> {
 
   private ArrayResourceFactoryFactory arrayResourceFactoryFactory;
 
+  private ArrayResultExtractorFactory arrayResultExtractorFactory;
+
   private ProcedureCallerFactory(Class<T> interfaceDeclaration, DataSource dataSource) {
     this.interfaceDeclaration = interfaceDeclaration;
     this.dataSource = dataSource;
@@ -142,6 +144,7 @@ public final class ProcedureCallerFactory<T> {
     this.typeMapper = DefaultTypeMapper.INSTANCE;
     this.typeNameResolver = DEFAULT_TYPE_NAME_RESOLVER;
     this.arrayResourceFactoryFactory = ArrayResourceFactoryFactory.JDBC;
+    this.arrayResultExtractorFactory = ArrayResultExtractorFactory.JDBC;
   }
 
   private static SQLExceptionAdapter getDefaultExceptionAdapter(DataSource dataSource) {
@@ -339,6 +342,7 @@ public final class ProcedureCallerFactory<T> {
    */
   public ProcedureCallerFactory<T> withOracleArrays() {
     this.arrayResourceFactoryFactory = ArrayResourceFactoryFactory.ORACLE;
+    this.arrayResultExtractorFactory = ArrayResultExtractorFactory.ORACLE;
     return this;
   }
 
@@ -346,8 +350,7 @@ public final class ProcedureCallerFactory<T> {
    * Uses PostgreS API to create primitive arrays.
    *
    * @return this builder for chaining
-   * @see #withOracleExtensions()
-   * @see <a href="https://github.com/marschall/stored-procedure-proxy/wiki/Arrays#oracle">Binding Oracle Arrays</a>
+   * @see <a href="https://github.com/marschall/stored-procedure-proxy/wiki/Arrays#postgres">PostgreS extensions</a>
    */
   public ProcedureCallerFactory<T> withPostgresArrays() {
     this.arrayResourceFactoryFactory = ArrayResourceFactoryFactory.POSTGRES;
@@ -399,7 +402,8 @@ public final class ProcedureCallerFactory<T> {
             this.namespaceNamingStrategy, this.hasNamespace,
             this.parameterRegistration, this.exceptionAdapter,
             this.typeMapper, this.typeNameResolver,
-            this.arrayResourceFactoryFactory);
+            this.arrayResourceFactoryFactory,
+            this.arrayResultExtractorFactory);
     // REVIEW correct class loader
     Object proxy = Proxy.newProxyInstance(this.interfaceDeclaration.getClassLoader(),
             new Class<?>[]{this.interfaceDeclaration}, caller);
@@ -495,6 +499,8 @@ public final class ProcedureCallerFactory<T> {
 
     private final ArrayResourceFactoryFactory arrayResourceFactoryFactory;
 
+    private final ArrayResultExtractorFactory arrayResultExtractorFactory;
+
     private final DefaultMethodSupport defaultMethodSupport;
 
     ProcedureCaller(DataSource dataSource,
@@ -507,7 +513,8 @@ public final class ProcedureCallerFactory<T> {
             SQLExceptionAdapter exceptionAdapter,
             TypeMapper typeMapper,
             TypeNameResolver typeNameResolver,
-            ArrayResourceFactoryFactory arrayResourceFactoryFactory) {
+            ArrayResourceFactoryFactory arrayResourceFactoryFactory,
+            ArrayResultExtractorFactory arrayResultExtractorFactory) {
       this.dataSource = dataSource;
       this.interfaceDeclaration = interfaceDeclaration;
       this.parameterNamingStrategy = parameterNamingStrategy;
@@ -521,6 +528,7 @@ public final class ProcedureCallerFactory<T> {
       this.typeMapper = typeMapper;
       this.typeNameResolver = typeNameResolver;
       this.arrayResourceFactoryFactory = arrayResourceFactoryFactory;
+      this.arrayResultExtractorFactory = arrayResultExtractorFactory;
       this.callInfoCache = new HashMap<>();
       this.cacheLock = new ReentrantReadWriteLock();
       this.defaultMethodSupport = DefaultMethodSupportFactory.newInstance(interfaceDeclaration);
@@ -834,11 +842,7 @@ public final class ProcedureCallerFactory<T> {
           }
         }
       } else if (isArray) {
-        Class<?> componentType = methodReturnType.getComponentType();
-        if (this.useOracleArrays && OracleArrayResultExtractor.isSupportedElementType(componentType)) {
-          return new OracleArrayResultExtractor(componentType);
-        }
-        return new ArrayResultExtractor(componentType);
+        return this.arrayResultExtractorFactory.newArrayResultExtractor(methodReturnType);
       } else {
         Class<?> boxedReturnType = getBoxedClass(method.getReturnType());
         return new ScalarResultExtractor(boxedReturnType);
