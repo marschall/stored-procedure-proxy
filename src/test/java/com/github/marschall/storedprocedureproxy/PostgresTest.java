@@ -29,6 +29,7 @@ public class PostgresTest extends AbstractDataSourceTest {
   private PostgresProcedures procedures(ParameterRegistration parameterRegistration) {
     return ProcedureCallerFactory.of(PostgresProcedures.class, this.getDataSource())
             .withParameterRegistration(parameterRegistration)
+            .withPostgresArrays()
             .build();
   }
 
