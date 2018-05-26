@@ -356,7 +356,7 @@ final class ArrayResultExtractor implements ResultExtractor {
 
 final class OracleArrayResultExtractor implements ResultExtractor {
 
-  private static final Class<?> ARRAY;
+  private static final Class<?> ORACLE_ARRAY;
   private static final MethodHandle GET_LONG_ARRAY;
   private static final MethodHandle GET_INT_ARRAY;
   private static final MethodHandle GET_DOUBLE_ARRAY;
@@ -364,24 +364,24 @@ final class OracleArrayResultExtractor implements ResultExtractor {
   private static final MethodHandle GET_SHORT_ARRAY;
 
   static {
-    // https://docs.oracle.com/database/121/JJDBC/oraarr.htm#JJDBC28574
-    Class<?> array;
+    // https://docs.oracle.com/en/database/oracle/oracle-database/12.2/jajdb/oracle/jdbc/OracleArray.html
+    Class<?> oracleArray;
     MethodHandle getLongArray;
     MethodHandle getIntArray;
     MethodHandle getFloatArray;
     MethodHandle getDoubleArray;
     MethodHandle getShortArray;
     try {
-      array = Class.forName("oracle.jdbc.ARRAY");
+      oracleArray = Class.forName("oracle.jdbc.OracleArray");
 
       Lookup lookup = MethodHandles.publicLookup();
-      getLongArray = lookup.unreflect(array.getDeclaredMethod("getLongArray"));
-      getIntArray = lookup.unreflect(array.getDeclaredMethod("getIntArray"));
-      getFloatArray = lookup.unreflect(array.getDeclaredMethod("getFloatArray"));
-      getDoubleArray = lookup.unreflect(array.getDeclaredMethod("getDoubleArray"));
-      getShortArray = lookup.unreflect(array.getDeclaredMethod("getShortArray"));
+      getLongArray = lookup.unreflect(oracleArray.getDeclaredMethod("getLongArray"));
+      getIntArray = lookup.unreflect(oracleArray.getDeclaredMethod("getIntArray"));
+      getFloatArray = lookup.unreflect(oracleArray.getDeclaredMethod("getFloatArray"));
+      getDoubleArray = lookup.unreflect(oracleArray.getDeclaredMethod("getDoubleArray"));
+      getShortArray = lookup.unreflect(oracleArray.getDeclaredMethod("getShortArray"));
     } catch (ReflectiveOperationException e) {
-      array = null;
+      oracleArray = null;
 
       getLongArray = null;
       getIntArray = null;
@@ -389,7 +389,7 @@ final class OracleArrayResultExtractor implements ResultExtractor {
       getDoubleArray = null;
       getShortArray = null;
     }
-    ARRAY = array;
+    ORACLE_ARRAY = oracleArray;
     GET_LONG_ARRAY = getLongArray;
     GET_INT_ARRAY = getIntArray;
     GET_DOUBLE_ARRAY = getDoubleArray;
@@ -405,7 +405,7 @@ final class OracleArrayResultExtractor implements ResultExtractor {
 
   @Override
   public Object extractResult(CallableStatement statement, OutParameterRegistration outParameterRegistration, Object[] args) throws SQLException {
-    if (ARRAY == null) {
+    if (ORACLE_ARRAY == null) {
       throw new IllegalStateException("Oracle JDBC classes not available");
     }
     boolean hasResultSet = statement.execute();
@@ -414,11 +414,11 @@ final class OracleArrayResultExtractor implements ResultExtractor {
         if (!rs.next()) {
           throw new IllegalStateException("result set is empty");
         }
-        Array array = (Array) rs.getObject(1, ARRAY);
+        Array array = (Array) rs.getObject(1, ORACLE_ARRAY);
         return this.extractValue(array);
       }
     } else {
-      Array array = (Array) outParameterRegistration.getOutParamter(statement, ARRAY);
+      Array array = (Array) outParameterRegistration.getOutParamter(statement, ORACLE_ARRAY);
       return this.extractValue(array);
     }
   }
@@ -458,6 +458,7 @@ final class OracleArrayResultExtractor implements ResultExtractor {
   }
 
   private static Object getShortArray(Array array) {
+    // short[]
     try {
       return GET_SHORT_ARRAY.invoke(array);
     } catch (RuntimeException e) {
@@ -471,6 +472,7 @@ final class OracleArrayResultExtractor implements ResultExtractor {
   }
 
   private static Object getDoubleArray(Array array) {
+    // double[]
     try {
       return GET_DOUBLE_ARRAY.invoke(array);
     } catch (RuntimeException e) {
