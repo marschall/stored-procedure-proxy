@@ -21,6 +21,7 @@ public class Usage {
     Class<PostgresProcedures> inferfaceDeclaration = PostgresProcedures.class;
     PostgresProcedures procedures = ProcedureCallerFactory.of(inferfaceDeclaration, dataSource)
             .withParameterRegistration(ParameterRegistration.INDEX_AND_TYPE)
+            .withPostgresArrays()
             .build();
     procedures.browserVersion("safari", "9.0");
   }
