@@ -294,7 +294,7 @@ final class PgArrayFactory extends AbstractArrayFactory {
           throws SQLException {
 
     Object elements = args[this.argumentIndex];
-    if ((elements != null) && isSupportedPrimitiveArray(this.getClass())) {
+    if ((elements != null) && isSupportedPrimitiveArray(elements.getClass())) {
       return this.createPgArrayOf(connection, elements);
     } else {
       return this.createArrayOf(connection, args);
