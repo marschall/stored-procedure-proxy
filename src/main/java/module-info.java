@@ -11,4 +11,6 @@ module com.github.marschall.stored.procedure.proxy {
   requires static spring.jdbc;
   requires static spring.tx;
 
+  requires static postgresql;
+
 }
