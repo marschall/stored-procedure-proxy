@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Arrays;
 
-import org.junit.jupiter.params.ParameterizedTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;
@@ -25,26 +24,22 @@ public class FirebirdTest extends AbstractDataSourceTest {
             .build();
   }
 
-  @ParameterizedTest
-  @IndexRegistrationParameters
+  @ParameterRegistrationTest
   public void increment(ParameterRegistration parameterRegistration) {
     assertEquals(2, this.procedures(parameterRegistration).increment(1));
   }
 
-  @ParameterizedTest
-  @IndexRegistrationParameters
+  @ParameterRegistrationTest
   public void incrementOutParameter(ParameterRegistration parameterRegistration) {
     assertEquals(2, this.procedures(parameterRegistration).incrementOutParameter(1));
   }
 
-  @ParameterizedTest
-  @IndexRegistrationParameters
+  @ParameterRegistrationTest
   public void incrementReturnValue(ParameterRegistration parameterRegistration) {
     assertEquals(2, this.procedures(parameterRegistration).incrementReturnValue(1));
   }
 
-  @ParameterizedTest
-  @IndexRegistrationParameters
+  @ParameterRegistrationTest
   public void cursor(ParameterRegistration parameterRegistration) {
     assertEquals(Arrays.asList(1, 1, 2, 6, 24, 120), this.procedures(parameterRegistration).factorial(5));
   }

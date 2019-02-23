@@ -1,6 +1,7 @@
 package com.github.marschall.storedprocedureproxy;
 
 import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import java.lang.annotation.Documented;
@@ -13,7 +14,7 @@ import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.Paramete
 
 @Documented
 @Retention(RUNTIME)
-@Target(METHOD)
+@Target({TYPE, METHOD})
 @EnumSource(value = ParameterRegistration.class, names = {"INDEX_ONLY", "INDEX_AND_TYPE"})
 public @interface IndexRegistrationParameters {
 

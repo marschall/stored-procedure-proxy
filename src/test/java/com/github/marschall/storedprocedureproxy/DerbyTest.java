@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.math.BigDecimal;
 
-import org.junit.jupiter.params.ParameterizedTest;
 import org.springframework.test.context.ContextConfiguration;
 
 import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration;
@@ -23,20 +22,17 @@ public class DerbyTest extends AbstractDataSourceTest {
             .build();
   }
 
-  @ParameterizedTest
-  @IndexRegistrationParameters
+  @ParameterRegistrationTest
   public void outParameter(ParameterRegistration parameterRegistration) {
     assertThat(this.functions(parameterRegistration).calculateRevenueByMonth(9, 2016), comparesEqualTo(new BigDecimal(201609)));
   }
 
-  @ParameterizedTest
-  @IndexRegistrationParameters
+  @ParameterRegistrationTest
   public void inOutParameter(ParameterRegistration parameterRegistration) {
     assertThat(this.functions(parameterRegistration).raisePrice(new BigDecimal("10.1")), comparesEqualTo(new BigDecimal("20.2")));
   }
 
-  @ParameterizedTest
-  @IndexRegistrationParameters
+  @ParameterRegistrationTest
   public void returnValue(ParameterRegistration parameterRegistration) {
     assertEquals(0.01d, 6.0d, this.functions(parameterRegistration).salesTax(100.0d));
   }

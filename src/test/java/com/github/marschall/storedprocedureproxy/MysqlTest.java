@@ -24,8 +24,7 @@ public class MysqlTest extends AbstractDataSourceTest {
             .build();
   }
 
-  @ParameterizedTest
-  @IndexRegistrationParameters
+  @ParameterRegistrationTest
   public void helloFunction(ParameterRegistration parameterRegistration) {
     // names for out parameters of functions don't work
 

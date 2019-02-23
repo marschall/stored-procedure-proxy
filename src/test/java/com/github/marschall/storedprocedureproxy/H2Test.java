@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.function.Function;
 
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.params.ParameterizedTest;
 import org.springframework.test.context.ContextConfiguration;
 
 import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration;
@@ -31,57 +30,49 @@ public class H2Test extends AbstractDataSourceTest {
             .build();
   }
 
-  @ParameterizedTest
-  @IndexRegistrationParameters
+  @ParameterRegistrationTest
   public void callScalarFunction(ParameterRegistration parameterRegistration) {
     String input = "test";
     assertEquals("pre" + input + "post", this.procedures(parameterRegistration).stringProcedure(input));
   }
 
-  @ParameterizedTest
-  @IndexRegistrationParameters
+  @ParameterRegistrationTest
   public void callVoidProcedure(ParameterRegistration parameterRegistration) {
     this.procedures(parameterRegistration).voidProcedure("test");
   }
 
-  @ParameterizedTest
-  @IndexRegistrationParameters
+  @ParameterRegistrationTest
   public void noArgProcedure(ParameterRegistration parameterRegistration) {
     assertEquals("output", this.procedures(parameterRegistration).noArgProcedure());
   }
 
-  @ParameterizedTest
-  @IndexRegistrationParameters
+  @ParameterRegistrationTest
   public void reverseObjectArray(ParameterRegistration parameterRegistration) {
     Object[] input = new Object[] {1, "null", 1.1d};
     Object[] expected = new Object[] {1.1d, "null", 1};
     assertArrayEquals(expected, this.procedures(parameterRegistration).reverseObjectArray(input));
   }
 
-  @ParameterizedTest
-  @IndexRegistrationParameters
+  @ParameterRegistrationTest
   public void reverseIntegerArray(ParameterRegistration parameterRegistration) {
     Integer[] input = new Integer[] {11, 2, 15};
     Integer[] expected = new Integer[] {15, 2, 11};
     assertArrayEquals(expected, this.procedures(parameterRegistration).reverseIntegerArray(input));
   }
 
-  @ParameterizedTest
-  @IndexRegistrationParameters
+  @ParameterRegistrationTest
   public void returnObjectArray(ParameterRegistration parameterRegistration) {
     Object[] expected = new Object[] {1, "string"};
     assertArrayEquals(expected, this.procedures(parameterRegistration).returnObjectArray());
   }
 
-  @ParameterizedTest
-  @IndexRegistrationParameters
+  @ParameterRegistrationTest
   public void returnIntegerArray(ParameterRegistration parameterRegistration) {
     Integer[] expected = new Integer[] {4, 1, 7};
     assertArrayEquals(expected, this.procedures(parameterRegistration).returnIntegerArray());
   }
 
-  @ParameterizedTest
-  @IndexRegistrationParameters
+  @ParameterRegistrationTest
   public void simpleResultSetNumbered(ParameterRegistration parameterRegistration) {
     List<IdName> names = this.procedures(parameterRegistration).simpleResultSet((rs, i) -> {
       long id = rs.getLong("ID");
@@ -100,8 +91,7 @@ public class H2Test extends AbstractDataSourceTest {
     assertEquals("1-World", name.getName());
   }
 
-  @ParameterizedTest
-  @IndexRegistrationParameters
+  @ParameterRegistrationTest
   public void simpleResultSet(ParameterRegistration parameterRegistration) {
     List<IdName> names = this.procedures(parameterRegistration).simpleResultSet((ValueExtractor<IdName>) rs -> {
       long id = rs.getLong("ID");
@@ -120,8 +110,7 @@ public class H2Test extends AbstractDataSourceTest {
     assertEquals("World", name.getName());
   }
 
-  @ParameterizedTest
-  @IndexRegistrationParameters
+  @ParameterRegistrationTest
   @Disabled("feature not ready")
   public void simpleResultSetFunction(ParameterRegistration parameterRegistration) {
     List<IdName> names = this.procedures(parameterRegistration).simpleResultSet((Function<ResultSet, IdName>) rs -> {
@@ -147,8 +136,7 @@ public class H2Test extends AbstractDataSourceTest {
     assertEquals("World", name.getName());
   }
 
-  @ParameterizedTest
-  @IndexRegistrationParameters
+  @ParameterRegistrationTest
   public void simpleResultSetWithDefaultMethod(ParameterRegistration parameterRegistration) {
     if (isJava9OrLater()) {
       List<IdName> names = this.procedures(parameterRegistration)
@@ -167,8 +155,6 @@ public class H2Test extends AbstractDataSourceTest {
       });
     }
   }
-
-
 
   private static boolean isJava9OrLater() {
     try {
