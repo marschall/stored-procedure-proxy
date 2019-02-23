@@ -81,7 +81,7 @@
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
-      <version>1.4.197</version>
+      <version>1.4.198</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -99,13 +99,13 @@
     <dependency>
       <groupId>org.firebirdsql.jdbc</groupId>
       <artifactId>jaybird-jdk18</artifactId>
-      <version>3.0.4</version>
+      <version>3.0.5</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>2.19.0</version>
+      <version>2.24.5</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -117,7 +117,7 @@
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
-      <version>42.2.2</version>
+      <version>42.2.5</version>
       <optional>true</optional>
     </dependency>
     <dependency>
@@ -132,7 +132,7 @@
     <dependency>
       <groupId>org.mariadb.jdbc</groupId>
       <artifactId>mariadb-java-client</artifactId>
-      <version>2.2.5</version>
+      <version>2.4.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -164,7 +164,7 @@
     <dependency>
       <groupId>com.microsoft.sqlserver</groupId>
       <artifactId>mssql-jdbc</artifactId>
-      <version>6.4.0.jre8</version>
+      <version>7.2.1.jre8</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -242,6 +242,8 @@
             <link>https://docs.oracle.com/javase/8/docs/api/</link>
             <link>https://docs.spring.io/spring/docs/current/javadoc-api/</link>
           </links>
+          <!-- https://bugs.openjdk.java.net/browse/JDK-8212233 -->
+          <source>8</source>
         </configuration>
         <executions>
           <execution>
@@ -252,6 +254,34 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>codes.rafael.modulemaker</groupId>
+        <artifactId>modulemaker-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>make-module</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <name>com.github.marschall.stored.procedure.proxy</name>
+          <exports>
+            com.github.marschall.storedprocedureproxy,
+            com.github.marschall.storedprocedureproxy.annotations,
+            com.github.marschall.storedprocedureproxy.spi
+          </exports>
+          <requires>java.sql</requires>
+          <static-requires>
+            spring.beans,
+            jspring.core,
+            jspring.jdbc,
+            spring.tx,
+            postgresql
+          </static-requires>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.jboss.jandex</groupId>
@@ -292,16 +322,6 @@
         </executions>
       </plugin>
       <plugin>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <dependencies>
-          <dependency>
-            <groupId>org.junit.platform</groupId>
-            <artifactId>junit-platform-surefire-provider</artifactId>
-            <version>${junit.platform.version}</version>
-          </dependency>
-        </dependencies>
-      </plugin>
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
         <configuration>
@@ -321,15 +341,15 @@
       <plugins>
         <plugin>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>3.0.0</version>
+          <version>3.0.1</version>
         </plugin>
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.7.0</version>
+          <version>3.8.0</version>
         </plugin>
         <plugin>
           <artifactId>maven-resources-plugin</artifactId>
-          <version>3.0.2</version>
+          <version>3.1.0</version>
         </plugin>
         <plugin>
           <groupId>org.jboss.jandex</groupId>
@@ -350,11 +370,11 @@
         </plugin>
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
-          <version>3.0.2</version>
+          <version>3.1.1</version>
         </plugin>
         <plugin>
           <artifactId>maven-site-plugin</artifactId>
-          <version>3.7</version>
+          <version>3.7.1</version>
         </plugin>
         <plugin>
           <artifactId>maven-deploy-plugin</artifactId>
@@ -366,20 +386,25 @@
         </plugin>
         <plugin>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>2.19.1</version>
+          <version>2.22.1</version>
         </plugin>
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
-          <version>3.0.0</version>
+          <version>3.1.0</version>
         </plugin>
         <plugin>
           <artifactId>maven-scm-plugin</artifactId>
-          <version>1.9.5</version>
+          <version>1.11.1</version>
         </plugin>
         <plugin>
           <groupId>com.github.marschall</groupId>
           <artifactId>jdeps-maven-plugin</artifactId>
-          <version>0.4.2</version>
+          <version>0.5.1</version>
+        </plugin>
+        <plugin>
+          <groupId>codes.rafael.modulemaker</groupId>
+          <artifactId>modulemaker-maven-plugin</artifactId>
+          <version>1.6</version>
         </plugin>
         <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself. -->
         <plugin>
@@ -400,6 +425,19 @@
                   </pluginExecutionFilter>
                   <action>
                     <ignore />
+                  </action>
+                </pluginExecution>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>codes.rafael.modulemaker</groupId>
+                    <artifactId>modulemaker-maven-plugin</artifactId>
+                    <versionRange>[1.6,)</versionRange>
+                    <goals>
+                      <goal>make-module</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore></ignore>
                   </action>
                 </pluginExecution>
               </pluginExecutions>
@@ -432,64 +470,42 @@
       </build>
     </profile>
     <profile>
-      <id>jdk9</id>
+      <id>not-travis</id>
       <activation>
-        <jdk>9</jdk>
+        <property>
+          <name>!env.TRAVIS</name>
+        </property>
       </activation>
       <build>
         <plugins>
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>default-compile</id>
+          <plugin>
+            <artifactId>maven-compiler-plugin</artifactId>
             <configuration>
-              <!-- compile everything to ensure module-info contains right entries -->
-              <!-- required when JAVA_HOME is JDK 8 or below -->
+              <release>8</release>
+              <!-- Only required when JAVA_HOME isn't at least Java 11 and when haven't configured the maven-toolchains-plugin -->
               <jdkToolchain>
-                <version>9</version>
+                <version>11</version>
               </jdkToolchain>
-              <release>9</release>
             </configuration>
-          </execution>
-          <execution>
-            <id>base-compile</id>
-            <goals>
-              <goal>compile</goal>
-            </goals>
-            <!-- recompile everything for target VM except the module-info.java -->
+          </plugin>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
-              <excludes>
-                <exclude>module-info.java</exclude>
-              </excludes>
-              <jdkToolchain>
-                <version>9</version>
-              </jdkToolchain>
-              <!-- do not use release 8 so we can access MethodHandles.privateLookupIn without a multi release JAR -->
-              <source>1.8</source>
-              <target>1.8</target>
+              <argLine>
+                --add-opens com.github.marschall.stored.procedure.proxy/com.github.marschall.storedprocedureproxy=ALL-UNNAMED
+                --add-opens com.github.marschall.stored.procedure.proxy/com.github.marschall.storedprocedureproxy.configuration=ALL-UNNAMED
+                --add-opens com.github.marschall.stored.procedure.proxy/com.github.marschall.storedprocedureproxy.configuration=spring.beans
+              </argLine>
+              <enableAssertions>true</enableAssertions>
             </configuration>
-          </execution>
-        </executions>
-        <!-- defaults for compile and testCompile -->
-        <configuration>
-          <!-- jdkToolchain required when JAVA_HOME is JDK 9 or above -->
-          <jdkToolchain>
-            <version>9</version>
-          </jdkToolchain>
-          <!-- do not use release 8 so we can access MethodHandles.privateLookupIn without a multi release JAR -->
-          <source>1.8</source>
-          <target>1.8</target>
-        </configuration>
-      </plugin>
+          </plugin>
         </plugins>
       </build>
     </profile>
     <profile>
-      <!-- https://github.com/travis-ci/travis-ci/issues/4178 -->
-      <!-- https://github.com/travis-ci/travis-ci/issues/5520 -->
-      <id>travis</id>
+      <id>travis-8</id>
       <activation>
+        <jdk>1.8</jdk>
         <property>
           <name>env.TRAVIS</name>
         </property>
@@ -497,17 +513,39 @@
       <build>
         <plugins>
           <plugin>
-            <!--
-              can't use toolchains
-              https://github.com/travis-ci/travis-ci/issues/2727
-            -->
             <artifactId>maven-compiler-plugin</artifactId>
             <configuration>
               <source>${java.version}</source>
               <target>${java.version}</target>
-              <excludes>
-                <exclude>module-info.java</exclude>
-              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>travis-11</id>
+      <activation>
+        <jdk>11</jdk>
+        <property>
+          <name>env.TRAVIS</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <release>8</release>
+            </configuration>
+          </plugin>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <argLine>
+                --add-opens com.github.marschall.stored.procedure.proxy/com.github.marschall.storedprocedureproxy=ALL-UNNAMED
+                --add-opens com.github.marschall.stored.procedure.proxy/com.github.marschall.storedprocedureproxy.configuration=ALL-UNNAMED
+                --add-opens com.github.marschall.stored.procedure.proxy/com.github.marschall.storedprocedureproxy.configuration=spring.beans
+              </argLine>
             </configuration>
           </plugin>
         </plugins>
@@ -519,10 +557,10 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <java.version>1.8</java.version>
-    <spring.version>5.1.1.RELEASE</spring.version>
-    <log4j.version>2.11.1</log4j.version>
-    <junit.jupiter.version>5.1.1</junit.jupiter.version>
-    <junit.platform.version>1.1.1</junit.platform.version>
+    <spring.version>5.1.5.RELEASE</spring.version>
+    <log4j.version>2.11.2</log4j.version>
+    <junit.jupiter.version>5.4.0</junit.jupiter.version>
+    <junit.platform.version>1.4.0</junit.platform.version>
   </properties>
 
 </project>
