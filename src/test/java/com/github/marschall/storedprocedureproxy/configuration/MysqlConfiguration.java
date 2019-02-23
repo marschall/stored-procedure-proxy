@@ -18,7 +18,7 @@ public class MysqlConfiguration {
     String userName = System.getProperty("user.name");
     String database = userName;
     // https://dev.mysql.com/doc/connector-j/6.0/en/connector-j-reference-configuration-properties.html
-    dataSource.setUrl("jdbc:mysql://localhost:3306/" + database + "?useSSL=false&logger=com.mysql.cj.core.log.Slf4JLogger");
+    dataSource.setUrl("jdbc:mysql://localhost:3306/" + database + "?useSSL=false&allowPublicKeyRetrieval=true&logger=com.mysql.cj.log.Slf4JLogger");
     dataSource.setUsername(userName);
     String password = Travis.isTravis() ? "" : userName;
     dataSource.setPassword(password);

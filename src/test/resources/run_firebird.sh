@@ -3,10 +3,10 @@
 # docker exec -i -t firebird3 /bin/bash
 # -e 'ISC_PASSWORD=masterkey' \
 
-docker run -d \
-    --name jdbc-firebird \
-    -e 'FIREBIRD_DATABASE=jdbc' \
-    -e 'FIREBIRD_USER=jdbc' \
-    -e 'FIREBIRD_PASSWORD=Cent-Quick-Space-Bath-8' \
-    -p 3050:3050 \
-    jacobalberty/firebird:3.0.3
+docker run --name jdbc-firebird \
+ -e 'FIREBIRD_DATABASE=jdbc' \
+ -e 'FIREBIRD_USER=jdbc' \
+ -e 'FIREBIRD_PASSWORD=Cent-Quick-Space-Bath-8' \
+ -p 3050:3050 \
+ --mount type=tmpfs,destination=/firebird/data \
+ -d jacobalberty/firebird:3.0.3
