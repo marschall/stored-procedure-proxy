@@ -18,7 +18,7 @@ public class H2Configuration {
             .setType(H2)
             .setScriptEncoding("UTF-8")
             .ignoreFailedDrops(true)
-            .addScript("h2_procedures.sql")
+            .addScript("sql/h2_procedures.sql")
             .build();
   }
 

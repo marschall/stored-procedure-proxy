@@ -14,7 +14,7 @@ import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.Paramete
 import com.github.marschall.storedprocedureproxy.configuration.MysqlConfiguration;
 import com.github.marschall.storedprocedureproxy.procedures.MysqlProcedures;
 
-@Sql("classpath:mysql_procedures.sql")
+@Sql("classpath:sql/mysql_procedures.sql")
 @ContextConfiguration(classes = MysqlConfiguration.class)
 public class MysqlTest extends AbstractDataSourceTest {
 

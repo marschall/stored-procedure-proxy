@@ -11,7 +11,7 @@ import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.Paramete
 import com.github.marschall.storedprocedureproxy.configuration.MssqlConfiguration;
 import com.github.marschall.storedprocedureproxy.procedures.MssqlProcedures;
 
-@Sql("classpath:mssql_procedures.sql")
+@Sql("classpath:sql/mssql_procedures.sql")
 @ContextConfiguration(classes = MssqlConfiguration.class)
 @DisabledOnTravis
 public class MssqlTest extends AbstractDataSourceTest {

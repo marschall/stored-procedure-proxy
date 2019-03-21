@@ -22,7 +22,7 @@ import com.github.marschall.storedprocedureproxy.procedures.PostgresProcedures;
 
 @Transactional
 @ContextConfiguration(classes = PostgresConfiguration.class)
-@Sql(scripts = "classpath:postgres_procedures.sql", config = @SqlConfig(separator = "@"))
+@Sql(scripts = "classpath:sql/postgres_procedures.sql", config = @SqlConfig(separator = "@"))
 public class PostgresTest extends AbstractDataSourceTest {
 
   private PostgresProcedures procedures(ParameterRegistration parameterRegistration) {

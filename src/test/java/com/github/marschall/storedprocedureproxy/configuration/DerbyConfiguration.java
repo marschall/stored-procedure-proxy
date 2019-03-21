@@ -18,7 +18,7 @@ public class DerbyConfiguration {
             .setType(DERBY)
             .setScriptEncoding("UTF-8")
             .ignoreFailedDrops(true)
-            .addScript("derby_procedures.sql")
+            .addScript("sql/derby_procedures.sql")
             .build();
   }
 

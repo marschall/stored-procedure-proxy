@@ -14,7 +14,7 @@ import com.github.marschall.storedprocedureproxy.procedures.FirebirdProcedures;
 
 
 @ContextConfiguration(classes = FirebirdConfiguration.class)
-@Sql(scripts = "classpath:firebird_procedures.sql", config = @SqlConfig(separator = "^"))
+@Sql(scripts = "classpath:sql/firebird_procedures.sql", config = @SqlConfig(separator = "^"))
 @DisabledOnTravis
 public class FirebirdTest extends AbstractDataSourceTest {
 

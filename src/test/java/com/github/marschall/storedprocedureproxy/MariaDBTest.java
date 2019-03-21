@@ -15,7 +15,7 @@ import com.github.marschall.storedprocedureproxy.configuration.MariaDBConfigurat
 import com.github.marschall.storedprocedureproxy.procedures.MariaDBProcedures;
 
 @ContextConfiguration(classes = MariaDBConfiguration.class)
-@Sql("classpath:mariadb_procedures.sql")
+@Sql("classpath:sql/mariadb_procedures.sql")
 @DisabledOnTravis
 public class MariaDBTest extends AbstractDataSourceTest {
 

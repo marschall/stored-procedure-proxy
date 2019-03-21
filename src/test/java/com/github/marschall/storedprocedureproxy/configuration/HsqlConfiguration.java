@@ -19,7 +19,7 @@ public class HsqlConfiguration {
             .setScriptEncoding("UTF-8")
             .ignoreFailedDrops(true)
             .setSeparator("/;")
-            .addScript("hsql_procedures.sql")
+            .addScript("sql/hsql_procedures.sql")
             .build();
   }
 
