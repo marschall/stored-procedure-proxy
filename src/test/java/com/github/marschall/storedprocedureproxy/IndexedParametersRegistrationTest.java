@@ -7,11 +7,14 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+
+import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.ParameterRegistration;
 
 @Retention(RUNTIME)
 @Target(METHOD)
 @ParameterizedTest
-@IndexRegistrationParameters
+@EnumSource(value = ParameterRegistration.class, names = {"INDEX_ONLY", "INDEX_AND_TYPE"})
 public @interface IndexedParametersRegistrationTest {
 
 }

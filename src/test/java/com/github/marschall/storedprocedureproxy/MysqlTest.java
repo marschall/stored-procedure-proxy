@@ -5,8 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
 
@@ -31,14 +29,12 @@ public class MysqlTest extends AbstractDataSourceTest {
     assertEquals("Hello, Monty!", this.procedures(parameterRegistration).helloFunction("Monty"));
   }
 
-  @ParameterizedTest
-  @EnumSource(ParameterRegistration.class)
+  @AllParametersRegistrationTest
   public void helloProcedure(ParameterRegistration parameterRegistration) {
     assertEquals("Hello, Monty!", this.procedures(parameterRegistration).helloProcedure("Monty"));
   }
 
-  @ParameterizedTest
-  @EnumSource(ParameterRegistration.class)
+  @AllParametersRegistrationTest
   public void simpleRefCursor(ParameterRegistration parameterRegistration) {
     // https://stackoverflow.com/questions/273929/what-is-the-equivalent-of-oracle-s-ref-cursor-in-mysql-when-using-jdbc
     List<String> refCursor = this.procedures(parameterRegistration).fakeRefcursor();
