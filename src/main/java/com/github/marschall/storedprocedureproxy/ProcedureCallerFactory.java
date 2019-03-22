@@ -862,8 +862,8 @@ public final class ProcedureCallerFactory<T> {
 
     private OutParameterRegistration buildOutParameterRegistration(
             Method method, int outParameterSqlIndex, boolean hasOutParameter) {
-      InOutParameter inOutParameter = method.getAnnotation(InOutParameter.class);
       if (hasOutParameter) {
+        InOutParameter inOutParameter = method.getAnnotation(InOutParameter.class);
         if (inOutParameter == null) {
           int outParameterType = this.getOutParameterType(method);
           String returnTypeName = getReturnTypeName(method);
