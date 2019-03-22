@@ -1,0 +1,2 @@
+-- ALTER SESSION SET "_ORACLE_SCRIPT"=true;
+CREATE USER c##jdbc IDENTIFIED BY "Cent-Quick-Space-Bath-8";
