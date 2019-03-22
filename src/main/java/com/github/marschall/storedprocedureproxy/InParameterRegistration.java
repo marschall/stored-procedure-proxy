@@ -15,7 +15,7 @@ interface InParameterRegistration {
   void bindInParamters(CallableStatement statement, CallResource callResource, Object[] args) throws SQLException;
 
   static boolean hasScale(int type) {
-    return type == Types.NUMERIC || type == Types.DECIMAL;
+    return (type == Types.NUMERIC) || (type == Types.DECIMAL);
   }
 
 }
@@ -220,7 +220,7 @@ final class ByIndexAndTypeInParameterRegistration implements InParameterRegistra
       }
       int type = this.inParameterTypes[i];
       if (arg != null) {
-        if (InParameterRegistration.hasScale(type) && arg instanceof BigDecimal) {
+        if (InParameterRegistration.hasScale(type) && (arg instanceof BigDecimal)) {
           // if we don't do this a scale of 0 is assumed
           statement.setObject(parameterIndex, arg, type, ((BigDecimal) arg).scale());
         } else {
@@ -278,7 +278,7 @@ final class ByNameAndTypeInParameterRegistration implements InParameterRegistrat
       }
       int type = this.inParameterTypes[i];
       if (arg != null) {
-        if (InParameterRegistration.hasScale(type) && arg instanceof BigDecimal) {
+        if (InParameterRegistration.hasScale(type) && (arg instanceof BigDecimal)) {
           // if we don't do this a scale of 0 is assumed
           statement.setObject(parameterName, arg, type, ((BigDecimal) arg).scale());
         } else {
