@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
+import java.util.Arrays;
+
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -43,8 +45,7 @@ public class OracleTest extends AbstractDataSourceTest {
     assertEquals(0.01f, 6.0f, this.procedures(parameterRegistration).salesTax(100.0f));
   }
 
-  @ParameterizedTest
-  @EnumSource(value = ParameterRegistration.class, names = {"INDEX_ONLY", "INDEX_AND_TYPE", "NAME_ONLY", "NAME_AND_TYPE"})
+  @AllParametersRegistrationTest
   public void propertyTax(ParameterRegistration parameterRegistration) {
     assertEquals(0.01f, 6.0f, this.procedures(parameterRegistration).propertyTax(100.0f));
   }
@@ -62,17 +63,21 @@ public class OracleTest extends AbstractDataSourceTest {
   }
 
   @Disabled
-  @ParameterizedTest
-  @EnumSource(value = ParameterRegistration.class, names = {"INDEX_ONLY", "INDEX_AND_TYPE", "NAME_ONLY", "NAME_AND_TYPE"})
+  @AllParametersRegistrationTest
   public void arrayParameter(ParameterRegistration parameterRegistration) {
     assertEquals(6, this.packageProcedures(parameterRegistration).sum(new int[] {1, 2, 3}));
   }
 
   @Disabled
-  @ParameterizedTest
-  @EnumSource(value = ParameterRegistration.class, names = {"INDEX_ONLY", "INDEX_AND_TYPE", "NAME_ONLY", "NAME_AND_TYPE"})
+  @AllParametersRegistrationTest
   public void arrayResult(ParameterRegistration parameterRegistration) {
     assertArrayEquals(new int[] {1, 2, 3}, this.packageProcedures(parameterRegistration).arrayResult());
+  }
+
+  @ParameterizedTest
+  @AllParametersRegistrationTest
+  public void retrunRefCursor(ParameterRegistration parameterRegistration) {
+    assertEquals(Arrays.asList(1, 2, 3), this.packageProcedures(parameterRegistration).returnRefcursor());
   }
 
 }
