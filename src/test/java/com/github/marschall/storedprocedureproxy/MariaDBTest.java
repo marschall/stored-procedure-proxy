@@ -25,14 +25,14 @@ public class MariaDBTest extends AbstractDataSourceTest {
             .build();
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void helloFunction(ParameterRegistration parameterRegistration) {
     // names for out parameters of functions don't work
 
     assertEquals("Hello, Monty!", this.procedures(parameterRegistration).helloFunction("Monty"));
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void helloProcedure(ParameterRegistration parameterRegistration) {
     assertEquals("Hello, Monty!", this.procedures(parameterRegistration).helloProcedure("Monty"));
   }

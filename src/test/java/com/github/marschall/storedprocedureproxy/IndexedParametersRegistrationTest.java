@@ -12,6 +12,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 @Target(METHOD)
 @ParameterizedTest
 @IndexRegistrationParameters
-public @interface ParameterRegistrationTest {
+public @interface IndexedParametersRegistrationTest {
 
 }

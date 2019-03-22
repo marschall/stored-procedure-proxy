@@ -23,27 +23,27 @@ public class HsqlTest extends AbstractDataSourceTest {
             .build();
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void function(ParameterRegistration parameterRegistration) {
     LocalDateTime after = LocalDateTime.of(2016, 10, 12, 17, 19);
     LocalDateTime before = after.minusHours(1L);
     assertEquals(Timestamp.valueOf(before), this.procedures(parameterRegistration).anHourBefore(Timestamp.valueOf(after)));
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void refCursor(ParameterRegistration parameterRegistration) {
     List<Integer> list = this.procedures(parameterRegistration).refCursor();
     assertEquals(Arrays.asList(1, 2), list);
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void arrayCardinality(ParameterRegistration parameterRegistration) {
     Integer[] array = new Integer[] {1, 2, 3};
     int arrayCardinality = this.procedures(parameterRegistration).arrayCardinality(array);
     assertEquals(array.length, arrayCardinality);
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void returnArray(ParameterRegistration parameterRegistration) {
     Integer[] actual = this.procedures(parameterRegistration).returnArray();
     Integer[] expected = new Integer[] {0, 5, 10};

@@ -24,22 +24,22 @@ public class FirebirdTest extends AbstractDataSourceTest {
             .build();
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void increment(ParameterRegistration parameterRegistration) {
     assertEquals(2, this.procedures(parameterRegistration).increment(1));
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void incrementOutParameter(ParameterRegistration parameterRegistration) {
     assertEquals(2, this.procedures(parameterRegistration).incrementOutParameter(1));
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void incrementReturnValue(ParameterRegistration parameterRegistration) {
     assertEquals(2, this.procedures(parameterRegistration).incrementReturnValue(1));
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void cursor(ParameterRegistration parameterRegistration) {
     assertEquals(Arrays.asList(1, 1, 2, 6, 24, 120), this.procedures(parameterRegistration).factorial(5));
   }

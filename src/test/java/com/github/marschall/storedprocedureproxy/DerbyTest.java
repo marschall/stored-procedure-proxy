@@ -22,17 +22,17 @@ public class DerbyTest extends AbstractDataSourceTest {
             .build();
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void outParameter(ParameterRegistration parameterRegistration) {
     assertThat(this.functions(parameterRegistration).calculateRevenueByMonth(9, 2016), comparesEqualTo(new BigDecimal(201609)));
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void inOutParameter(ParameterRegistration parameterRegistration) {
     assertThat(this.functions(parameterRegistration).raisePrice(new BigDecimal("10.1")), comparesEqualTo(new BigDecimal("20.2")));
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void returnValue(ParameterRegistration parameterRegistration) {
     assertEquals(0.01d, 6.0d, this.functions(parameterRegistration).salesTax(100.0d));
   }

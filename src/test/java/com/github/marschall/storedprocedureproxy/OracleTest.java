@@ -26,7 +26,7 @@ public class OracleTest extends AbstractDataSourceTest {
             .build();
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void salesTax(ParameterRegistration parameterRegistration) {
     assertEquals(0.01f, 6.0f, this.procedures(parameterRegistration).salesTax(100.0f));
   }

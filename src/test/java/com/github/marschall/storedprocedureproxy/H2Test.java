@@ -30,49 +30,49 @@ public class H2Test extends AbstractDataSourceTest {
             .build();
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void callScalarFunction(ParameterRegistration parameterRegistration) {
     String input = "test";
     assertEquals("pre" + input + "post", this.procedures(parameterRegistration).stringProcedure(input));
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void callVoidProcedure(ParameterRegistration parameterRegistration) {
     this.procedures(parameterRegistration).voidProcedure("test");
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void noArgProcedure(ParameterRegistration parameterRegistration) {
     assertEquals("output", this.procedures(parameterRegistration).noArgProcedure());
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void reverseObjectArray(ParameterRegistration parameterRegistration) {
     Object[] input = new Object[] {1, "null", 1.1d};
     Object[] expected = new Object[] {1.1d, "null", 1};
     assertArrayEquals(expected, this.procedures(parameterRegistration).reverseObjectArray(input));
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void reverseIntegerArray(ParameterRegistration parameterRegistration) {
     Integer[] input = new Integer[] {11, 2, 15};
     Integer[] expected = new Integer[] {15, 2, 11};
     assertArrayEquals(expected, this.procedures(parameterRegistration).reverseIntegerArray(input));
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void returnObjectArray(ParameterRegistration parameterRegistration) {
     Object[] expected = new Object[] {1, "string"};
     assertArrayEquals(expected, this.procedures(parameterRegistration).returnObjectArray());
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void returnIntegerArray(ParameterRegistration parameterRegistration) {
     Integer[] expected = new Integer[] {4, 1, 7};
     assertArrayEquals(expected, this.procedures(parameterRegistration).returnIntegerArray());
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void simpleResultSetNumbered(ParameterRegistration parameterRegistration) {
     List<IdName> names = this.procedures(parameterRegistration).simpleResultSet((rs, i) -> {
       long id = rs.getLong("ID");
@@ -91,7 +91,7 @@ public class H2Test extends AbstractDataSourceTest {
     assertEquals("1-World", name.getName());
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void simpleResultSet(ParameterRegistration parameterRegistration) {
     List<IdName> names = this.procedures(parameterRegistration).simpleResultSet((ValueExtractor<IdName>) rs -> {
       long id = rs.getLong("ID");
@@ -110,7 +110,7 @@ public class H2Test extends AbstractDataSourceTest {
     assertEquals("World", name.getName());
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   @Disabled("feature not ready")
   public void simpleResultSetFunction(ParameterRegistration parameterRegistration) {
     List<IdName> names = this.procedures(parameterRegistration).simpleResultSet((Function<ResultSet, IdName>) rs -> {
@@ -136,7 +136,7 @@ public class H2Test extends AbstractDataSourceTest {
     assertEquals("World", name.getName());
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void simpleResultSetWithDefaultMethod(ParameterRegistration parameterRegistration) {
     if (isJava9OrLater()) {
       List<IdName> names = this.procedures(parameterRegistration)

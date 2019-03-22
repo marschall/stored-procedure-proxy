@@ -22,17 +22,17 @@ public class MssqlTest extends AbstractDataSourceTest {
             .build();
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void plus1inout(ParameterRegistration parameterRegistration) {
     assertEquals(2, this.procedures(parameterRegistration).plus1inout(1));
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void plus1inret(ParameterRegistration parameterRegistration) {
     assertEquals(2, this.procedures(parameterRegistration).plus1inret(1));
   }
 
-  @ParameterRegistrationTest
+  @IndexedParametersRegistrationTest
   public void fakeCursor(ParameterRegistration parameterRegistration) {
     assertEquals(Arrays.asList("hello", "world"), this.procedures(parameterRegistration).fakeCursor());
   }
