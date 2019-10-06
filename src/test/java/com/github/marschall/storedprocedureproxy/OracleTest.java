@@ -19,7 +19,8 @@ import com.github.marschall.storedprocedureproxy.configuration.OracleConfigurati
 import com.github.marschall.storedprocedureproxy.procedures.OraclePackageProcedures;
 import com.github.marschall.storedprocedureproxy.procedures.OracleProcedures;
 
-@DisabledOnTravis
+@Disabled
+//@DisabledOnTravis
 @Transactional
 @ContextConfiguration(classes = OracleConfiguration.class)
 @Sql(scripts = "classpath:sql/oracle_procedures.sql", config = @SqlConfig(separator = "/"))
