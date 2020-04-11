@@ -23,8 +23,6 @@ public class MssqlConfiguration {
     }
     SingleConnectionDataSource dataSource = new SingleConnectionDataSource();
     dataSource.setSuppressClose(true);
-    // defaults from Postgres.app
-//    dataSource.setUrl("jdbc:sqlserver://localhost:1433;databaseName=master;user=sa;password=your_password");
     dataSource.setUrl("jdbc:sqlserver://localhost:1433;databaseName=master");
     dataSource.setUsername("sa");
     dataSource.setPassword("Cent-Quick-Space-Bath-8");
