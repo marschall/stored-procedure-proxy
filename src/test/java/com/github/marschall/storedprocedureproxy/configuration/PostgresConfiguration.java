@@ -1,5 +1,7 @@
 package com.github.marschall.storedprocedureproxy.configuration;
 
+import static com.github.marschall.storedprocedureproxy.Travis.isTravis;
+
 import java.sql.SQLException;
 
 import javax.sql.DataSource;
@@ -27,7 +29,8 @@ public class PostgresConfiguration {
     // defaults from Postgres.app
     dataSource.setUrl("jdbc:postgresql:" + userName);
     dataSource.setUsername(userName);
-    dataSource.setPassword("");
+    String password = isTravis() ? "" : "Cent-Quick-Space-Bath-8";
+    dataSource.setPassword(password);
     return dataSource;
   }
 
