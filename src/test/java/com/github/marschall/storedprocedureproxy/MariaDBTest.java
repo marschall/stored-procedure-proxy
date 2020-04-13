@@ -30,7 +30,7 @@ public class MariaDBTest extends AbstractDataSourceTest {
     assertEquals("Hello, Monty!", this.procedures(parameterRegistration).helloFunction("Monty"));
   }
 
-  @IndexedParametersRegistrationTest
+  @AllParametersRegistrationTest
   public void helloProcedure(ParameterRegistration parameterRegistration) {
     assertEquals("Hello, Monty!", this.procedures(parameterRegistration).helloProcedure("Monty"));
   }
