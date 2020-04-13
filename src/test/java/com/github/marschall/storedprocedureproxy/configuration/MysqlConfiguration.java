@@ -17,7 +17,7 @@ public class MysqlConfiguration {
     try {
       Class.forName("com.mysql.cj.jdbc.Driver");
     } catch (ClassNotFoundException e) {
-      throw new BeanCreationException("mariadb driver not present", e);
+      throw new BeanCreationException("mysql driver not present", e);
     }
     SingleConnectionDataSource dataSource = new SingleConnectionDataSource();
     dataSource.setSuppressClose(true);
