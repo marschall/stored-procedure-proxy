@@ -9,6 +9,8 @@ import com.github.marschall.storedprocedureproxy.annotations.ProcedureName;
 import com.github.marschall.storedprocedureproxy.annotations.ReturnValue;
 import com.github.marschall.storedprocedureproxy.annotations.TypeName;
 
+import oracle.jdbc.OracleTypes;
+
 @Namespace("stored_procedure_proxy")
 public interface OraclePackageProcedures {
 
@@ -22,13 +24,13 @@ public interface OraclePackageProcedures {
 
   @OutParameter(name = "sum_result")
   @ProcedureName("array_sum")
-  int sum(@TypeName("stored_procedure_proxy.TEST_IDS") int[] ids);
+  int sum(@TypeName("STORED_PROCEDURE_PROXY_ARRAY") int[] ids);
 
-  @OutParameter(name = "sum_result", typeName = "stored_procedure_proxy.TEST_IDS")
-  @ProcedureName("array_result")
+  @OutParameter(name = "ARRAY_RESULT", typeName = "STORED_PROCEDURE_PROXY_ARRAY")
+  @ProcedureName("return_array")
   int[] arrayResult();
 
-  @OutParameter(name = "ids", type = -10) // OracleTypes.CURSOR
+  @OutParameter(name = "ids", type = OracleTypes.CURSOR)
   @ProcedureName("return_refcursor")
   List<Integer> returnRefcursor();
 

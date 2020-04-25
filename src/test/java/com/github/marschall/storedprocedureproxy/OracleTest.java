@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.util.Arrays;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.test.context.ContextConfiguration;
@@ -62,13 +61,11 @@ public class OracleTest extends AbstractDataSourceTest {
     assertFalse(this.packageProcedures(parameterRegistration).negateProcedure(true));
   }
 
-  @Disabled
   @AllParametersRegistrationTest
   public void arrayParameter(ParameterRegistration parameterRegistration) {
     assertEquals(6, this.packageProcedures(parameterRegistration).sum(new int[] {1, 2, 3}));
   }
 
-  @Disabled
   @AllParametersRegistrationTest
   public void arrayResult(ParameterRegistration parameterRegistration) {
     assertArrayEquals(new int[] {1, 2, 3}, this.packageProcedures(parameterRegistration).arrayResult());
