@@ -11,4 +11,4 @@ docker run -itd --name jdbc-db2 \
  -e 'DB2INST1_PASSWORD=Cent-Quick-Space-Bath-8' \
  -e DBNAME=jdbc \
  -e ARCHIVE_LOGS=false \
- ibmcom/db2:11.5.5.1
+ ibmcom/db2:11.5.6.0a
