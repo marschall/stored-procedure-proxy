@@ -537,8 +537,7 @@ public final class ProcedureCallerFactory<T> {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
       if (method.isDefault()) {
-        return this.defaultMethodSupport.getDefaultMethodHandle(proxy, method)
-                .invokeWithArguments(args);
+        return this.defaultMethodSupport.invokeDefaultMethod(proxy, method, args);
       }
 
       // handle methods defined in Object: toString, hashCode, equals

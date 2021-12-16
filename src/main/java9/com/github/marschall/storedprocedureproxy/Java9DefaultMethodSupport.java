@@ -80,7 +80,11 @@ final class Java9DefaultMethodSupport implements DefaultMethodSupport {
   }
 
   @Override
-  public MethodHandle getDefaultMethodHandle(Object proxy, Method method) {
+  public Object invokeDefaultMethod(Object proxy, Method method, Object[] args) throws Throwable {
+    return getDefaultMethodHandle(proxy, method).invokeWithArguments(args);
+  }
+
+  private MethodHandle getDefaultMethodHandle(Object proxy, Method method) {
     MethodHandle methodHandle = this.getDefaultMethodHandleFromCacheOrNull(method);
     if (methodHandle != null) {
       return methodHandle;
