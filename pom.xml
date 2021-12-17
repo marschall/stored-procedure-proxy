@@ -103,6 +103,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>jsr305</artifactId>
+      <version>3.0.2</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
       <version>1.4.200</version>
@@ -262,6 +268,17 @@
         </executions>
       </plugin>
       <plugin>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <artifactId>maven-jar-plugin</artifactId>
         <configuration>
           <archive>
@@ -292,34 +309,6 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>codes.rafael.modulemaker</groupId>
-        <artifactId>modulemaker-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>process-classes</phase>
-            <goals>
-              <goal>make-module</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <name>com.github.marschall.stored.procedure.proxy</name>
-          <exports>
-            com.github.marschall.storedprocedureproxy,
-            com.github.marschall.storedprocedureproxy.annotations,
-            com.github.marschall.storedprocedureproxy.spi
-          </exports>
-          <requires>java.sql</requires>
-          <static-requires>
-            spring.beans,
-            jspring.core,
-            jspring.jdbc,
-            spring.tx,
-            org.postgresql.jdbc
-          </static-requires>
-        </configuration>
-      </plugin>
-      <plugin>
         <groupId>org.jboss.jandex</groupId>
         <artifactId>jandex-maven-plugin</artifactId>
         <executions>
@@ -328,21 +317,6 @@
             <goals>
               <goal>jandex</goal>
             </goals>
-            <!-- at the moment jandex can't handle module-info.class -->
-            <configuration>
-              <fileSets>
-                <fileSet>
-                  <directory>${project.build.outputDirectory}</directory>
-                  <includes>
-                    <include>**/*.class</include>
-                  </includes>
-                  <excludes>
-                    <exclude>**/module-info.class</exclude>
-                  </excludes>
-                  <useDefaultExcludes>true</useDefaultExcludes>
-                </fileSet>
-              </fileSets>
-            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -381,6 +355,10 @@
           <version>2.8.2</version>
         </plugin>
         <plugin>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <version>2.22.2</version>
+        </plugin>
+        <plugin>
           <artifactId>maven-gpg-plugin</artifactId>
           <version>3.0.1</version>
         </plugin>
@@ -400,11 +378,6 @@
           <groupId>org.jboss.jandex</groupId>
           <artifactId>jandex-maven-plugin</artifactId>
           <version>1.2.0</version>
-        </plugin>
-        <plugin>
-          <groupId>codes.rafael.modulemaker</groupId>
-          <artifactId>modulemaker-maven-plugin</artifactId>
-          <version>1.7</version>
         </plugin>
         <plugin>
           <artifactId>maven-resources-plugin</artifactId>
@@ -495,7 +468,7 @@
               <release>8</release>
               <!-- Only required when JAVA_HOME isn't at least Java 11 and when haven't configured the maven-toolchains-plugin -->
               <jdkToolchain>
-                <version>11</version>
+                <version>17</version>
               </jdkToolchain>
             </configuration>
           </plugin>

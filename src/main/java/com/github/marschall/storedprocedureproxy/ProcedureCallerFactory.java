@@ -57,7 +57,7 @@ import com.github.marschall.storedprocedureproxy.spi.TypeNameResolver;
  * <p>Instances of this class are not thread safe but the instances returned by
  * {@link #build()} and {@link #build(Class, DataSource)} are.</p>
  *
- * <h3>Simple Usage</h3>
+ * <h2>Simple Usage</h2>
  * In the simplest case this class can be used like this:
  * <pre><code>
  *  DataSource dataSource = ...; // some way to get the data source, either injection or look up
@@ -66,7 +66,7 @@ import com.github.marschall.storedprocedureproxy.spi.TypeNameResolver;
  *  procedures.aProcedure("param1", "param2"); // actual procedure with actual parameters
  * </code></pre>
  *
- * <h3>Advanced Usage</h3>
+ * <h2>Advanced Usage</h2>
  * If you want to customize the defaults you can use this class like this:
  * <pre><code>
  *  DataSource dataSource = ...; // some way to get the data source, either injection or look up

@@ -45,7 +45,7 @@ public @interface OutParameter {
    * parameter is assumed to be the last parameter.
    *
    * <p>If the out parameter isn't the last parameter you have to
-   * provide the index of the out parameter.<p>
+   * provide the index of the out parameter.</p>
    *
    * @return the 1 based index of the out parameter
    */

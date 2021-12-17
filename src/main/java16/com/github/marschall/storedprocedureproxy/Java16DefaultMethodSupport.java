@@ -16,7 +16,7 @@ final class Java16DefaultMethodSupport implements DefaultMethodSupport {
     try {
       Method invokeDefaultMethod = InvocationHandler.class
         .getDeclaredMethod("invokeDefault", Object.class, Method.class, Object[].class);
-      invokeDefaultHandle = MethodHandles.publicLookup().unreflect(invokeDefaultMethod);
+      invokeDefaultHandle = MethodHandles.lookup().unreflect(invokeDefaultMethod);
     } catch (ReflectiveOperationException e) {
       throw new RuntimeException("could not initialize class", e);
     }
