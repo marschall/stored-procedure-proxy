@@ -12,7 +12,7 @@ import com.github.marschall.storedprocedureproxy.ProcedureCallerFactory.Paramete
 import com.github.marschall.storedprocedureproxy.configuration.Db2Configuration;
 import com.github.marschall.storedprocedureproxy.procedures.Db2Procedures;
 
-@DisabledOnTravis
+@Disabled
 @Transactional
 @ContextConfiguration(classes = Db2Configuration.class)
 @Sql(scripts = "classpath:sql/db2_procedures.sql", config = @SqlConfig(separator = "/"))
