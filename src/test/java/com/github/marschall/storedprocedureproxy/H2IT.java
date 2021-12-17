@@ -27,7 +27,7 @@ public class H2IT extends AbstractDataSourceTest {
 
   @IndexedParametersRegistrationTest
   public void simpleResultSetWithDefaultMethod(ParameterRegistration parameterRegistration) {
-    if (isJava9OrLater()) {
+    if (JavaVersionSupport.isJava9OrLater()) {
       List<IdName> names = this.procedures(parameterRegistration)
               .simpleResultSet();
       assertThat(names, hasSize(2));
@@ -42,15 +42,6 @@ public class H2IT extends AbstractDataSourceTest {
         this.procedures(parameterRegistration)
           .simpleResultSet();
       });
-    }
-  }
-
-  private static boolean isJava9OrLater() {
-    try {
-      Class.forName("java.lang.Runtime$Version");
-      return true;
-    } catch (ClassNotFoundException e) {
-      return false;
     }
   }
 

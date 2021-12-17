@@ -454,8 +454,26 @@
       </build>
     </profile>
     <profile>
-      <id>not-travis</id>
+      <id>jdk-8</id>
       <activation>
+        <jdk>1.8</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <source>${java.version}</source>
+              <target>${java.version}</target>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>not-travis-11</id>
+      <activation>
+        <jdk>[11,</jdk>
         <property>
           <name>!env.TRAVIS</name>
         </property>
@@ -487,29 +505,9 @@
       </build>
     </profile>
     <profile>
-      <id>travis-8</id>
-      <activation>
-        <jdk>1.8</jdk>
-        <property>
-          <name>env.TRAVIS</name>
-        </property>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <configuration>
-              <source>${java.version}</source>
-              <target>${java.version}</target>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
       <id>travis-11</id>
       <activation>
-        <jdk>11</jdk>
+        <jdk>[11,</jdk>
         <property>
           <name>env.TRAVIS</name>
         </property>
