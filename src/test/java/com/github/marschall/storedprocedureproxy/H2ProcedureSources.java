@@ -23,24 +23,12 @@ public class H2ProcedureSources {
     return "output";
   }
 
-  public static Object[] reverseObjectArray(Object[] src) {
-    Object[] target = new Object[src.length];
-    for (int i = 0; i < src.length; i++) {
-      target[target.length - i - 1] = src[i];
-    }
-    return target;
-  }
-
   public static Integer[] reverseIntegerArray(Integer[] src) {
     Integer[] target = new Integer[src.length];
     for (int i = 0; i < src.length; i++) {
       target[target.length - i - 1] = src[i];
     }
     return target;
-  }
-
-  public static Object[] returnObjectArray() {
-    return new Object[] {1, "string"};
   }
 
   public static Integer[] returnIntegerArray() {

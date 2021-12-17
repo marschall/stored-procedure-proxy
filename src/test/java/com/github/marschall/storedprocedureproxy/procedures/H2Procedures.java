@@ -7,7 +7,6 @@ import java.util.function.Function;
 import com.github.marschall.storedprocedureproxy.NumberedValueExtractor;
 import com.github.marschall.storedprocedureproxy.ValueExtractor;
 import com.github.marschall.storedprocedureproxy.annotations.ReturnValue;
-import com.github.marschall.storedprocedureproxy.annotations.TypeName;
 
 public interface H2Procedures {
 
@@ -20,13 +19,7 @@ public interface H2Procedures {
   String noArgProcedure();
 
   @ReturnValue
-  Object[] reverseObjectArray(@TypeName("ignored") Object[] input);
-
-  @ReturnValue
   Integer[] reverseIntegerArray(Integer[] input);
-
-  @ReturnValue
-  Object[] returnObjectArray();
 
   @ReturnValue
   Integer[] returnIntegerArray();
@@ -38,7 +31,7 @@ public interface H2Procedures {
   List<IdName> simpleResultSet(Function<ResultSet, IdName> extractor);
 
   default List<IdName> simpleResultSet() {
-    return simpleResultSet((rs, i) -> {
+    return this.simpleResultSet((rs, i) -> {
       long id = rs.getLong("ID");
       String name = rs.getString("NAME");
       return new IdName(id, name);

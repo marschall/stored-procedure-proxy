@@ -6,10 +6,6 @@ CREATE ALIAS NO_ARG_PROCEDURE FOR "com.github.marschall.storedprocedureproxy.H2P
 
 CREATE ALIAS SIMPLE_RESULT_SET FOR "com.github.marschall.storedprocedureproxy.H2ProcedureSources.simpleResultSet";
 
-CREATE ALIAS REVERSE_OBJECT_ARRAY FOR "com.github.marschall.storedprocedureproxy.H2ProcedureSources.reverseObjectArray";
-
 CREATE ALIAS REVERSE_INTEGER_ARRAY FOR "com.github.marschall.storedprocedureproxy.H2ProcedureSources.reverseIntegerArray";
-
-CREATE ALIAS RETURN_OBJECT_ARRAY FOR "com.github.marschall.storedprocedureproxy.H2ProcedureSources.returnObjectArray";
 
 CREATE ALIAS RETURN_INTEGER_ARRAY FOR "com.github.marschall.storedprocedureproxy.H2ProcedureSources.returnIntegerArray";

@@ -46,23 +46,10 @@ public class H2Test extends AbstractDataSourceTest {
   }
 
   @IndexedParametersRegistrationTest
-  public void reverseObjectArray(ParameterRegistration parameterRegistration) {
-    Object[] input = new Object[] {1, "null", 1.1d};
-    Object[] expected = new Object[] {1.1d, "null", 1};
-    assertArrayEquals(expected, this.procedures(parameterRegistration).reverseObjectArray(input));
-  }
-
-  @IndexedParametersRegistrationTest
   public void reverseIntegerArray(ParameterRegistration parameterRegistration) {
     Integer[] input = new Integer[] {11, 2, 15};
     Integer[] expected = new Integer[] {15, 2, 11};
     assertArrayEquals(expected, this.procedures(parameterRegistration).reverseIntegerArray(input));
-  }
-
-  @IndexedParametersRegistrationTest
-  public void returnObjectArray(ParameterRegistration parameterRegistration) {
-    Object[] expected = new Object[] {1, "string"};
-    assertArrayEquals(expected, this.procedures(parameterRegistration).returnObjectArray());
   }
 
   @IndexedParametersRegistrationTest
