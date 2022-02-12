@@ -23,7 +23,7 @@ public class MssqlConfiguration {
     }
     SingleConnectionDataSource dataSource = new SingleConnectionDataSource();
     dataSource.setSuppressClose(true);
-    dataSource.setUrl("jdbc:sqlserver://localhost:1433;databaseName=master");
+    dataSource.setUrl("jdbc:sqlserver://localhost:1433;databaseName=master;encrypt=false");
     dataSource.setUsername("sa");
     dataSource.setPassword("Cent-Quick-Space-Bath-8");
     return dataSource;
