@@ -49,7 +49,7 @@
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-framework-bom</artifactId>
-        <version>5.3.15</version>
+        <version>5.3.18</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -63,7 +63,7 @@
       <dependency>
         <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-bom</artifactId>
-        <version>2.17.1</version>
+        <version>2.17.2</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -149,7 +149,7 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>4.3.1</version>
+      <version>4.4.0</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -161,7 +161,7 @@
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
-      <version>42.3.2</version>
+      <version>42.3.3</version>
       <optional>true</optional>
     </dependency>
     <dependency>
@@ -184,7 +184,7 @@
     <dependency>
       <groupId>org.mariadb.jdbc</groupId>
       <artifactId>mariadb-java-client</artifactId>
-      <version>3.0.3</version>
+      <version>3.0.4</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -344,11 +344,11 @@
       <plugins>
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
-          <version>3.1.0</version>
+          <version>3.2.0</version>
         </plugin>
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.8.1</version>
+          <version>3.10.1</version>
         </plugin>
         <plugin>
           <artifactId>maven-deploy-plugin</artifactId>
@@ -372,12 +372,12 @@
         </plugin>
         <plugin>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>3.3.0</version>
+          <version>3.3.2</version>
         </plugin>
         <plugin>
           <groupId>org.jboss.jandex</groupId>
           <artifactId>jandex-maven-plugin</artifactId>
-          <version>1.2.0</version>
+          <version>1.2.2</version>
         </plugin>
         <plugin>
           <artifactId>maven-resources-plugin</artifactId>
@@ -389,11 +389,11 @@
         </plugin>
         <plugin>
           <artifactId>maven-scm-plugin</artifactId>
-          <version>1.11.2</version>
+          <version>1.12.2</version>
         </plugin>
         <plugin>
           <artifactId>maven-site-plugin</artifactId>
-          <version>3.9.1</version>
+          <version>3.11.0</version>
         </plugin>
         <plugin>
           <artifactId>maven-source-plugin</artifactId>
