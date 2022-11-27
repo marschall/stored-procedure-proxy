@@ -16,7 +16,7 @@ public class FirebirdConfiguration {
     try {
       Class.forName("org.firebirdsql.jdbc.FBDriver");
     } catch (ClassNotFoundException e) {
-      throw new BeanCreationException("mariadb driver not present", e);
+      throw new BeanCreationException("firebird driver not present", e);
     }
     SingleConnectionDataSource dataSource = new SingleConnectionDataSource();
     dataSource.setSuppressClose(true);
